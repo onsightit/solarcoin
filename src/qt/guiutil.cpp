@@ -47,7 +47,6 @@ static boost::filesystem::detail::utf8_codecvt_facet utf8;
 
 namespace GUIUtil {
 
-bool fTicker = false;
 bool fNoHeaders = false;
 bool fSmallHeaders = false;
 int TOOLBAR_WIDTH = 120;
@@ -98,14 +97,12 @@ void refactorGUI(QRect screenSize)
         TOOLBAR_ICON_HEIGHT = 32;
         HEADER_HEIGHT = 0;
         fNoHeaders = true;
-        fTicker = false;
     }
     else if (screenSize.height() < 728) // 728px if OS taskbar is not hidden
     {
         TOOLBAR_ICON_HEIGHT = 32;
         HEADER_HEIGHT = 32;
         fNoHeaders = true;
-        fTicker = false;
     }
     else // Default small wallet at 728px to 768px
     {

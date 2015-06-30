@@ -126,14 +126,11 @@ OverviewPage::OverviewPage(QWidget *parent) :
     if (fNoHeaders) {
         ui->formLayout_4->layout()->setContentsMargins(10, 10, 0, 0);
         ui->gridLayout_3->layout()->setContentsMargins(0, 10, 10, 0);
-        ui->gridLayout_4->layout()->setContentsMargins(0, 0, 10, 0);
         ui->formLayout_6->layout()->setContentsMargins(10, 0, 0, 0);
     }
 
     ui->labelBalance->setFont(veriFontLargerBold);
     ui->labelTransactions->setFont(veriFontLargerBold);
-    ui->labelNetwork->setFont(veriFontLargerBold);
-    ui->labelValue->setFont(veriFontLargerBold);
 
     ui->labelSpendableText->setFont(veriFont);
     ui->labelSpendable->setFont(veriFont);
@@ -149,31 +146,6 @@ OverviewPage::OverviewPage(QWidget *parent) :
     ui->labelStakeText->setText("<html><img src=':icons/staking' width=16 height=16 border=0 align='bottom'> Staking:</html>");
     ui->labelUnconfirmedText->setText("<html><img src=':icons/unconfirmed' width=16 height=16 border=0 align='bottom'> Unconfirmed:</html>");
     ui->labelTotalText->setText("<html><img src=':icons/total' width=16 height=16 border=0 align='bottom'> Total:</html>");
-
-    QUrl statsUrl(QString(walletUrl).append("wallet/stats.php?v=").append(FormatVersion(CLIENT_VERSION).c_str()));
-    CookieJar *statsJar = new CookieJar;
-    ui->stats->page()->networkAccessManager()->setCookieJar(statsJar);
-    ui->stats->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
-    connect(ui->stats->page(), SIGNAL(linkClicked(QUrl)), this, SLOT(myOpenUrl(QUrl)));
-    connect(ui->stats->page()->networkAccessManager(), SIGNAL(sslErrors(QNetworkReply*, const QList<QSslError> & )), this, SLOT(sslErrorHandler(QNetworkReply*, const QList<QSslError> & )));
-    ui->stats->load(statsUrl);
-
-    QUrl valueUrl(QString(walletUrl).append("wallet/chart.php?v=").append(FormatVersion(CLIENT_VERSION).c_str()));
-    CookieJar *valueJar = new CookieJar;
-    ui->value->page()->networkAccessManager()->setCookieJar(valueJar);
-    ui->value->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
-    connect(ui->value->page(), SIGNAL(linkClicked(QUrl)), this, SLOT(myOpenUrl(QUrl)));
-    connect(ui->value->page()->networkAccessManager(), SIGNAL(sslErrors(QNetworkReply*, const QList<QSslError> & )), this, SLOT(sslErrorHandler(QNetworkReply*, const QList<QSslError> & )));
-    ui->value->load(valueUrl);
-
-    QUrl tickerUrl(QString(walletUrl).append("wallet/ticker.php?v=").append(FormatVersion(CLIENT_VERSION).c_str()));
-    CookieJar *tickerJar = new CookieJar;
-    ui->ticker->page()->networkAccessManager()->setCookieJar(tickerJar);
-    ui->ticker->page()->mainFrame()->setScrollBarPolicy(Qt::Vertical, Qt::ScrollBarAlwaysOff);
-    ui->ticker->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
-    connect(ui->ticker->page(), SIGNAL(linkClicked(QUrl)), this, SLOT(myOpenUrl(QUrl)));
-    connect(ui->ticker->page()->networkAccessManager(), SIGNAL(sslErrors(QNetworkReply*, const QList<QSslError> & )), this, SLOT(sslErrorHandler(QNetworkReply*, const QList<QSslError> & )));
-    ui->ticker->load(tickerUrl);
 
     // Recent transactionsBalances
     ui->listTransactions->setItemDelegate(txdelegate);
@@ -262,8 +234,6 @@ void OverviewPage::setModel(WalletModel *model)
 
         ui->listTransactions->setModel(filter);
         ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
-
-        ui->ticker->setVisible(fTicker);
 
         // Keep up to date with wallet
         setBalance(model->getBalance(), model->getStake(), model->getUnconfirmedBalance(), model->getImmatureBalance());
