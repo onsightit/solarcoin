@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>996</width>
-    <height>608</height>
+    <height>644</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -38,28 +38,6 @@
    <property name="spacing">
     <number>0</number>
    </property>
-   <item row="2" column="0" colspan="2">
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <property name="spacing">
-      <number>0</number>
-     </property>
-     <property name="sizeConstraint">
-      <enum>QLayout::SetDefaultConstraint</enum>
-     </property>
-     <property name="leftMargin">
-      <number>0</number>
-     </property>
-     <property name="topMargin">
-      <number>0</number>
-     </property>
-     <property name="rightMargin">
-      <number>0</number>
-     </property>
-     <property name="bottomMargin">
-      <number>0</number>
-     </property>
-    </layout>
-   </item>
    <item row="0" column="1">
     <layout class="QGridLayout" name="gridLayout_3">
      <property name="leftMargin">
@@ -88,13 +66,13 @@
        <property name="minimumSize">
         <size>
          <width>470</width>
-         <height>640</height>
+         <height>400</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
          <width>470</width>
-         <height>640</height>
+         <height>400</height>
         </size>
        </property>
        <property name="frameShape">
@@ -675,7 +653,7 @@
      <property name="topMargin">
       <number>0</number>
      </property>
-     <item row="0" column="1">
+     <item row="1" column="1">
       <spacer name="verticalSpacer_4">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
@@ -688,10 +666,31 @@
        </property>
       </spacer>
      </item>
+     <item row="0" column="1">
+      <widget class="QLabel" name="label_wallet_bgcoin">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="pixmap">
+        <pixmap resource="../bitcoin.qrc">:/images/logo</pixmap>
+       </property>
+       <property name="scaledContents">
+        <bool>false</bool>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+       <property name="margin">
+        <number>-2</number>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../bitcoin.qrc"/>
+ </resources>
  <connections/>
 </ui>
