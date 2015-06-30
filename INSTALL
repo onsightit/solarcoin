@@ -1,0 +1,9 @@
+Building SolarCoin
+
+See doc/readme-qt.rst for instructions on building SolarCoin-Qt,
+the intended-for-end-users, nice-graphical-interface, reference
+implementation of SolarCoin.
+
+See doc/build-*.txt for instructions on building solarcoind,
+the intended-for-services, no-graphical-interface, reference
+implementation of SolarCoin.
