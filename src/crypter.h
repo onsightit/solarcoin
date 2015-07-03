@@ -69,10 +69,8 @@ public:
             break;
 
             case 1: // scrypt+sha512
-                nDeriveIterations = 25000;
-                nDerivationMethod = 0;
-                // DEBUG nDeriveIterations = 10000;
-                // DEBUG nDerivationMethod = 1;
+                nDeriveIterations = 10000;
+                nDerivationMethod = 1;
                 vchOtherDerivationParameters = std::vector<unsigned char>(0);
             break;
         }

@@ -26,7 +26,7 @@ class CInv;
 class CRequestTracker;
 class CNode;
 
-static const int LAST_POW_BLOCK = 700000;
+static const int LAST_POW_BLOCK = 750000;
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/4;
 static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
@@ -460,7 +460,7 @@ public:
     (
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
-        READWRITE(nTime);
+        // DEBUG READWRITE(nTime);
         READWRITE(vin);
         READWRITE(vout);
         READWRITE(nLockTime);
@@ -877,6 +877,7 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
+        // header
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
         READWRITE(hashPrevBlock);
@@ -919,7 +920,8 @@ public:
 
     uint256 GetHash() const
     {
-        return scrypt_blockhash(CVOIDBEGIN(nVersion));
+        // DEBUG return scrypt_blockhash(CVOIDBEGIN(nVersion));
+        return Hash(BEGIN(nVersion), END(nNonce));
     }
 
     int64_t GetBlockTime() const
@@ -1422,7 +1424,7 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
-        READWRITE(blockHash);
+        // DEBUG READWRITE(blockHash);
     )
 
     uint256 GetBlockHash() const

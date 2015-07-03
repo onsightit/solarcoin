@@ -2726,9 +2726,6 @@ bool LoadBlockIndex(bool fAllowNew)
         //   vMerkleTree: 97ddfbbae6
         const char* pszTimestamp = "One Megawatt Hour";
         CTransaction txNew;
-        //txNew.nVersion = 1;
-        //txNew.nLockTime = 0;
-        // DEBUG txNew.nTime = 1384473600;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
         txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
