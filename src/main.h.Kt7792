@@ -441,7 +441,7 @@ public:
     static const int LEGACY_VERSION_1 = 1;
     static const int CURRENT_VERSION = 2;
     int nVersion;
-    unsigned int nTime;
+    //unsigned int nTime;
     std::vector<CTxIn> vin;
     std::vector<CTxOut> vout;
     unsigned int nLockTime;
@@ -460,7 +460,7 @@ public:
     (
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
-        READWRITE(nTime);
+        // DEBUG READWRITE(nTime);
         READWRITE(vin);
         READWRITE(vout);
         READWRITE(nLockTime);
@@ -964,7 +964,7 @@ public:
         return maxTransactionTime;
     }
 
-        uint256 BuildMerkleTree() const
+    uint256 BuildMerkleTree() const
     {
         vMerkleTree.clear();
         BOOST_FOREACH(const CTransaction& tx, vtx)

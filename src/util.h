@@ -26,7 +26,6 @@
 
 #include <openssl/sha.h>
 #include <openssl/ripemd.h>
-#include "hash.h"
 
 #include "netbase.h" // for AddTimeData
 
@@ -480,7 +479,6 @@ bool SoftSetBoolArg(const std::string& strArg, bool fValue);
 
 
 
-/************ See hash.h copied from SolarCoin 1.5
 template<typename T1>
 inline uint256 Hash(const T1 pbegin, const T1 pend)
 {
@@ -491,6 +489,7 @@ inline uint256 Hash(const T1 pbegin, const T1 pend)
     SHA256((unsigned char*)&hash1, sizeof(hash1), (unsigned char*)&hash2);
     return hash2;
 }
+
 class CHashWriter
 {
 private:
@@ -529,6 +528,7 @@ public:
         return (*this);
     }
 };
+
 
 template<typename T1, typename T2>
 inline uint256 Hash(const T1 p1begin, const T1 p1end,
@@ -580,8 +580,6 @@ inline uint160 Hash160(const std::vector<unsigned char>& vch)
     RIPEMD160((unsigned char*)&hash1, sizeof(hash1), (unsigned char*)&hash2);
     return hash2;
 }
-*************/
-
 
 /**
  * Timing-attack-resistant comparison.
