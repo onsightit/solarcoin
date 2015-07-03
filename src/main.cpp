@@ -472,7 +472,7 @@ bool CTransaction::CheckTransaction() const
         if (txout.nValue < 0)
             return DoS(100, error("CTransaction::CheckTransaction() : txout.nValue negative"));
         if (txout.nValue > MAX_MONEY) {
-            printf("txout.nValue = %" PRIi64 " : MAX_MONEY = %" PRIi64 "\n", txout.nValue, MAX_MONEY);
+            printf("txout.nValue = %" PRId64 " : MAX_MONEY = %" PRId64 "\n", txout.nValue, MAX_MONEY);
             return DoS(100, error("CTransaction::CheckTransaction() : txout.nValue too high"));
         }
         nValueOut += txout.nValue;
@@ -2178,8 +2178,26 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
     if (vtx.empty() || vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
         return DoS(100, error("CheckBlock() : size limits failed"));
 
+    // SolarCoin: Special short-term limits to avoid 10,000 BDB lock limit:
+    if (GetBlockTime() < 1376568000)  // stop enforcing 15 August 2013 00:00:00
+    {
+        // Rule is: #unique txids referenced <= 4,500
+        // ... to prevent 10,000 BDB lock exhaustion on old clients
+        set<uint256> setTxIn;
+        for (size_t i = 0; i < vtx.size(); i++)
+        {
+            setTxIn.insert(vtx[i].GetHash());
+            if (i == 0) continue; // skip coinbase txin
+            BOOST_FOREACH(const CTxIn& txin, vtx[i].vin)
+                setTxIn.insert(txin.prevout.hash);
+        }
+        size_t nTxids = setTxIn.size();
+        if (nTxids > 4500)
+            return error("CheckBlock() : 15 August maxlocks violation");
+    }
+
     // Check proof of work matches claimed amount
-    if (fCheckPOW && IsProofOfWork() && !CheckProofOfWork(GetHash(), nBits))
+    if (fCheckPOW && IsProofOfWork() && !CheckProofOfWork(GetPoWHash(), nBits))
         return DoS(50, error("CheckBlock() : proof of work failed"));
 
     // Check timestamp
@@ -2732,6 +2750,7 @@ bool LoadBlockIndex(bool fAllowNew)
         txNew.vout[0].nValue = 100 * COIN;
         txNew.vout[0].scriptPubKey = CScript() << ParseHex("040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9") << OP_CHECKSIG;
         txNew.strTxComment = "text:SolarCoin genesis block";
+        txNew.nTime = 1384473600;
 
         CBlock block;
         block.vtx.push_back(txNew);

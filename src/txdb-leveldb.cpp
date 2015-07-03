@@ -360,7 +360,6 @@ bool CTxDB::LoadBlockIndex()
     // Now read each entry.
     while (iterator->Valid())
     {
-        /* DEBUG VeriCoin version */
         // Unpack keys and values.
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.write(iterator->key().data(), iterator->key().size());

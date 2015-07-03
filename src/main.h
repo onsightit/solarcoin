@@ -34,7 +34,7 @@ static const unsigned int MAX_ORPHAN_TRANSACTIONS = MAX_BLOCK_SIZE/100;
 static const unsigned int MAX_INV_SZ = 50000;
 static const int64_t MIN_TX_FEE = 10000;
 static const int64_t MIN_RELAY_TX_FEE = MIN_TX_FEE;
-static const int64_t MAX_MONEY = (long) 1000000000000 * (long) COIN; // SolarCoin: maximum of 98.1 billion coins
+static const int64_t MAX_MONEY = 1000000000000 * COIN; // SolarCoin: maximum of 98.1 billion coins
 static const double PI = 3.1415926535;
 
 inline bool PoSTprotocol(int nHeight) { return nHeight > LAST_POW_BLOCK; }
@@ -441,11 +441,11 @@ public:
     static const int LEGACY_VERSION_1 = 1;
     static const int CURRENT_VERSION = 2;
     int nVersion;
-    unsigned int nTime;
     std::vector<CTxIn> vin;
     std::vector<CTxOut> vout;
     unsigned int nLockTime;
     std::string strTxComment;
+    unsigned int nTime;
 
     // Denial-of-service detection:
     mutable int nDoS;
@@ -460,12 +460,14 @@ public:
     (
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
-        // DEBUG READWRITE(nTime);
         READWRITE(vin);
         READWRITE(vout);
         READWRITE(nLockTime);
         if(this->nVersion > LEGACY_VERSION_1) {
         READWRITE(strTxComment); }
+
+        // TODO: For PoST but not in PoW header
+        //READWRITE(nTime);
     )
 
     void SetNull()
@@ -920,8 +922,12 @@ public:
 
     uint256 GetHash() const
     {
-        // DEBUG return scrypt_blockhash(CVOIDBEGIN(nVersion));
         return Hash(BEGIN(nVersion), END(nNonce));
+    }
+
+    uint256 GetPoWHash() const
+    {
+        return scrypt_blockhash(CVOIDBEGIN(nVersion));
     }
 
     int64_t GetBlockTime() const
@@ -966,7 +972,7 @@ public:
         return maxTransactionTime;
     }
 
-        uint256 BuildMerkleTree() const
+    uint256 BuildMerkleTree() const
     {
         vMerkleTree.clear();
         BOOST_FOREACH(const CTransaction& tx, vtx)
@@ -1063,7 +1069,7 @@ public:
         }
 
         // Check the header
-        if (fReadTransactions && IsProofOfWork() && !CheckProofOfWork(GetHash(), nBits))
+        if (fReadTransactions && IsProofOfWork() && !CheckProofOfWork(GetPoWHash(), nBits))
             return error("CBlock::ReadFromDisk() : errors in block header");
 
         return true;
@@ -1094,9 +1100,10 @@ public:
 */
     void print() const
     {
-        printf("CBlock(hash=%s, input=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%"PRIszu")\n",
+        printf("CBlock(hash=%s, input=%s, PoW=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%"PRIszu")\n",
             GetHash().ToString().c_str(),
             HexStr(BEGIN(nVersion),BEGIN(nVersion)+80,false).c_str(),
+            GetPoWHash().ToString().c_str(),
             nVersion,
             hashPrevBlock.ToString().c_str(),
             hashMerkleRoot.ToString().c_str(),
