@@ -1424,7 +1424,7 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
-        // DEBUG READWRITE(blockHash);
+        READWRITE(blockHash);
     )
 
     uint256 GetBlockHash() const
