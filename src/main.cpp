@@ -3184,7 +3184,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     }
 
 
-    else if (pfrom->nVersion == 0)
+    // DEBUG else if (pfrom->nVersion == 0)
+    else if (vRecv.nVersion < MIN_PROTO_VERSION)
     {
         // Must have a version message before anything else
         pfrom->Misbehaving(1);
