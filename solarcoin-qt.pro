@@ -342,7 +342,11 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/rescandialog.h \
     src/qt/webview.h \
     src/qt/postdialog.h \
-    src/qt/whatsnewdialog.h
+    src/qt/whatsnewdialog.h \
+    src/limitedmap.h \
+    src/hash.h \
+    src/threadsafety.h \
+    src/bloom.h
 
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
@@ -435,7 +439,9 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/webview.cpp \
     src/qt/postdialog.cpp \
     src/qt/whatsnewdialog.cpp \
-    src/zerocoin/ZeroTest.cpp
+    src/zerocoin/ZeroTest.cpp \
+    src/hash.cpp \
+    src/bloom.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc

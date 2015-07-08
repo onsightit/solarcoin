@@ -60,7 +60,7 @@ Value getpeerinfo(const Array& params, bool fHelp)
         obj.push_back(Pair("lastrecv", (boost::int64_t)stats.nLastRecv));
         obj.push_back(Pair("conntime", (boost::int64_t)stats.nTimeConnected));
         obj.push_back(Pair("version", stats.nVersion));
-        obj.push_back(Pair("subversion", stats.strSubVer));
+        obj.push_back(Pair("subver", stats.cleanSubVer));
         obj.push_back(Pair("inbound", stats.fInbound));
         obj.push_back(Pair("startingheight", stats.nStartingHeight));
         obj.push_back(Pair("banscore", stats.nMisbehavior));
@@ -84,7 +84,7 @@ Value sendalert(const Array& params, bool fHelp)
             "<privatekey> is hex string of alert master private key\n"
             "<minver> is the minimum applicable internal client version\n"
             "<maxver> is the maximum applicable internal client version\n"
-            "<subver> is the string client version /Veritoshi:0.0.0/\n"
+            "<subver> is the string client version /Satoshi:0.0.0/\n"
             "<priority> is integer priority number\n"
             "<id> is the alert id\n"
             "[cancelupto] cancels all alert id's up to this number\n"

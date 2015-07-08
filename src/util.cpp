@@ -77,8 +77,8 @@ using namespace std;
 map<string, string> mapArgs;
 map<string, vector<string> > mapMultiArgs;
 #ifdef QT_GUI
-const char *walletUrl = "https://www.solarcoin.info/";
-const char *walletDownloadsUrl = "https://www.solarcoin.info/downloads/";
+const char *walletUrl = "https://www.solarcoin.org/";
+const char *walletDownloadsUrl = "https://www.solarcoin.org/downloads/";
 const char *forumsUrl = "http://www.solarcoinforums.com";
 bool fRestart = false;
 bool fBootstrapTurbo = false;
@@ -100,6 +100,7 @@ bool fServer = false;
 bool fCommandLine = false;
 string strMiscWarning;
 bool fTestNet = false;
+bool fBloomFilters = true;
 bool fNoListen = false;
 bool fLogTimestamps = false;
 CMedianFilter<int64_t> vTimeOffsets(200,0);

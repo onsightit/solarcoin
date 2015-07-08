@@ -5,6 +5,7 @@
 
 #include "netbase.h"
 #include "util.h"
+#include "hash.h"
 #include "sync.h"
 
 #ifndef WIN32

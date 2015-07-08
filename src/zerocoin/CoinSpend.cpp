@@ -10,6 +10,7 @@
  * @license    This project is released under the MIT license.
  **/
 
+#include "hash.h"
 #include "Zerocoin.h"
 
 namespace libzerocoin {

@@ -489,6 +489,9 @@ bool AppInit2()
     nNodeLifespan = GetArg("-addrlifespan", 7);
     fUseFastIndex = GetBoolArg("-fastindex", true);
     nMinerSleep = GetArg("-minersleep", 500);
+    fBloomFilters = GetBoolArg("-bloomfilters", true);
+    if (fBloomFilters)
+        nLocalServices |= NODE_BLOOM;
 
     CheckpointsMode = Checkpoints::CPSTRICT;
     std::string strCpMode = GetArg("-cppolicy", "strict");

@@ -511,7 +511,7 @@ void BitcoinGUI::createActions()
     checkForUpdateAction->setToolTip(tr("Check for a new version of the wallet and update."));
     forumAction = new QAction(QIcon(":/icons/bitcoin"), tr("SolarCoin &Forums"), this);
     forumAction->setToolTip(tr("Go to the SolarCoin forums."));
-    webAction = new QAction(QIcon(":/icons/site"), tr("www.solarcoin.info"), this);
+    webAction = new QAction(QIcon(":/icons/site"), tr("www.solarcoin.org"), this);
     webAction->setToolTip(tr("Go to SolarCoin website."));
 
     exportAction = new QAction(QIcon(":/icons/export"), tr("&Export Data"), this);
