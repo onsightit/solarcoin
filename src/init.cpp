@@ -437,6 +437,7 @@ std::string HelpMessage()
     return strUsage;
 }
 
+
 /** Initialize bitcoin.
  *  @pre Parameters should be parsed and config file should be read.
  */

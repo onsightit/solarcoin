@@ -2404,15 +2404,19 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
             mapProofOfStake.insert(make_pair(hash, hashProofOfStake));
     }
 
-    CBlockIndex* pcheckpoint = Checkpoints::GetLastSyncCheckpoint();
+    // DEBUG CBlockIndex* pcheckpoint = Checkpoints::GetLastSyncCheckpoint();
+    CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
     if (pcheckpoint && pblock->hashPrevBlock != hashBestChain && !Checkpoints::WantedByPendingSyncCheckpoint(hash))
     {
         // Extra checks to prevent "fill up memory by spamming with bogus blocks"
         int64_t deltaTime = pblock->GetBlockTime() - pcheckpoint->nTime;
+        if (deltaTime < 0)
+        {
+            return error("ProcessBlock() : block with timestamp before last checkpoint");
+        }
         CBigNum bnNewBlock;
         bnNewBlock.SetCompact(pblock->nBits);
         CBigNum bnRequired;
-
         if (pblock->IsProofOfStake())
             bnRequired.SetCompact(ComputeMinStake(GetLastBlockIndex(pcheckpoint, true)->nBits, deltaTime, pblock->nTime));
         else
@@ -3756,6 +3760,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     else if (strCommand == "block")
     {
+        /* DEBUG
         CBlock block;
         vRecv >> block;
         uint256 hashBlock = block.GetHash();
@@ -3764,6 +3769,20 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         // block.print();
 
         CInv inv(MSG_BLOCK, hashBlock);
+        pfrom->AddInventoryKnown(inv);
+
+        if (ProcessBlock(pfrom, &block))
+            mapAlreadyAskedFor.erase(inv);
+        if (block.nDoS) pfrom->Misbehaving(block.nDoS);
+        */
+
+        CBlock block;
+        vRecv >> block;
+
+        printf("received block %s\n", block.GetHash().ToString().c_str());
+        // block.print();
+
+        CInv inv(MSG_BLOCK, block.GetHash());
         pfrom->AddInventoryKnown(inv);
 
         if (ProcessBlock(pfrom, &block))
@@ -4134,8 +4153,19 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                 pto->PushMessage("ping");
         }
 
+        // Start block sync
+        if (pto->fStartSync) {
+            pto->fStartSync = false;
+            pto->PushGetBlocks(pindexBest, uint256(0));
+        }
+
         // Resend wallet transactions that haven't gotten in a block yet
-        ResendWalletTransactions();
+        // Except during reindex, importing and IBD, when old wallet
+        // transactions become unconfirmed and spams other nodes.
+        if (!IsInitialBlockDownload())
+        {
+            ResendWalletTransactions();
+        }
 
         // Address refresh broadcast
         static int64_t nLastRebroadcast;

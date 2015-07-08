@@ -1740,11 +1740,6 @@ void static StartSync(const vector<CNode*> &vNodes) {
     CNode *pnodeNewSync = NULL;
     double dBestScore = 0;
 
-    // fImporting and fReindex are accessed out of cs_main here, but only
-    // as an optimization - they are checked again in SendMessages.
-    // DEBUG if (fImporting || fReindex)
-    // DEBUG     return;
-
     // Iterate over all nodes
     BOOST_FOREACH(CNode* pnode, vNodes) {
         // check preconditions for allowing a sync

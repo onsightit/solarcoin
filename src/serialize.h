@@ -790,11 +790,6 @@ struct ser_streamplaceholder
 
 
 
-
-
-
-
-// DEBUG
 typedef std::vector<char, zero_after_free_allocator<char> > CSerializeData;
 
 /** Double ended buffer combining vector and stream-like interfaces.
@@ -806,7 +801,6 @@ class CDataStream
 {
 protected:
     typedef CSerializeData vector_type;
-    // DEBUG typedef std::vector<char, zero_after_free_allocator<char> > vector_type;
     vector_type vch;
     unsigned int nReadPos;
     short state;

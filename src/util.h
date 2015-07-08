@@ -477,9 +477,7 @@ bool SoftSetBoolArg(const std::string& strArg, bool fValue);
 
 
 
-
-
-/* DEBUG (See hash.h)
+/* (See hash.h)
 template<typename T1>
 inline uint256 Hash(const T1 pbegin, const T1 pend)
 {
@@ -581,7 +579,8 @@ inline uint160 Hash160(const std::vector<unsigned char>& vch)
     RIPEMD160((unsigned char*)&hash1, sizeof(hash1), (unsigned char*)&hash2);
     return hash2;
 }
-DEBUG */
+ */
+
 
 /**
  * Timing-attack-resistant comparison.
