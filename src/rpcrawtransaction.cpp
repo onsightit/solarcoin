@@ -576,6 +576,7 @@ Value sendrawtransaction(const Array& params, bool fHelp)
     catch (std::exception &e) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
     }
+
     uint256 hashTx = tx.GetHash();
 
     // See if the transaction is already in a block

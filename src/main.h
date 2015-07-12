@@ -67,6 +67,7 @@ extern CBlockIndex* pindexGenesisBlock;
 extern unsigned int nStakeMinAge;
 extern unsigned int nNodeLifespan;
 extern int nCoinbaseMaturity;
+extern int nCoinbaseMaturity_PoW;
 extern int nBestHeight;
 extern uint256 nBestChainTrust;
 extern uint256 nBestInvalidTrust;
@@ -98,6 +99,7 @@ static const uint64_t nMinDiskSpace = 52428800;
 class CReserveKey;
 class CTxDB;
 class CTxIndex;
+class CBlockHeader;
 
 void RegisterWallet(CWallet* pwalletIn);
 void UnregisterWallet(CWallet* pwalletIn);
@@ -113,6 +115,7 @@ bool ProcessMessages(CNode* pfrom);
 bool SendMessages(CNode* pto, bool fSendTrickle);
 bool LoadExternalBlockFile(FILE* fileIn);
 
+unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock);
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake);
 int64_t GetProofOfWorkReward(int64_t nFees);
@@ -421,14 +424,69 @@ public:
 };
 
 
-
-
 enum GetMinFee_mode
 {
     GMF_BLOCK,
     GMF_RELAY,
     GMF_SEND,
 };
+
+
+
+
+/** This is a legacy version of CTransaction which has a different hash
+ *  than the current version.  Needed for backwards compatibility.
+ */
+class CTransactionLegacy
+{
+public:
+    static int64_t nMinTxFee;
+    static int64_t nMinRelayTxFee;
+    static const int LEGACY_VERSION_1 = 1;
+    static const int CURRENT_VERSION = 2;
+    int nVersion;
+    std::vector<CTxIn> vin;
+    std::vector<CTxOut> vout;
+    unsigned int nLockTime;
+    std::string strTxComment;
+
+    CTransactionLegacy()
+    {
+        SetNull();
+    }
+
+    IMPLEMENT_SERIALIZE
+    (
+        READWRITE(this->nVersion);
+        nVersion = this->nVersion;
+        READWRITE(vin);
+        READWRITE(vout);
+        READWRITE(nLockTime);
+        if(this->nVersion > LEGACY_VERSION_1) {
+        READWRITE(strTxComment); }
+    )
+
+    void SetNull()
+    {
+        nVersion = CTransactionLegacy::CURRENT_VERSION;
+        vin.clear();
+        vout.clear();
+        nLockTime = 0;
+        strTxComment.clear();
+    }
+
+    bool IsNull() const
+    {
+        return (vin.empty() && vout.empty());
+    }
+
+    uint256 GetHash() const
+    {
+        return SerializeHash(*this);
+    }
+};
+
+
 
 typedef std::map<uint256, std::pair<CTxIndex, CTransaction> > MapPrevTx;
 
@@ -439,13 +497,14 @@ class CTransaction
 {
 public:
     static const int LEGACY_VERSION_1 = 1;
-    static const int CURRENT_VERSION = 2;
+    static const int LEGACY_VERSION_2 = 2;
+    static const int CURRENT_VERSION = 3;
     int nVersion;
+    unsigned int nTime;
     std::vector<CTxIn> vin;
     std::vector<CTxOut> vout;
     unsigned int nLockTime;
     std::string strTxComment;
-    unsigned int nTime;
 
     // Denial-of-service detection:
     mutable int nDoS;
@@ -460,20 +519,30 @@ public:
     (
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
+        // DEBUG if(this->nVersion > LEGACY_VERSION_2) {
+        READWRITE(nTime);
+        // DEBUG }
         READWRITE(vin);
         READWRITE(vout);
         READWRITE(nLockTime);
-        if(this->nVersion > LEGACY_VERSION_1) {
-        READWRITE(strTxComment); }
-
-        // TODO: For PoST but not in PoW header
-        //READWRITE(nTime);
+        // DEBUG if(this->nVersion > LEGACY_VERSION_1) {
+        READWRITE(strTxComment);
+        // DEBUG }
     )
 
     void SetNull()
     {
-        nVersion = CTransaction::CURRENT_VERSION;
-        nTime = GetAdjustedTime();
+        // DEBUG
+        if (nBestHeight > LAST_POW_BLOCK)
+        {
+            nVersion = CTransaction::CURRENT_VERSION;
+            nTime = GetAdjustedTime();
+        }
+        else
+        {
+            nVersion = CTransaction::LEGACY_VERSION_2;
+            nTime = 0;
+        }
         vin.clear();
         vout.clear();
         nLockTime = 0;
@@ -488,7 +557,21 @@ public:
 
     uint256 GetHash() const
     {
-        return SerializeHash(*this);
+        // DEBUG
+        if (nVersion < CTransaction::CURRENT_VERSION)
+        {
+            CTransactionLegacy txL;
+            txL.nVersion = nVersion;
+            txL.vin = vin;
+            txL.vout = vout;
+            txL.nLockTime = nLockTime;
+            txL.strTxComment = strTxComment;
+            return txL.GetHash();
+        }
+        else
+        {
+            return SerializeHash(*this);
+        }
     }
 
     bool IsFinal(int nBlockHeight=0, int64_t nBlockTime=0) const
@@ -502,6 +585,7 @@ public:
             nBlockTime = GetAdjustedTime();
         if ((int64_t)nLockTime < ((int64_t)nLockTime < LOCKTIME_THRESHOLD ? (int64_t)nBlockHeight : nBlockTime))
             return true;
+
         BOOST_FOREACH(const CTxIn& txin, vin)
             if (!txin.IsFinal())
                 return false;
@@ -607,6 +691,14 @@ public:
         if (!filein)
             return error("CTransaction::ReadFromDisk() : OpenBlockFile failed");
 
+        // DEBUG
+        // Compensate for CURRENT_VERSION serialized data being one byte longer for nTime
+        //if (nBestHeight <= LAST_POW_BLOCK) pos.nTxPos += 1;
+        printf("*** DEBUG Relative nTxPos = %d\n", pos.nTxPos - pos.nBlockPos);
+        //int n = 20;
+        //pos.nTxPos += 10;
+        //while (n--) {
+
         // Read transaction
         if (fseek(filein, pos.nTxPos, SEEK_SET) != 0)
             return error("CTransaction::ReadFromDisk() : fseek failed");
@@ -617,6 +709,12 @@ public:
         catch (std::exception &e) {
             return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
         }
+
+        // DEBUG
+        //    if (this->nVersion == 2)
+        //        printf("FOUND nVersion at offset %d\n", pos.nTxPos);
+        //    pos.nTxPos--;
+        //}
 
         // Return file pointer
         if (pfileRet)
@@ -715,6 +813,7 @@ public:
 protected:
     const CTxOut& GetOutputFor(const CTxIn& input, const MapPrevTx& inputs) const;
 };
+
 
 
 
@@ -948,7 +1047,7 @@ class CBlockHeader
 {
 public:
     // header
-    static const int CURRENT_VERSION=2;
+    static const int CURRENT_VERSION = 2;
     int nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
@@ -1001,36 +1100,17 @@ public:
 };
 
 
-/** Nodes collect new transactions into a block, hash them into a hash tree,
- * and scan through nonce values to make the block's hash satisfy proof-of-work
- * requirements.  When they solve the proof-of-work, they broadcast the block
- * to everyone and the block is added to the block chain.  The first transaction
- * in the block is a special one that creates a new coin owned by the creator
- * of the block.
- *
- * Blocks are appended to blk0001.dat files on disk.  Their location on disk
- * is indexed by CBlockIndex objects in memory.
- */
-class CBlock
+class CBlock : public CBlockHeader
 {
 public:
-    // header
-    static const int CURRENT_VERSION = 2;
-    int nVersion;
-    uint256 hashPrevBlock;
-    uint256 hashMerkleRoot;
-    unsigned int nTime;
-    unsigned int nBits;
-    unsigned int nNonce;
-
     // network and disk
     std::vector<CTransaction> vtx;
 
-    // ppcoin: block signature - signed by one of the coin base txout[N]'s owner
-    std::vector<unsigned char> vchBlockSig;
-
     // memory only
     mutable std::vector<uint256> vMerkleTree;
+
+    // ppcoin: block signature - signed by one of the coin base txout[N]'s owner
+    std::vector<unsigned char> vchBlockSig;
 
     // Denial-of-service detection:
     mutable int nDoS;
@@ -1041,77 +1121,31 @@ public:
         SetNull();
     }
 
+    CBlock(const CBlockHeader &header)
+    {
+        SetNull();
+        *((CBlockHeader*)this) = header;
+    }
+
     IMPLEMENT_SERIALIZE
     (
-        // header
-        READWRITE(this->nVersion);
-        nVersion = this->nVersion;
-        READWRITE(hashPrevBlock);
-        READWRITE(hashMerkleRoot);
-        READWRITE(nTime);
-        READWRITE(nBits);
-        READWRITE(nNonce);
-
-        // ConnectBlock depends on vtx following header to generate CDiskTxPos
-        if (!(nType & (SER_GETHASH|SER_BLOCKHEADERONLY)))
-        {
-            READWRITE(vtx);
-            READWRITE(vchBlockSig);
-        }
-        else if (fRead)
-        {
-            const_cast<CBlock*>(this)->vtx.clear();
-            const_cast<CBlock*>(this)->vchBlockSig.clear();
-        }
+        READWRITE(*(CBlockHeader*)this);
+        READWRITE(vtx);
     )
 
     void SetNull()
     {
-        nVersion = CBlock::CURRENT_VERSION;
-        hashPrevBlock = 0;
-        hashMerkleRoot = 0;
-        nTime = 0;
-        nBits = 0;
-        nNonce = 0;
+        CBlockHeader::SetNull();
         vtx.clear();
-        vchBlockSig.clear();
         vMerkleTree.clear();
+        vchBlockSig.clear();
         nDoS = 0;
-    }
-
-    bool IsNull() const
-    {
-        return (nBits == 0);
-    }
-
-    uint256 GetHash() const
-    {
-        return Hash(BEGIN(nVersion), END(nNonce));
     }
 
     uint256 GetPoWHash() const
     {
         return scrypt_blockhash(CVOIDBEGIN(nVersion));
     }
-
-    CBlockHeader GetBlockHeader() const
-    {
-        CBlockHeader block;
-        block.nVersion       = nVersion;
-        block.hashPrevBlock  = hashPrevBlock;
-        block.hashMerkleRoot = hashMerkleRoot;
-        block.nTime          = nTime;
-        block.nBits          = nBits;
-        block.nNonce         = nNonce;
-        return block;
-    }
-
-    int64_t GetBlockTime() const
-    {
-        return (int64_t)nTime;
-    }
-
-    void UpdateTime(const CBlockIndex* pindexPrev);
 
     // ppcoin: entropy bit for stake modifier if chosen by modifier
     unsigned int GetStakeEntropyBit(unsigned int nTime) const
@@ -1148,6 +1182,18 @@ public:
         return maxTransactionTime;
     }
 
+    CBlockHeader GetBlockHeader() const
+    {
+        CBlockHeader block;
+        block.nVersion       = nVersion;
+        block.hashPrevBlock  = hashPrevBlock;
+        block.hashMerkleRoot = hashMerkleRoot;
+        block.nTime          = nTime;
+        block.nBits          = nBits;
+        block.nNonce         = nNonce;
+        return block;
+    }
+
     uint256 BuildMerkleTree() const
     {
         vMerkleTree.clear();
@@ -1165,6 +1211,12 @@ public:
             j += nSize;
         }
         return (vMerkleTree.empty() ? 0 : vMerkleTree.back());
+    }
+
+    const uint256 &GetTHxash(unsigned int nIndex) const {
+        assert(vMerkleTree.size() > 0); // BuildMerkleTree must have been called first
+        assert(nIndex < vtx.size());
+        return vMerkleTree[nIndex];
     }
 
     std::vector<uint256> GetMerkleBranch(int nIndex) const
@@ -1197,7 +1249,6 @@ public:
         }
         return hash;
     }
-
 
     bool WriteToDisk(unsigned int& nFileRet, unsigned int& nBlockPosRet)
     {
@@ -1252,28 +1303,7 @@ public:
     }
 
 
-/* NEWER BELOW
-    void print() const
-    {
-        printf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%"PRIszu", vchBlockSig=%s)\n",
-            GetHash().ToString().c_str(),
-            nVersion,
-            hashPrevBlock.ToString().c_str(),
-            hashMerkleRoot.ToString().c_str(),
-            nTime, nBits, nNonce,
-            vtx.size(),
-            HexStr(vchBlockSig.begin(), vchBlockSig.end()).c_str());
-        for (unsigned int i = 0; i < vtx.size(); i++)
-        {
-            printf("  ");
-            vtx[i].print();
-        }
-        printf("  vMerkleTree: ");
-        for (unsigned int i = 0; i < vMerkleTree.size(); i++)
-            printf("%s ", vMerkleTree[i].ToString().substr(0,10).c_str());
-        printf("\n");
-    }
-*/
+
     void print() const
     {
         printf("CBlock(hash=%s, input=%s, PoW=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%"PRIszu")\n",
@@ -1310,7 +1340,6 @@ public:
 private:
     bool SetBestChainInner(CTxDB& txdb, CBlockIndex *pindexNew);
 };
-
 
 
 
@@ -1419,7 +1448,7 @@ public:
         nNonce         = block.nNonce;
     }
 
-    CBlock GetBlockHeader() const
+    CBlockHeader GetBlockHeader() const
     {
         CBlock block;
         block.nVersion       = nVersion;
@@ -1834,7 +1863,6 @@ struct CCoinsStats
 
     CCoinsStats() : nHeight(0), hashBlock(0), nTransactions(0), nTransactionOutputs(0), nSerializedSize(0), hashSerialized(0), nTotalAmount(0) {}
 };
-
 
 
 

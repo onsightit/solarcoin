@@ -101,7 +101,6 @@ public:
     }
 };
 
-
 /** Thread types */
 enum threadId
 {
@@ -120,8 +119,8 @@ enum threadId
 };
 
 extern bool fClient;
-extern bool fDiscover;
 extern bool fUseUPnP;
+extern bool fDiscover;
 extern uint64_t nLocalServices;
 extern uint64_t nLocalHostNonce;
 extern CAddress addrSeenByPeer;

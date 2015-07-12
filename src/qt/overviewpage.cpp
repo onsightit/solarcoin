@@ -124,9 +124,7 @@ OverviewPage::OverviewPage(QWidget *parent) :
 
     // try to make more room for small screens
     if (fNoHeaders) {
-        ui->formLayout_4->layout()->setContentsMargins(10, 10, 0, 0);
         ui->gridLayout_3->layout()->setContentsMargins(0, 10, 10, 0);
-        ui->formLayout_6->layout()->setContentsMargins(10, 0, 0, 0);
     }
 
     ui->labelBalance->setFont(veriFontLargerBold);

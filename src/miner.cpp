@@ -7,6 +7,7 @@
 #include "txdb.h"
 #include "miner.h"
 #include "kernel.h"
+#include "main.h"
 
 using namespace std;
 
@@ -166,7 +167,17 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake, int64_t* pFees)
     if (mapArgs.count("-mintxfee"))
         ParseMoney(mapArgs["-mintxfee"], nMinTxFee);
 
-    pblock->nBits = GetNextTargetRequired(pindexPrev, fProofOfStake);
+    if (fProofOfStake)
+    {
+        pblock->nBits = GetNextTargetRequired(pindexBest, fProofOfStake);
+    }
+    else
+    {
+        const CBlockIndex* pblockIndex = pindexBest;
+        const CBlockHeader *pblockHeader = new CBlockHeader(pblock->GetBlockHeader());
+        pblock->nBits = GetNextWorkRequired(pblockIndex, pblockHeader);
+        delete pblockHeader;
+    }
 
     // Collect memory pool transactions into the block
     int64_t nFees = 0;
@@ -530,7 +541,8 @@ void StakeMiner(CWallet *pwallet)
         if (fShutdown)
             return;
 
-        while (pwallet->IsLocked())
+        // Special restriction for SolarCoin to not allow staking while still in PoW mode.
+        while (pwallet->IsLocked() || nBestHeight <= LAST_POW_BLOCK)
         {
             MilliSleep(1000);
             if (fShutdown)
