@@ -2517,10 +2517,6 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
         return DoS(100, error("CheckBlock() : out-of-bounds SigOpCount"));
 
     // Check merkle root
-    // DEBUG
-    printf("block merkel = %s\n", hashMerkleRoot.ToString().c_str());
-    printf("build merkel = %s\n", BuildMerkleTree().ToString().c_str());
-
     if (fCheckMerkleRoot && hashMerkleRoot != BuildMerkleTree())
         return DoS(100, error("CheckBlock() : hashMerkleRoot mismatch"));
 
