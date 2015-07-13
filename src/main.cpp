@@ -50,6 +50,9 @@ unsigned int nTargetSpacing = 1 * 60; // 1 minute
 unsigned int nStakeMinAge = 8 * 60 * 60; // 8 hours
 unsigned int nModifierInterval = 10 * 60; // time to elapse before new modifier is computed
 
+// DEBUG
+bool fLegacy = false;
+
 int nCoinbaseMaturity = 500;
 int nCoinbaseMaturity_PoW = 10;
 CBlockIndex* pindexGenesisBlock = NULL;
@@ -803,7 +806,6 @@ int CMerkleTx::GetBlocksToMaturity() const
 {
     if (!(IsCoinBase() || IsCoinStake()))
         return 0;
-
     int nMature = (nBestHeight > LAST_POW_BLOCK ? nCoinbaseMaturity + 10 : nCoinbaseMaturity_PoW + 1);
     return max(0, nMature - GetDepthInMainChain());
 }
@@ -1589,7 +1591,6 @@ bool CTransaction::FetchInputs(CTxDB& txdb, const map<uint256, CTxIndex>& mapTes
         {
             // Get prev tx from disk
             if (!txPrev.ReadFromDisk(txindex.pos))
-            // DEBUG if (ReadFromDisk(txdb, prevout))
                 return error("FetchInputs() : %s ReadFromDisk prev tx %s failed", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
         }
     }
@@ -1684,7 +1685,6 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
                     if (pindex->nBlockPos == txindex.pos.nBlockPos && pindex->nFile == txindex.pos.nFile)
                         return error("ConnectInputs() : tried to spend %s at depth %d", txPrev.IsCoinBase() ? "coinbase" : "coinstake", pindexBlock->nHeight - pindex->nHeight);
             }
-
             // ppcoin: check transaction timestamp
             if (nBestHeight > LAST_POW_BLOCK) // Don't care about PoW nTime
                 if (txPrev.nTime > nTime)
@@ -1840,21 +1840,12 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
 
     //// issue here: it doesn't know the version
     unsigned int nTxPos;
-
     if (fJustCheck)
-    {
         // FetchInputs treats CDiskTxPos(1,1,1) as a special "refer to memorypool" indicator
         // Since we're just checking the block and not actually connecting it, it might not (and probably shouldn't) be on the disk to get the transaction from
         nTxPos = 1;
-    }
     else
-    {
-        // DEBUG
         nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK, CLIENT_VERSION) - (2 * GetSizeOfCompactSize(0)) + GetSizeOfCompactSize(vtx.size());
-        //nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK, CLIENT_VERSION) - (2 * GetSizeOfCompactSize(0)) + vtxSizeOffset;
-        //nTxPos = pindex->nBlockPos;
-        //nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK, CLIENT_VERSION) - (2 * GetSizeOfCompactSize(0));
-    }
 
     map<uint256, CTxIndex> mapQueuedChanges;
     int64_t nFees = 0;
@@ -1919,7 +1910,6 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
             //    nTxValueOut = nTxValueOut-nNetworkDriftBuffer;
             //    nStakeReward = nTxValueOut - nTxValueIn;
             //}
-            //if ((tx.IsCoinStake() && currentHeight >= 299000) || (tx.IsCoinStake() && fTestNet))
             if (tx.IsCoinStake() || (tx.IsCoinStake() && fTestNet))
             {
                 nStakeReward = nTxValueOut - nTxValueIn;
@@ -1938,8 +1928,8 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
         mapQueuedChanges[hashTx] = CTxIndex(posThisTx, tx.vout.size());
     }
 
-// DEBUG
-printf("DEBUG *** ConnectBlock: nValueIn = %d, nValueOut = %d\n",nValueIn,nValueOut);
+    // DEBUG
+    printf("DEBUG *** ConnectBlock: nValueIn = %d, nValueOut = %d\n",nValueIn,nValueOut);
 
     if (IsProofOfWork())
     {
@@ -3188,7 +3178,7 @@ bool LoadBlockIndex(bool fAllowNew)
         txNew.vout[0].nValue = 100 * COIN;
         txNew.vout[0].scriptPubKey = CScript() << ParseHex("040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9") << OP_CHECKSIG;
         txNew.strTxComment = "text:SolarCoin genesis block";
-        txNew.nTime = 0;
+        txNew.nTime = 1384473600;
 
         CBlock block;
         block.vtx.push_back(txNew);
@@ -4043,11 +4033,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     else if (strCommand == "block")
     {
+        // Depending on the value of the global flag fLegacy (true or false),
+        // the block will be created with LEGACY_VERSION_V2 transactions,
+        // or CURRENT_VERSION transactions.
         CBlock block;
         vRecv >> block;
 
         // DEBUG
-        if (nBestHeight >= 345) {
+        if (nBestHeight >= 345 || nBestHeight < 2) {
             printf("*** DEBUG BLOCK PRINT\n");
             block.print();
         }

@@ -93,6 +93,9 @@ extern unsigned int nDerivationMethodIndex;
 
 extern bool fEnforceCanonical;
 
+// DEBUG
+extern bool fLegacy;
+
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64_t nMinDiskSpace = 52428800;
 
@@ -424,6 +427,8 @@ public:
 };
 
 
+
+
 enum GetMinFee_mode
 {
     GMF_BLOCK,
@@ -431,60 +436,6 @@ enum GetMinFee_mode
     GMF_SEND,
 };
 
-
-
-
-/** This is a legacy version of CTransaction which has a different hash
- *  than the current version.  Needed for backwards compatibility.
- */
-class CTransactionLegacy
-{
-public:
-    static int64_t nMinTxFee;
-    static int64_t nMinRelayTxFee;
-    static const int LEGACY_VERSION_1 = 1;
-    static const int CURRENT_VERSION = 2;
-    int nVersion;
-    std::vector<CTxIn> vin;
-    std::vector<CTxOut> vout;
-    unsigned int nLockTime;
-    std::string strTxComment;
-
-    CTransactionLegacy()
-    {
-        SetNull();
-    }
-
-    IMPLEMENT_SERIALIZE
-    (
-        READWRITE(this->nVersion);
-        nVersion = this->nVersion;
-        READWRITE(vin);
-        READWRITE(vout);
-        READWRITE(nLockTime);
-        if(this->nVersion > LEGACY_VERSION_1) {
-        READWRITE(strTxComment); }
-    )
-
-    void SetNull()
-    {
-        nVersion = CTransactionLegacy::CURRENT_VERSION;
-        vin.clear();
-        vout.clear();
-        nLockTime = 0;
-        strTxComment.clear();
-    }
-
-    bool IsNull() const
-    {
-        return (vin.empty() && vout.empty());
-    }
-
-    uint256 GetHash() const
-    {
-        return SerializeHash(*this);
-    }
-};
 
 
 
@@ -519,30 +470,29 @@ public:
     (
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
-        // DEBUG if(this->nVersion > LEGACY_VERSION_2) {
+        // DEBUG
+        if(!fLegacy) {
         READWRITE(nTime);
-        // DEBUG }
+        }
         READWRITE(vin);
         READWRITE(vout);
         READWRITE(nLockTime);
-        // DEBUG if(this->nVersion > LEGACY_VERSION_1) {
+        if(this->nVersion > LEGACY_VERSION_1) {
         READWRITE(strTxComment);
-        // DEBUG }
+        }
     )
 
     void SetNull()
     {
-        // DEBUG
         if (nBestHeight > LAST_POW_BLOCK)
         {
             nVersion = CTransaction::CURRENT_VERSION;
-            nTime = GetAdjustedTime();
         }
         else
         {
             nVersion = CTransaction::LEGACY_VERSION_2;
-            nTime = 0;
         }
+        nTime = GetAdjustedTime();
         vin.clear();
         vout.clear();
         nLockTime = 0;
@@ -557,21 +507,7 @@ public:
 
     uint256 GetHash() const
     {
-        // DEBUG
-        if (nVersion < CTransaction::CURRENT_VERSION)
-        {
-            CTransactionLegacy txL;
-            txL.nVersion = nVersion;
-            txL.vin = vin;
-            txL.vout = vout;
-            txL.nLockTime = nLockTime;
-            txL.strTxComment = strTxComment;
-            return txL.GetHash();
-        }
-        else
-        {
             return SerializeHash(*this);
-        }
     }
 
     bool IsFinal(int nBlockHeight=0, int64_t nBlockTime=0) const
@@ -691,14 +627,6 @@ public:
         if (!filein)
             return error("CTransaction::ReadFromDisk() : OpenBlockFile failed");
 
-        // DEBUG
-        // Compensate for CURRENT_VERSION serialized data being one byte longer for nTime
-        //if (nBestHeight <= LAST_POW_BLOCK) pos.nTxPos += 1;
-        printf("*** DEBUG Relative nTxPos = %d\n", pos.nTxPos - pos.nBlockPos);
-        //int n = 20;
-        //pos.nTxPos += 10;
-        //while (n--) {
-
         // Read transaction
         if (fseek(filein, pos.nTxPos, SEEK_SET) != 0)
             return error("CTransaction::ReadFromDisk() : fseek failed");
@@ -709,12 +637,6 @@ public:
         catch (std::exception &e) {
             return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
         }
-
-        // DEBUG
-        //    if (this->nVersion == 2)
-        //        printf("FOUND nVersion at offset %d\n", pos.nTxPos);
-        //    pos.nTxPos--;
-        //}
 
         // Return file pointer
         if (pfileRet)
@@ -813,7 +735,6 @@ public:
 protected:
     const CTxOut& GetOutputFor(const CTxIn& input, const MapPrevTx& inputs) const;
 };
-
 
 
 
@@ -1140,6 +1061,10 @@ public:
         vMerkleTree.clear();
         vchBlockSig.clear();
         nDoS = 0;
+        if (nBestHeight > LAST_POW_BLOCK)
+            fLegacy = false;
+        else
+            fLegacy = true;
     }
 
     uint256 GetPoWHash() const
