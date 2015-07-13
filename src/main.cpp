@@ -2450,9 +2450,8 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
             return DoS(100, error("CheckBlock() : more than one coinbase"));
 
     // Check coinbase timestamp
-    if (IsProofOfStake())
-        if (GetBlockTime() > FutureDrift((int64_t)vtx[0].nTime))
-            return DoS(50, error("CheckBlock() : coinbase timestamp is too early"));
+    if (GetBlockTime() > FutureDrift((int64_t)vtx[0].nTime))
+        return DoS(50, error("CheckBlock() : coinbase timestamp is too early"));
 
     if (IsProofOfStake())
     {
@@ -3201,8 +3200,8 @@ bool LoadBlockIndex(bool fAllowNew)
         assert(block.CheckBlock());
 
         // Start new block file
-        unsigned int nFile;
-        unsigned int nBlockPos;
+        unsigned int nFile = -1;
+        unsigned int nBlockPos = 0;
         if (!block.WriteToDisk(nFile, nBlockPos))
             return error("LoadBlockIndex() : writing genesis block to disk failed");
         if (!block.AddToBlockIndex(nFile, nBlockPos))
@@ -4040,7 +4039,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         vRecv >> block;
 
         // DEBUG
-        if (nBestHeight >= 345 || nBestHeight < 2) {
+        if (nBestHeight >= 345) {
             printf("*** DEBUG BLOCK PRINT\n");
             block.print();
         }

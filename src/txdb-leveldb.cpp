@@ -278,7 +278,7 @@ bool CTxDB::ReadDiskTx(COutPoint outpoint, CTransaction& tx)
 
 bool CTxDB::WriteBlockIndex(const CDiskBlockIndex& blockindex)
 {
-    return Write(make_pair('b', blockindex.GetBlockHash()), blockindex);
+    return Write(make_pair(string("blockindex"), blockindex.GetBlockHash()), blockindex);
 }
 
 bool CTxDB::ReadHashBestChain(uint256& hashBestChain)
@@ -354,9 +354,8 @@ bool CTxDB::LoadBlockIndex()
     leveldb::Iterator *iterator = pdb->NewIterator(leveldb::ReadOptions());
     // Seek to start key.
     CDataStream ssStartKey(SER_DISK, CLIENT_VERSION);
-    ssStartKey << make_pair('b', uint256(0));
+    ssStartKey << make_pair(string("blockindex"), uint256(0));
     iterator->Seek(ssStartKey.str());
-
     // Now read each entry.
     while (iterator->Valid())
     {
@@ -365,10 +364,10 @@ bool CTxDB::LoadBlockIndex()
         ssKey.write(iterator->key().data(), iterator->key().size());
         CDataStream ssValue(SER_DISK, CLIENT_VERSION);
         ssValue.write(iterator->value().data(), iterator->value().size());
-        char chType;
-        ssKey >> chType;
+        string strType;
+        ssKey >> strType;
         // Did we reach the end of the data to read?
-        if (fRequestShutdown || chType != 'b')
+        if (fRequestShutdown || strType != "blockindex")
             break;
         CDiskBlockIndex diskindex;
         ssValue >> diskindex;
