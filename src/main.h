@@ -473,7 +473,6 @@ public:
     (
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
-        // DEBUG
         if(!fLegacy) {
         READWRITE(nTime);
         }
@@ -510,7 +509,10 @@ public:
 
     uint256 GetHash() const
     {
-            return SerializeHash(*this);
+        if (nBestHeight <= LAST_POW_BLOCK)
+            fLegacy = true;
+        return SerializeHash(*this);
+        fLegacy = false;
     }
 
     bool IsFinal(int nBlockHeight=0, int64_t nBlockTime=0) const
@@ -1064,10 +1066,6 @@ public:
         vMerkleTree.clear();
         vchBlockSig.clear();
         nDoS = 0;
-        if (nBestHeight > LAST_POW_BLOCK)
-            fLegacy = false;
-        else
-            fLegacy = true;
     }
 
     uint256 GetPoWHash() const
