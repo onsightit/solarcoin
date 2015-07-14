@@ -66,6 +66,8 @@ OBJS= \
     obj/checkpoints.o \
     obj/netbase.o \
     obj/addrman.o \
+    obj/bloom.o \
+    obj/hash.o \
     obj/crypter.o \
     obj/key.o \
     obj/db.o \
@@ -105,7 +107,7 @@ OBJS= \
     obj/zerocoin/SpendMetaData.o \
     obj/zerocoin/ZeroTest.o 
 
-all: vericoind.exe
+all: solarcoind.exe
 
 LIBS += leveldb/libleveldb.a leveldb/libmemenv.a
 DEFS += $(addprefix -I,leveldb/include)
@@ -127,11 +129,11 @@ obj/scrypt-x86.o: scrypt-x86.S
 obj/scrypt-x86_64.o: scrypt-x86_64.S
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 
-vericoind.exe: $(OBJS:obj/%=obj/%)
+solarcoind.exe: $(OBJS:obj/%=obj/%)
 	g++ $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 clean:
-	rm -f vericoind.exe
+	rm -f solarcoind.exe
 	rm -f obj/*.o	
 	rm -f obj/zerocoin/*.o
 	cd leveldb && make TARGET_OS=NATIVE_WINDOWS clean && cd ..
