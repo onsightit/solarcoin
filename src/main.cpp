@@ -209,7 +209,7 @@ bool AddOrphanTx(const CTransaction& tx)
     // 10,000 orphans, each of which is at most 5,000 bytes big is
     // at most 500 megabytes of orphans:
 
-    unsigned int nSize = tx.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
+    size_t nSize = tx.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
     if (nSize > 5000)
     {
         printf("ignoring large orphan tx (size: %"PRIszu", hash: %s)\n", nSize, hash.ToString().substr(0,10).c_str());
