@@ -18,8 +18,6 @@
 
 #include <boost/type_traits/is_fundamental.hpp>
 #include <boost/tuple/tuple.hpp>
-#include <boost/tuple/tuple_comparison.hpp>
-#include <boost/tuple/tuple_io.hpp>
 
 #include "allocators.h"
 #include "version.h"
@@ -116,8 +114,8 @@ inline unsigned int GetSerializeSize(signed int a,         int, int=0) { return 
 inline unsigned int GetSerializeSize(unsigned int a,       int, int=0) { return sizeof(a); }
 inline unsigned int GetSerializeSize(signed long a,        int, int=0) { return sizeof(a); }
 inline unsigned int GetSerializeSize(unsigned long a,      int, int=0) { return sizeof(a); }
-inline unsigned int GetSerializeSize(int64_t a,          int, int=0) { return sizeof(a); }
-inline unsigned int GetSerializeSize(uint64_t a,         int, int=0) { return sizeof(a); }
+inline unsigned int GetSerializeSize(signed long long a,   int, int=0) { return sizeof(a); }
+inline unsigned int GetSerializeSize(unsigned long long a, int, int=0) { return sizeof(a); }
 inline unsigned int GetSerializeSize(float a,              int, int=0) { return sizeof(a); }
 inline unsigned int GetSerializeSize(double a,             int, int=0) { return sizeof(a); }
 
@@ -130,8 +128,8 @@ template<typename Stream> inline void Serialize(Stream& s, signed int a,        
 template<typename Stream> inline void Serialize(Stream& s, unsigned int a,       int, int=0) { WRITEDATA(s, a); }
 template<typename Stream> inline void Serialize(Stream& s, signed long a,        int, int=0) { WRITEDATA(s, a); }
 template<typename Stream> inline void Serialize(Stream& s, unsigned long a,      int, int=0) { WRITEDATA(s, a); }
-template<typename Stream> inline void Serialize(Stream& s, int64_t a,          int, int=0) { WRITEDATA(s, a); }
-template<typename Stream> inline void Serialize(Stream& s, uint64_t a,         int, int=0) { WRITEDATA(s, a); }
+template<typename Stream> inline void Serialize(Stream& s, signed long long a,   int, int=0) { WRITEDATA(s, a); }
+template<typename Stream> inline void Serialize(Stream& s, unsigned long long a, int, int=0) { WRITEDATA(s, a); }
 template<typename Stream> inline void Serialize(Stream& s, float a,              int, int=0) { WRITEDATA(s, a); }
 template<typename Stream> inline void Serialize(Stream& s, double a,             int, int=0) { WRITEDATA(s, a); }
 
@@ -144,8 +142,8 @@ template<typename Stream> inline void Unserialize(Stream& s, signed int& a,     
 template<typename Stream> inline void Unserialize(Stream& s, unsigned int& a,       int, int=0) { READDATA(s, a); }
 template<typename Stream> inline void Unserialize(Stream& s, signed long& a,        int, int=0) { READDATA(s, a); }
 template<typename Stream> inline void Unserialize(Stream& s, unsigned long& a,      int, int=0) { READDATA(s, a); }
-template<typename Stream> inline void Unserialize(Stream& s, int64_t& a,          int, int=0) { READDATA(s, a); }
-template<typename Stream> inline void Unserialize(Stream& s, uint64_t& a,         int, int=0) { READDATA(s, a); }
+template<typename Stream> inline void Unserialize(Stream& s, signed long long& a,   int, int=0) { READDATA(s, a); }
+template<typename Stream> inline void Unserialize(Stream& s, unsigned long long& a, int, int=0) { READDATA(s, a); }
 template<typename Stream> inline void Unserialize(Stream& s, float& a,              int, int=0) { READDATA(s, a); }
 template<typename Stream> inline void Unserialize(Stream& s, double& a,             int, int=0) { READDATA(s, a); }
 
@@ -808,7 +806,7 @@ typedef std::vector<char, zero_after_free_allocator<char> > CSerializeData;
 class CDataStream
 {
 protected:
-    typedef CSerializeData vector_type;
+    typedef std::vector<char, zero_after_free_allocator<char> > vector_type;
     vector_type vch;
     unsigned int nReadPos;
     short state;
