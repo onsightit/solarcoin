@@ -40,9 +40,9 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     this->layout()->setContentsMargins(10, 10 + HEADER_HEIGHT, 10, 10);
     this->resize(HEADER_WIDTH, WINDOW_MIN_HEIGHT - HEADER_HEIGHT - STATUSBAR_HEIGHT);
 
-    ui->labelExplanation->setFont(veriFontSmaller);
+    ui->labelExplanation->setFont(qFontSmaller);
     ui->tableView->viewport()->setAttribute(Qt::WA_Hover, true);
-    ui->tableView->setFont(veriFont);
+    ui->tableView->setFont(qFont);
 
 #ifndef USE_QRCODE
     ui->showQRCode->setVisible(false);

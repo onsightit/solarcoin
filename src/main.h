@@ -92,9 +92,7 @@ extern bool fUseFastIndex;
 extern unsigned int nDerivationMethodIndex;
 
 extern bool fEnforceCanonical;
-
-// DEBUG
-extern bool fLegacy;
+extern bool fLegacyHash;
 
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64_t nMinDiskSpace = 52428800;
@@ -473,7 +471,7 @@ public:
     (
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
-        if(!fLegacy) {
+        if(!fLegacyHash) {
         READWRITE(nTime);
         }
         READWRITE(vin);
@@ -510,9 +508,9 @@ public:
     uint256 GetHash() const
     {
         if (nBestHeight <= LAST_POW_BLOCK)
-            fLegacy = true;
+            fLegacyHash = true;
         return SerializeHash(*this);
-        fLegacy = false;
+        fLegacyHash = false;
     }
 
     bool IsFinal(int nBlockHeight=0, int64_t nBlockTime=0) const
@@ -1032,11 +1030,11 @@ public:
     // network and disk
     std::vector<CTransaction> vtx;
 
-    // memory only
-    mutable std::vector<uint256> vMerkleTree;
-
     // ppcoin: block signature - signed by one of the coin base txout[N]'s owner
     std::vector<unsigned char> vchBlockSig;
+
+    // memory only
+    mutable std::vector<uint256> vMerkleTree;
 
     // Denial-of-service detection:
     mutable int nDoS;
@@ -1056,21 +1054,36 @@ public:
     IMPLEMENT_SERIALIZE
     (
         READWRITE(*(CBlockHeader*)this);
-        READWRITE(vtx);
+        // ConnectBlock depends on vtx following header to generate CDiskTxPos
+        if (!(nType & (SER_GETHASH|SER_BLOCKHEADERONLY)))
+        {
+            READWRITE(vtx);
+            if(!fLegacyHash) {
+            READWRITE(vchBlockSig);
+            }
+        }
+        else if (fRead)
+        {
+            const_cast<CBlock*>(this)->vtx.clear();
+            const_cast<CBlock*>(this)->vchBlockSig.clear();
+        }
     )
 
     void SetNull()
     {
         CBlockHeader::SetNull();
         vtx.clear();
-        vMerkleTree.clear();
         vchBlockSig.clear();
+        vMerkleTree.clear();
         nDoS = 0;
     }
 
     uint256 GetPoWHash() const
     {
+        if (nBestHeight <= LAST_POW_BLOCK)
+            fLegacyHash = true;
         return scrypt_blockhash(CVOIDBEGIN(nVersion));
+        fLegacyHash = false;
     }
 
     // ppcoin: entropy bit for stake modifier if chosen by modifier
@@ -1232,7 +1245,7 @@ public:
 
     void print() const
     {
-        printf("CBlock(hash=%s, input=%s, PoW=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%"PRIszu")\n",
+        printf("CBlock(hash=%s, input=%s, PoW=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%"PRIszu", vchBlockSig=%s)\n",
             GetHash().ToString().c_str(),
             HexStr(BEGIN(nVersion),BEGIN(nVersion)+80,false).c_str(),
             GetPoWHash().ToString().c_str(),
@@ -1240,7 +1253,8 @@ public:
             hashPrevBlock.ToString().c_str(),
             hashMerkleRoot.ToString().c_str(),
             nTime, nBits, nNonce,
-            vtx.size());
+            vtx.size(),
+            HexStr(vchBlockSig.begin(), vchBlockSig.end()).c_str());
         for (unsigned int i = 0; i < vtx.size(); i++)
         {
             printf("  ");

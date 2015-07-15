@@ -104,7 +104,7 @@ TransactionView::TransactionView(QWidget *parent) :
     vlayout->setSpacing(0);
 
     QTableView *view = new QTableView(this);
-    view->setFont(veriFont);
+    view->setFont(qFont);
     view->setMouseTracking(true);
     view->viewport()->setAttribute(Qt::WA_Hover, true);
     view->horizontalHeader()->setHighlightSections(false);
@@ -127,7 +127,7 @@ TransactionView::TransactionView(QWidget *parent) :
     transactionView = view;
 
     totalWidget = new QLabel(this);
-    totalWidget->setFont(veriFont);
+    totalWidget->setFont(qFont);
     totalWidget->setAlignment(Qt::AlignBottom | Qt::AlignRight);
     totalWidget->setLayoutDirection(Qt::RightToLeft);
     totalWidget->setFixedHeight(27);

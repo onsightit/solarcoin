@@ -478,10 +478,10 @@
         <bool>false</bool>
        </property>
        <property name="alignment">
-        <set>Qt::AlignCenter</set>
+        <set>Qt::AlignHCenter|Qt::AlignTop</set>
        </property>
        <property name="margin">
-        <number>90</number>
+        <number>10</number>
        </property>
       </widget>
      </item>

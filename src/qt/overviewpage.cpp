@@ -127,17 +127,17 @@ OverviewPage::OverviewPage(QWidget *parent) :
         ui->gridLayout_3->layout()->setContentsMargins(0, 10, 10, 0);
     }
 
-    ui->labelBalance->setFont(veriFontLargerBold);
-    ui->labelTransactions->setFont(veriFontLargerBold);
+    ui->labelBalance->setFont(qFontLargerBold);
+    ui->labelTransactions->setFont(qFontLargerBold);
 
-    ui->labelSpendableText->setFont(veriFont);
-    ui->labelSpendable->setFont(veriFont);
-    ui->labelStakeText->setFont(veriFont);
-    ui->labelStake->setFont(veriFont);
-    ui->labelUnconfirmedText->setFont(veriFont);
-    ui->labelUnconfirmed->setFont(veriFont);
-    ui->labelTotalText->setFont(veriFont);
-    ui->labelTotal->setFont(veriFont);
+    ui->labelSpendableText->setFont(qFont);
+    ui->labelSpendable->setFont(qFont);
+    ui->labelStakeText->setFont(qFont);
+    ui->labelStake->setFont(qFont);
+    ui->labelUnconfirmedText->setFont(qFont);
+    ui->labelUnconfirmed->setFont(qFont);
+    ui->labelTotalText->setFont(qFont);
+    ui->labelTotal->setFont(qFont);
 
     // Add icons to the Balance section
     ui->labelSpendableText->setText("<html><img src=':icons/spendable' width=16 height=16 border=0 align='bottom'> Spendable:</html>");
@@ -152,9 +152,9 @@ OverviewPage::OverviewPage(QWidget *parent) :
     ui->listTransactions->setAttribute(Qt::WA_MacShowFocusRect, false);
     ui->listTransactions->setMouseTracking(true);
     ui->listTransactions->viewport()->setAttribute(Qt::WA_Hover, true);
-    ui->listTransactions->setStyleSheet("QListView { background: white; color: " + STRING_VERIFONT + "; border-radius: 10px; border: 0; padding-right: 10px; padding-bottom: 5px; } \
+    ui->listTransactions->setStyleSheet("QListView { background: white; color: " + STR_FONT_COLOR + "; border-radius: 10px; border: 0; padding-right: 10px; padding-bottom: 5px; } \
                                          QListView::hover { background: qlineargradient(x1: 0, y1: 1, x2: 0, y2: 0, stop: 0 #fafbfe, stop: 1 #ECF3FA); }");
-    ui->listTransactions->setFont(veriFont);
+    ui->listTransactions->setFont(qFont);
 
     connect(ui->listTransactions, SIGNAL(clicked(QModelIndex)), this, SLOT(handleTransactionClicked(QModelIndex)));
 

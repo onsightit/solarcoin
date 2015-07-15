@@ -123,7 +123,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     QFontDatabase::addApplicationFont(":fonts/Lato-Bold");
     QFontDatabase::addApplicationFont(":fonts/Lato-Regular");
     GUIUtil::setFontPixelSizes();
-    qApp->setFont(veriFont);
+    qApp->setFont(qFont);
 
     setWindowTitle(tr("SolarCoin Wallet"));
     setWindowIcon(QIcon(":icons/bitcoin"));
@@ -166,11 +166,11 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     receiveCoinsPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::ReceivingTab);
     // Re-set Header and styles for Receive (Default is headerAddress)
     if (fNoHeaders)
-        receiveCoinsPage->findChild<QGraphicsView *>("header")->setStyleSheet("QGraphicsView { background-color: " + STRING_VERIBLUE + "; }");
+        receiveCoinsPage->findChild<QGraphicsView *>("header")->setStyleSheet("QGraphicsView { background-color: " + STR_COLOR + "; }");
     else if (fSmallHeaders)
-        receiveCoinsPage->findChild<QGraphicsView *>("header")->setStyleSheet("QGraphicsView { background: url(:images/headerReceiveSmall) no-repeat 0px 0px; border: none; background-color: " + STRING_VERIBLUE + "; }");
+        receiveCoinsPage->findChild<QGraphicsView *>("header")->setStyleSheet("QGraphicsView { background: url(:images/headerReceiveSmall) no-repeat 0px 0px; border: none; background-color: " + STR_COLOR + "; }");
     else
-        receiveCoinsPage->findChild<QGraphicsView *>("header")->setStyleSheet("QGraphicsView { background: url(:images/headerReceive) no-repeat 0px 0px; border: none; background-color: " + STRING_VERIBLUE + "; }");
+        receiveCoinsPage->findChild<QGraphicsView *>("header")->setStyleSheet("QGraphicsView { background: url(:images/headerReceive) no-repeat 0px 0px; border: none; background-color: " + STR_COLOR + "; }");
 
     // Create History Page
     transactionsPage = new TransactionsPage();
@@ -217,12 +217,12 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     // Create status bar
     statusBar();
     statusBar()->setContentsMargins(STATUSBAR_MARGIN,0,0,0);
-    statusBar()->setFont(veriFontSmall);
+    statusBar()->setFont(qFontSmall);
     statusBar()->setFixedHeight(STATUSBAR_HEIGHT);
 
     QFrame *versionBlocks = new QFrame();
     versionBlocks->setContentsMargins(0,0,0,0);
-    versionBlocks->setFont(veriFontSmall);
+    versionBlocks->setFont(qFontSmall);
 
     versionBlocks->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
     QHBoxLayout *versionBlocksLayout = new QHBoxLayout(versionBlocks);
@@ -235,9 +235,9 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     versionLabel = new QLabel();
     versionLabel->setContentsMargins(0,0,0,0);
     if (!STATUSBAR_MARGIN)
-        versionLabel->setFont(veriFontSmallest);
+        versionLabel->setFont(qFontSmallest);
     else
-        versionLabel->setFont(veriFontSmaller);
+        versionLabel->setFont(qFontSmaller);
     versionLabel->setFixedWidth(TOOLBAR_WIDTH - STATUSBAR_MARGIN - (versionBlocksLayout->spacing() * 3) - labelVersionIcon->pixmap()->width());
     versionLabel->setText(tr("Version %1").arg(FormatVersion(CLIENT_VERSION).c_str()));
     versionLabel->setStyleSheet("QLabel { color: white; }");
@@ -246,19 +246,19 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     versionBlocksLayout->addWidget(versionLabel);
 
     balanceLabel = new QLabel();
-    balanceLabel->setFont(veriFontSmall);
+    balanceLabel->setFont(qFontSmall);
     balanceLabel->setText(QString(""));
     balanceLabel->setFixedWidth(FRAMEBLOCKS_LABEL_WIDTH);
 
     stakingLabel = new QLabel();
-    stakingLabel->setFont(veriFontSmall);
+    stakingLabel->setFont(qFontSmall);
     stakingLabel->setText(QString("Syncing..."));
     QFontMetrics fm(stakingLabel->font());
     int labelWidth = fm.width(stakingLabel->text());
     stakingLabel->setFixedWidth(labelWidth + 10);
 
     connectionsLabel= new QLabel();
-    connectionsLabel->setFont(veriFontSmall);
+    connectionsLabel->setFont(qFontSmall);
     connectionsLabel->setText(QString("Connecting..."));
     connectionsLabel->setFixedWidth(FRAMEBLOCKS_LABEL_WIDTH);
 
@@ -267,14 +267,14 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     labelStakingIcon = new QLabel();
     labelStakingIcon->setVisible(false);
     labelConnectionsIcon = new QLabel();
-    labelConnectionsIcon->setFont(veriFontSmall);
+    labelConnectionsIcon->setFont(qFontSmall);
     labelBlocksIcon = new QLabel();
     labelBlocksIcon->setVisible(true);
     labelBlocksIcon->setPixmap(QIcon(":/icons/notsynced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
 
     QFrame *frameBlocks = new QFrame();
     frameBlocks->setContentsMargins(0,0,0,0);
-    frameBlocks->setFont(veriFontSmall);
+    frameBlocks->setFont(qFontSmall);
     frameBlocks->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
     frameBlocks->setStyleSheet("QFrame { color: white; }");
     QHBoxLayout *frameBlocksLayout = new QHBoxLayout(frameBlocks);
@@ -295,9 +295,9 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     // Progress bar and label for blocks download
     progressBar = new QProgressBar();
     progressBar->setContentsMargins(0,0,0,0);
-    progressBar->setFont(veriFontSmall);
+    progressBar->setFont(qFontSmall);
     progressBar->setMinimumWidth(550);
-    progressBar->setStyleSheet("QProgressBar::chunk { background: " + STRING_VERIBLUE_LT + "; } QProgressBar { color: black; border-color: " + STRING_VERIBLUE_LT + "; margin: 3px; margin-right: 13px; border-width: 1px; border-style: solid; }");
+    progressBar->setStyleSheet("QProgressBar::chunk { background: " + STR_COLOR_LT + "; } QProgressBar { color: black; border-color: " + STR_COLOR_LT + "; margin: 3px; margin-right: 13px; border-width: 1px; border-style: solid; }");
     progressBar->setAlignment(Qt::AlignCenter);
     // Override style sheet for progress bar for styles that have a segmented progress bar,
     // as they make the text unreadable (workaround for issue #1071)
@@ -305,7 +305,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     QString curStyle = qApp->style()->metaObject()->className();
     if(curStyle == "QWindowsStyle" || curStyle == "QWindowsXPStyle")
     {
-        progressBar->setStyleSheet("QProgressBar { background: white; color: black; border: 0px; padding: 1px; text-align: center; } QProgressBar::chunk { background: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #FF8000, stop: 1 " + STRING_VERIBLUE_LT + "); border-radius: 7px; margin: 0px; }");
+        progressBar->setStyleSheet("QProgressBar { background: white; color: black; border: 0px; padding: 1px; text-align: center; } QProgressBar::chunk { background: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #FF8000, stop: 1 " + STR_COLOR_LT + "); border-radius: 7px; margin: 0px; }");
     }
     progressBar->setVisible(true);
 
@@ -549,11 +549,11 @@ void BitcoinGUI::createMenuBar()
     // Get the main window's menu bar on other platforms
     appMenuBar = menuBar();
 #endif
-	appMenuBar->setFont(veriFont);
+	appMenuBar->setFont(qFont);
 
     // Configure the menus
     QMenu *file = appMenuBar->addMenu(tr("&File"));
-    file->setFont(veriFont);
+    file->setFont(qFont);
     file->addAction(backupWalletAction);
     file->addAction(exportAction);
     file->addAction(rescanWalletAction);
@@ -566,7 +566,7 @@ void BitcoinGUI::createMenuBar()
     file->addAction(quitAction);
 
     QMenu *settings = appMenuBar->addMenu(tr("&Settings"));
-    settings->setFont(veriFont);
+    settings->setFont(qFont);
     settings->addAction(lockWalletAction);
     settings->addAction(unlockWalletAction);
     settings->addAction(changePassphraseAction);
@@ -574,7 +574,7 @@ void BitcoinGUI::createMenuBar()
     settings->addAction(optionsAction);
 
     QMenu *help = appMenuBar->addMenu(tr("&Help"));
-    help->setFont(veriFont);
+    help->setFont(qFont);
     help->addAction(openRPCConsoleAction);
     help->addSeparator();
     help->addAction(webAction);

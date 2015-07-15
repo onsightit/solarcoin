@@ -22,18 +22,18 @@ Downloader::Downloader(QWidget *parent, WalletModel *walletModel) :
     this->setFixedWidth(480);
 
     ui->setupUi(this);
-    ui->urlEdit->setFont(veriFont);
+    ui->urlEdit->setFont(qFont);
     ui->urlEdit->setText("");
     ui->statusLabel->setWordWrap(true);
-    ui->statusLabel->setFont(veriFont);
+    ui->statusLabel->setFont(qFont);
     ui->downloadButton->setAutoDefault(false);
     ui->continueButton->setAutoDefault(false);
     ui->quitButton->setAutoDefault(false);
 
     // Progress bar and label for blockchain download/extract, and auto update
-    ui->progressBarLabel->setFont(veriFont);
+    ui->progressBarLabel->setFont(qFont);
     ui->progressBarLabel->setText(tr("Status:"));
-    ui->progressBar->setFont(veriFont);
+    ui->progressBar->setFont(qFont);
     ui->progressBar->setValue(0);
 
     // Create a timer to handle hung download requests

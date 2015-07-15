@@ -19,9 +19,9 @@ WhatsNewDialog::WhatsNewDialog(QWidget *parent) :
     std::string version = "NEW IN " + GetArg("-vVersion", "0.0");
     ui->setupUi(this);
 
-    ui->title->setFont(veriFontLarge);
+    ui->title->setFont(qFontLarge);
     ui->title->setText(title.c_str());
-    ui->description->setFont(veriFont);
+    ui->description->setFont(qFont);
     ui->description->setText(version.append(": ").append(description).c_str());
 }
 

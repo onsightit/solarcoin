@@ -13,7 +13,7 @@ AboutDialog::AboutDialog(QWidget *parent) :
     ui(new Ui::AboutDialog)
 {
     ui->setupUi(this);
-    ui->label_2->setFont(veriFontSmall);
+    ui->label_2->setFont(qFontSmall);
 }
 
 void AboutDialog::setModel(ClientModel *model)

@@ -14,7 +14,7 @@ PostDialog::PostDialog(QWidget *parent) :
     ui(new Ui::PostDialog)
 {
     ui->setupUi(this);
-    ui->description->setFont(veriFont);
+    ui->description->setFont(qFont);
 }
 
 void PostDialog::setModel(ClientModel *model)

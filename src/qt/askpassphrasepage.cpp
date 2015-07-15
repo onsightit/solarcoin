@@ -24,7 +24,7 @@ AskPassphrasePage::AskPassphrasePage(Mode mode, QWidget *parent) :
     this->setStyleSheet(GUIUtil::veriAskPassphrasePageStyleSheet);
 
     ui->formLayout->setContentsMargins(220, 320 + HEADER_HEIGHT, 220, 0);
-    ui->messageLabel->setFont(veriFontBold);
+    ui->messageLabel->setFont(qFontBold);
     ui->passEdit1->setMaxLength(MAX_PASSPHRASE_SIZE);
     ui->passEdit2->setMaxLength(MAX_PASSPHRASE_SIZE);
     ui->passEdit3->setMaxLength(MAX_PASSPHRASE_SIZE);

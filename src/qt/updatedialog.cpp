@@ -20,9 +20,9 @@ UpdateDialog::UpdateDialog(QWidget *parent) :
     std::string postreq = std::string("\nPost-Install Notes: ").append((GetBoolArg("-vBootstrap") ? "Auto Bootstrap will run after the installation." : "Bootstrapping is not required."));
     ui->setupUi(this);
 
-    ui->title->setFont(veriFontLarge);
+    ui->title->setFont(qFontLarge);
     ui->title->setText(title.c_str());
-    ui->description->setFont(veriFont);
+    ui->description->setFont(qFont);
     ui->description->setText(version.append(": ").append(description).append(postreq).append("\n\nPress OK to download the update.").c_str());
 }
 

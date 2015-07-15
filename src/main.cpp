@@ -50,8 +50,7 @@ unsigned int nTargetSpacing = 1 * 60; // 1 minute
 unsigned int nStakeMinAge = 8 * 60 * 60; // 8 hours
 unsigned int nModifierInterval = 10 * 60; // time to elapse before new modifier is computed
 
-// DEBUG
-bool fLegacy = false;
+bool fLegacyHash = false;
 
 int nCoinbaseMaturity = 500;
 int nCoinbaseMaturity_PoW = 10;
@@ -1736,9 +1735,6 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
 
         if (!IsCoinStake())
         {
-            // DEBUG
-            int64_t nValueOut = GetValueOut();
-
             if (nValueIn < GetValueOut())
                 return DoS(100, error("ConnectInputs() : %s value in < value out", GetHash().ToString().substr(0,10).c_str()));
 
@@ -1747,9 +1743,12 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
             if (nTxFee < 0)
                 return DoS(100, error("ConnectInputs() : %s nTxFee < 0", GetHash().ToString().substr(0,10).c_str()));
 
+            /* Fees can be 0 (limited number of free blocks) in the old SolarCoin PoW.
+             * We won't enforce it in 2.0 (PoST version)
             // enforce transaction fees for every block
             if (nTxFee < GetMinFee())
                 return fBlock? DoS(100, error("ConnectInputs() : %s not paying required fee=%s, paid=%s", GetHash().ToString().substr(0,10).c_str(), FormatMoney(GetMinFee()).c_str(), FormatMoney(nTxFee).c_str())) : false;
+            */
 
             nFees += nTxFee;
             if (!MoneyRange(nFees))
@@ -1838,14 +1837,13 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
     if (!CheckBlock(!fJustCheck, !fJustCheck, false))
         return false;
 
-    //// issue here: it doesn't know the version
     unsigned int nTxPos;
     if (fJustCheck)
         // FetchInputs treats CDiskTxPos(1,1,1) as a special "refer to memorypool" indicator
         // Since we're just checking the block and not actually connecting it, it might not (and probably shouldn't) be on the disk to get the transaction from
         nTxPos = 1;
     else
-        nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK, CLIENT_VERSION) - (2 * GetSizeOfCompactSize(0)) + GetSizeOfCompactSize(vtx.size());
+        nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK, CLIENT_VERSION);
 
     map<uint256, CTxIndex> mapQueuedChanges;
     int64_t nFees = 0;
@@ -1928,15 +1926,14 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
         mapQueuedChanges[hashTx] = CTxIndex(posThisTx, tx.vout.size());
     }
 
-    // DEBUG
-    printf("DEBUG *** ConnectBlock: nValueIn = %d, nValueOut = %d\n",nValueIn,nValueOut);
+    //printf("*** DEBUG *** ConnectBlock: nValueIn=%"PRIu64", nValueOut=%"PRIu64"\n", nValueIn, nValueOut);
 
     if (IsProofOfWork())
     {
         int64_t nReward = GetProofOfWorkReward(nFees);
         // Check coinbase reward
         if (vtx[0].GetValueOut() > nReward)
-            return DoS(50, error("ConnectBlock() : coinbase reward exceeded (actual=%"PRId64" vs calculated=%"PRId64")",
+            return DoS(50, error("ConnectBlock() : coinbase reward exceeded (actual=%"PRIu64" vs calculated=%"PRIu64")",
                    vtx[0].GetValueOut(),
                    nReward));
     }
@@ -3191,9 +3188,8 @@ bool LoadBlockIndex(bool fAllowNew)
         block.print();
 
         //// debug print
-        uint256 hash = block.GetHash();
-        printf("block hash   = %s\n", hash.ToString().c_str());
         printf("block merkel = %s\n", block.hashMerkleRoot.ToString().c_str());
+        printf("block hash   = %s\n", block.GetHash().ToString().c_str());
 
         assert(block.hashMerkleRoot == uint256("0x33ecdb1985425f576c65e2c85d7983edc6207038a2910fefaf86cfb4e53185a3"));
         assert(block.GetHash() == (!fTestNet ? hashGenesisBlock : hashGenesisBlockTestNet));
@@ -4032,17 +4028,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     else if (strCommand == "block")
     {
-        // Depending on the value of the global flag fLegacy (true or false),
-        // the block will be created with LEGACY_VERSION_V2 transactions,
-        // or CURRENT_VERSION transactions.
+        // Depending on the value of the global flag fLegacyHash (true or false),
+        // the block will be created with LEGACY_VERSION_V2 hashes.
         CBlock block;
         vRecv >> block;
-
-        // DEBUG
-        if (nBestHeight >= 345) {
-            printf("*** DEBUG BLOCK PRINT\n");
-            block.print();
-        }
 
         printf("received block %s\n", block.GetHash().ToString().c_str());
         // block.print();

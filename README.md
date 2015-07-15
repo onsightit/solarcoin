@@ -6,7 +6,8 @@ http://www.solarcoin.org
 
 Copyright (c) 2009-2014 Bitcoin Developers
 Copyright (c) 2011-2014 Litecoin Developers
-Copyright (c) 2014 SolarCoin Developers
+Copyright (c) 2014-2015 VeriCoin Developers
+Copyright (c) 2014-2015 SolarCoin Developers
 
 What is SolarCoin?
 ----------------
