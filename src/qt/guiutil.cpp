@@ -152,7 +152,7 @@ QString veriToolBarStyleSheet = QString("QToolBar { background: " + STR_COLOR + 
                             QToolButton:pressed { background: " + STR_COLOR_LT + "; color: white; border: none; } \
                             QToolButton:checked { background: " + STR_COLOR_LT + "; color: white; border: none; } ");
 
-QString veriToolTipStyleSheet = QString("QToolTip { background-color: " + STR_COLOR_LT + "; color: white; border: 1px solid #EBEBEB; border-radius: 3px; margin: 0; padding: 4px; white-space: nowrap; } ");
+QString veriToolTipStyleSheet = QString("QToolTip { background-color: " + STR_COLOR_TTBG + "; color: white; border: 1px solid #EBEBEB; border-radius: 3px; margin: 0; padding: 4px; white-space: nowrap; } ");
 
 QString veriMiscStyleSheet = QString("QStatusBar { background: " + STR_COLOR + "; color: white; } QStatusBar::item { border: none; } QDialog { background: white; color: " + STR_FONT_COLOR + "; } QTableView::item:hover { background: #EBEBEB; color: " + STR_FONT_COLOR + "; } ");
 

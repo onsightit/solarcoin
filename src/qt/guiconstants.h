@@ -27,6 +27,7 @@ static const int MAX_PASSPHRASE_SIZE = 1024;
 #define STR_COLOR QString("#6b4e13")
 #define STR_COLOR_LT QString("#e9d785")
 #define STR_COLOR_HOVER QString("#3a2d09")
+#define STR_COLOR_TTBG QString("#6b4e13")
 #define STR_FONT_COLOR QString("#444748")
 
 #ifdef Q_OS_MAC
