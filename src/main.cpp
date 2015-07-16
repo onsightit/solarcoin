@@ -1105,7 +1105,7 @@ static const int64_t nHeight_Version2 = 208440;
 static const int64_t nInterval_Version2 = 15;
 static const int64_t nTargetTimespan_Version2 = nInterval_Version2 * nTargetSpacing; // 10 minutes
 
-/* DEBUG
+/* (See below)
 //
 // maximum nBits value could possible be required nTime after
 //
@@ -1132,7 +1132,6 @@ unsigned int ComputeMaxBits(CBigNum bnTargetLimit, unsigned int nBase, int64_t n
 //
 unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
 {
-    // DEBUG return ComputeMaxBits(bnProofOfWorkLimit, nBase, nTime);
     // Testnet has min-difficulty blocks
     // after nTargetSpacing*2 time between blocks:
     if (fTestNet && nTime > nTargetSpacing*2)
@@ -1157,7 +1156,6 @@ unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
 //
 unsigned int ComputeMinStake(unsigned int nBase, int64_t nTime, unsigned int nBlockTime)
 {
-    // DEBUG return ComputeMaxBits(bnProofOfStakeLimit, nBase, nTime);
     CBigNum bnResult;
     bnResult.SetCompact(nBase);
     bnResult *= 2;
@@ -2728,7 +2726,6 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         Checkpoints::AskForPendingSyncCheckpoint(pfrom);
 
     // If don't already have its previous block, shunt it off to holding area until we get it
-    // DEBUG if (!mapBlockIndex.count(pblock->hashPrevBlock))
     if (pblock->hashPrevBlock != 0 && !mapBlockIndex.count(pblock->hashPrevBlock))
     {
         printf("ProcessBlock: ORPHAN BLOCK, prev=%s\n", pblock->hashPrevBlock.ToString().substr(0,20).c_str());
@@ -3226,8 +3223,8 @@ bool LoadBlockIndex(bool fAllowNew)
         assert(block.CheckBlock());
 
         // Start new block file
-        unsigned int nFile = -1;
-        unsigned int nBlockPos = 0;
+        unsigned int nFile;
+        unsigned int nBlockPos;
         if (!block.WriteToDisk(nFile, nBlockPos))
             return error("LoadBlockIndex() : writing genesis block to disk failed");
         if (!block.AddToBlockIndex(nFile, nBlockPos))
