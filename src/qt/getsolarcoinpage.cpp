@@ -56,6 +56,6 @@ void GetSolarCoinPage::setModel(WalletModel *model)
 {
     this->walletModel = model;
 
-    QUrl url(QString(walletUrl).append("wallet/getsolarcoin.php?v=").append(FormatVersion(CLIENT_VERSION).c_str()));
+    QUrl url(QString(walletUrl).append("wallet/getsolarcoin.html"));
     ui->webView->myOpenUrl(url);
 }
