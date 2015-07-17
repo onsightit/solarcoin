@@ -875,13 +875,11 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
         tooltip = tr("Downloaded %1 blocks of transaction history.").arg(count);
     }
 
-    // Show a warning message if on wrong protocol version
-    char pv[10];
-    sprintf(pv, "%d", PROTOCOL_VERSION);
-    if (GetArg("-vProtocol","").compare("") && GetArg("-vProtocol","0").compare(pv) && !progressBar->isVisible() && strStatusBarWarnings.isEmpty() && !clientModel->isTestNet())
+    // Show a warning message if out of sync more than 500 blocks but not if more than 5000.
+    int countDiff = nTotalBlocks - count;
+    if ((countDiff > 500 && countDiff < 5000) && !fBootstrapTurbo && strStatusBarWarnings.isEmpty() && !clientModel->isTestNet())
     {
-        // Warn for wrong protocol version.
-        strStatusBarWarnings = tr("Wrong protocol version detected: %1 Check for update.").arg(GetArg("-vProtocol","").c_str());
+        strStatusBarWarnings = tr("Go to File->Reload Blockchain to speed up or fix syncing issues.");
     }
 
     // Override progressBar text when we have warnings to display
