@@ -80,7 +80,7 @@ map<string, vector<string> > mapMultiArgs;
 const char *walletUrl = "http://solarcoin.org/";
 const char *walletDownloadsUrl = "http://solarcoin.org/downloads/";
 const char *forumsUrl = "https://bitcointalk.org/index.php?topic=785257.0";
-const char *blockchainUrl = "https://chainz.cryptoid.info/slr/";
+const char *blockchainUrl = "http://blockexplorer.solarcoin.org/";
 bool fRestart = false;
 bool fBootstrapTurbo = false;
 bool fRescan = false;

@@ -19,7 +19,7 @@ WebView::WebView(QWidget *parent) :
     QWebView(parent)
 {
     // These will get appended to by the values in VERSION.json
-    trustedUrls << "www.solarcoin.org" << "solarcoin.org" << "blockchain.solarcoin.org" << "chainz.cryptoid.info" << "bitcointalk.org";
+    trustedUrls << "www.solarcoin.org" << "solarcoin.org" << "blockexplorer.solarcoin.org" << "bitcointalk.org";
     fTrustedUrlsSet = false;
 }
 

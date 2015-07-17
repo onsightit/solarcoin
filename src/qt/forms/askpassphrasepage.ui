@@ -56,9 +56,12 @@
       <number>250</number>
      </property>
      <property name="topMargin">
-      <number>480</number>
+      <number>250</number>
      </property>
      <property name="rightMargin">
+      <number>250</number>
+     </property>
+     <property name="bottomMargin">
       <number>250</number>
      </property>
      <item row="1" column="1">
@@ -162,7 +165,7 @@
        <property name="sizeHint" stdset="0">
         <size>
          <width>20</width>
-         <height>150</height>
+         <height>100</height>
         </size>
        </property>
       </spacer>

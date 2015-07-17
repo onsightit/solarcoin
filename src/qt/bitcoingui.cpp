@@ -186,7 +186,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     addressBookPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::AddressBookTab);
 
     // Create GetSolarCoin Page
-    getSolarCoinPage = new GetSolarCoinPage();
+    //getSolarCoinPage = new GetSolarCoinPage();
 
     // Create Forums Page
     forumsPage = new ForumsPage();
@@ -208,7 +208,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     centralWidget->addWidget(transactionsPage);
     centralWidget->addWidget(receiveCoinsPage);
     centralWidget->addWidget(sendCoinsPage);
-    centralWidget->addWidget(getSolarCoinPage);
+    //centralWidget->addWidget(getSolarCoinPage);
     centralWidget->addWidget(forumsPage);
     centralWidget->addWidget(chatPage);
     centralWidget->addWidget(blockchainPage);
@@ -431,11 +431,13 @@ void BitcoinGUI::createActions()
     historyAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_4));
     tabGroup->addAction(historyAction);
 
+    /* Reserved for future
     getSolarCoinAction = new QAction(QIcon(":/icons/getsolarcoin"), tr("Get SolarCoin"), this);
     getSolarCoinAction->setToolTip(tr("Buy SolarCoin with Fiat or Bitcoin"));
     getSolarCoinAction->setCheckable(true);
     getSolarCoinAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
     tabGroup->addAction(getSolarCoinAction);
+    */
 
     forumsAction = new QAction(QIcon(":/icons/forums"), tr("Forums"), this);
     forumsAction->setToolTip(tr("Join the SolarCoin Community\nGet the Latest News"));
@@ -463,8 +465,8 @@ void BitcoinGUI::createActions()
     connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryPage()));
-    connect(getSolarCoinAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(getSolarCoinAction, SIGNAL(triggered()), this, SLOT(gotoGetSolarCoinPage()));
+    //connect(getSolarCoinAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    //connect(getSolarCoinAction, SIGNAL(triggered()), this, SLOT(gotoGetSolarCoinPage()));
     connect(forumsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(forumsAction, SIGNAL(triggered()), this, SLOT(gotoForumsPage()));
     connect(chatAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
@@ -496,7 +498,7 @@ void BitcoinGUI::createActions()
     backupWalletAction->setToolTip(tr("Backup wallet to another location"));
     rescanWalletAction = new QAction(QIcon(":/icons/rescan"), tr("Re&scan Wallet"), this);
     rescanWalletAction->setToolTip(tr("Rescan the blockchain for your wallet transactions."));
-    reloadBlockchainAction = new QAction(QIcon(":/icons/blockchain-dark"), tr("&Reload Blockchain"), this);
+    reloadBlockchainAction = new QAction(QIcon(":/icons/blockchain-dark"), tr("&Reload PoST Blockchain"), this);
     reloadBlockchainAction->setToolTip(tr("Reload the blockchain from bootstrap."));
     changePassphraseAction = new QAction(QIcon(":/icons/key"), tr("&Change Password"), this);
     changePassphraseAction->setToolTip(tr("Change the passphrase used for wallet encryption"));
@@ -538,6 +540,10 @@ void BitcoinGUI::createActions()
     connect(checkForUpdateAction, SIGNAL(triggered()), this, SLOT(menuCheckForUpdate()));
     connect(forumAction, SIGNAL(triggered()), this, SLOT(forumClicked()));
     connect(webAction, SIGNAL(triggered()), this, SLOT(webClicked()));
+
+    // Enable after PoW
+    if (nBestHeight <= LAST_POW_BLOCK)
+        reloadBlockchainActionEnabled(false);
 }
 
 void BitcoinGUI::createMenuBar()
@@ -557,7 +563,7 @@ void BitcoinGUI::createMenuBar()
     file->addAction(backupWalletAction);
     file->addAction(exportAction);
     file->addAction(rescanWalletAction);
-    //file->addAction(reloadBlockchainAction);
+    file->addAction(reloadBlockchainAction);
     file->addSeparator();
     file->addAction(addressBookAction);
     file->addAction(signMessageAction);
@@ -603,7 +609,7 @@ void BitcoinGUI::createToolBars()
     toolbar->addAction(sendCoinsAction);
     toolbar->addAction(receiveCoinsAction);
     toolbar->addAction(historyAction);
-    toolbar->addAction(getSolarCoinAction);
+    //toolbar->addAction(getSolarCoinAction);
     toolbar->addAction(forumsAction);
     toolbar->addAction(chatAction);
     toolbar->addAction(blockchainAction);}
@@ -667,7 +673,7 @@ void BitcoinGUI::setWalletModel(WalletModel *walletModel)
         receiveCoinsPage->setModel(walletModel->getAddressTableModel());
         transactionView->setModel(walletModel);
         addressBookPage->setModel(walletModel->getAddressTableModel());
-        getSolarCoinPage->setModel(walletModel);
+        //getSolarCoinPage->setModel(walletModel);
         forumsPage->setModel(walletModel);
         chatPage->setModel(walletModel);
         blockchainPage->setModel(walletModel);

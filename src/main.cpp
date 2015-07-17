@@ -1682,6 +1682,13 @@ unsigned int CTransaction::GetP2SHSigOpCount(const MapPrevTx& inputs) const
     return nSigOps;
 }
 
+bool CScriptCheck::operator()() const {
+    const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
+    if (!VerifyScript2(scriptSig, scriptPubKey, *ptxTo, nIn, nFlags, nHashType))
+        return error("CScriptCheck() : %s VerifySignature failed", ptxTo->GetHash().ToString().c_str());
+    return true;
+}
+
 bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTxIndex>& mapTestPool, const CDiskTxPos& posThisTx,
     const CBlockIndex* pindexBlock, bool fBlock, bool fMiner)
 {
@@ -1744,9 +1751,32 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
             if (!(fBlock && (nBestHeight < Checkpoints::GetTotalBlocksEstimate())))
             {
                 // Verify signature
-                if (!VerifySignature(txPrev, *this, i, 0))
+                if (nBestHeight > LAST_POW_BLOCK) // Different signature rules for PoST
                 {
-                    return DoS(100,error("ConnectInputs() : %s VerifySignature failed", GetHash().ToString().substr(0,10).c_str()));
+                    if (!VerifySignature(txPrev, *this, i, 0))
+                    {
+                        return DoS(100,error("ConnectInputs() : %s VerifySignature failed", GetHash().ToString().substr(0,10).c_str()));
+                    }
+                }
+                else
+                {
+                    // BIP16 didn't become active until Oct 1 2012
+                    int64_t nBIP16SwitchTime = 1349049600;
+                    bool fStrictPayToScriptHash = (pindexBlock->nTime >= nBIP16SwitchTime);
+                    unsigned int flags = SCRIPT_VERIFY_NOCACHE |
+                                         (fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE);
+                    CScriptCheck check(txPrev, *this, i, flags, 0);
+                    if (!check()) {
+                        if (flags & SCRIPT_VERIFY_STRICTENC) {
+                            // For now, check whether the failure was caused by non-canonical
+                            // encodings or not; if so, don't trigger DoS protection.
+                            CScriptCheck check(txPrev, *this, i, flags & (~SCRIPT_VERIFY_STRICTENC), 0);
+                            if (check()) {
+                                return error("ConnectInputs() : VerifySignature non-canonical signature failed");
+                            }
+                        }
+                        return DoS(100,error("ConnectInputs() : %s VerifySignature failed", GetHash().ToString().substr(0,10).c_str()));
+                    }
                 }
             }
 
