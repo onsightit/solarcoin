@@ -439,8 +439,8 @@ void BitcoinGUI::createActions()
     tabGroup->addAction(getSolarCoinAction);
     */
 
-    forumsAction = new QAction(QIcon(":/icons/forums"), tr("Forums"), this);
-    forumsAction->setToolTip(tr("Join the SolarCoin Community\nGet the Latest News"));
+    forumsAction = new QAction(QIcon(":/icons/forums"), tr("Claims"), this);
+    forumsAction->setToolTip(tr("Join the SolarCoin Community\nApply for Energy Claims"));
     forumsAction->setCheckable(true);
     forumsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_7));
     tabGroup->addAction(forumsAction);
@@ -502,9 +502,9 @@ void BitcoinGUI::createActions()
     reloadBlockchainAction->setToolTip(tr("Reload the blockchain from bootstrap."));
     changePassphraseAction = new QAction(QIcon(":/icons/key"), tr("&Change Password"), this);
     changePassphraseAction->setToolTip(tr("Change the passphrase used for wallet encryption"));
-    lockWalletAction = new QAction(QIcon(":/icons/overview"), tr("&Disable Staking"), this);
+    lockWalletAction = new QAction(QIcon(":/icons/stake100"), tr("&Disable Staking"), this);
     lockWalletAction->setToolTip(tr("Turn staking off"));
-    unlockWalletAction = new QAction(QIcon(":/icons/overview"), tr("&Enable Staking"), this);
+    unlockWalletAction = new QAction(QIcon(":/icons/stake100"), tr("&Enable Staking"), this);
     unlockWalletAction->setToolTip(tr("Turn staking on"));
     addressBookAction = new QAction(QIcon(":/icons/address-book-menu"), tr("&Address Book"), this);
     signMessageAction = new QAction(QIcon(":/icons/edit"), tr("Sign and Verify &Message"), this);
@@ -877,9 +877,9 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
 
     // Show a warning message if out of sync more than 500 blocks but not if more than 5000.
     int countDiff = nTotalBlocks - count;
-    if ((countDiff > 500 && countDiff < 5000) && !fBootstrapTurbo && strStatusBarWarnings.isEmpty() && !clientModel->isTestNet())
+    if ((countDiff > 500 && countDiff < 5000) && nTotalBlocks > LAST_POW_BLOCK && !fBootstrapTurbo && strStatusBarWarnings.isEmpty() && !clientModel->isTestNet())
     {
-        strStatusBarWarnings = tr("Go to File->Reload Blockchain to speed up or fix syncing issues.");
+        strStatusBarWarnings = tr("Go to File > Reload Blockchain to speed up or fix syncing issues.");
     }
 
     // Override progressBar text when we have warnings to display
@@ -896,7 +896,7 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
     {
         // Add a delay in case there is another warning
         this->repaint();
-        MilliSleep(1000);
+        MilliSleep(2000);
         strStatusBarWarnings = tr(GetArg("-vAlertMsg","").c_str());
         progressBar->setFormat(strStatusBarWarnings);
         progressBar->setValue(0);

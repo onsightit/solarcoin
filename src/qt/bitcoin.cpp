@@ -276,7 +276,7 @@ int main(int argc, char *argv[])
                     }
                     else
                     {
-                        //window.reloadBlockchain(true);
+                        window.reloadBlockchain(true);
                     }
                 }
                 else
