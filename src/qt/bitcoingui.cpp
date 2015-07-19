@@ -541,8 +541,8 @@ void BitcoinGUI::createActions()
     connect(forumAction, SIGNAL(triggered()), this, SLOT(forumClicked()));
     connect(webAction, SIGNAL(triggered()), this, SLOT(webClicked()));
 
-    // Enable after PoW
-    if (nBestHeight <= LAST_POW_BLOCK)
+    // Disable on testnet
+    if (fTestNet)
         reloadBlockchainActionEnabled(false);
 }
 

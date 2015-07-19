@@ -549,8 +549,8 @@ void Downloader::reloadBlockchain()
         return;
     }
 
-    if (!boost::filesystem::exists(GetDataDir() / zlist[0].toStdString().append("blk0001.dat")) ||
-        !boost::filesystem::exists(GetDataDir() / zlist[0].toStdString().append("txleveldb")))
+    if (!boost::filesystem::exists(GetDataDir() / "bootstrap" / "blk0001.dat") ||
+        !boost::filesystem::exists(GetDataDir() / "bootstrap" / "txleveldb"))
     {
         printf("Bootstrap extract is invalid!\n");
         ui->statusLabel->setText(tr("I'm sorry, the bootstrap extract was successful, but the contents are invalid."));

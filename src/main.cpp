@@ -3712,6 +3712,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         return true;
     }
 
+    // Bascially, don't push blocks/headers to PoW nodes.
+    bool isPoWNode = (pfrom->nVersion == PROTOCOL_VERSION_POW);
 
     if (strCommand == "version")
     {
@@ -3743,15 +3745,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             vRecv >> pfrom->strSubVer;
             pfrom->cleanSubVer = SanitizeString(pfrom->strSubVer);
         }
-
-        /* DEBUG Don't accept from 2.0 clients until past last checkpoint
-        if (pfrom->cleanSubVer == "/Satoshi:2.0.0/" && nBestHeight < Checkpoints::GetLastCheckpoint(mapBlockIndex)->nHeight)
-        {
-            printf("partner %s using new version %i; disconnecting\n", pfrom->addr.ToString().c_str(), pfrom->nVersion);
-            pfrom->fDisconnect = true;
-            return false;
-        }
-        */
 
         if (!vRecv.empty())
             vRecv >> pfrom->nStartingHeight;
@@ -3979,7 +3972,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     }
 
 
-    else if (strCommand == "getdata")
+    else if (strCommand == "getdata" && !isPoWNode)
     {
         vector<CInv> vInv;
         vRecv >> vInv;
@@ -4000,7 +3993,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     }
 
 
-    else if (strCommand == "getblocks")
+    else if (strCommand == "getblocks" && !isPoWNode)
     {
         CBlockLocator locator;
         uint256 hashStop;
@@ -4050,7 +4043,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     }
 
 
-    else if (strCommand == "getheaders")
+    else if (strCommand == "getheaders" && !isPoWNode)
     {
         CBlockLocator locator;
         uint256 hashStop;
@@ -4183,7 +4176,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     }
 
 
-    else if (strCommand == "mempool")
+    else if (strCommand == "mempool" && !isPoWNode)
     {
         std::vector<uint256> vtxid;
         mempool.queryHashes(vtxid);
@@ -4199,7 +4192,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     }
 
 
-    else if (strCommand == "checkorder")
+    else if (strCommand == "checkorder" && !isPoWNode)
     {
         uint256 hashReply;
         vRecv >> hashReply;
@@ -4499,7 +4492,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 {
     TRY_LOCK(cs_main, lockMain);
     if (lockMain) {
-        // Don't send anything until we get their version message or if they are PoW only.
+        // Don't send anything until we get their version message.
         if (pto->nVersion == 0)
             return true;
 
