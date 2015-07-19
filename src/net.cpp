@@ -2212,7 +2212,7 @@ void RelayTransaction(const CTransaction& tx, const uint256& hash, const CDataSt
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
-        if(!pnode->fRelayTxes)
+        if(!pnode->fRelayTxes || pnode->nVersion == PROTOCOL_VERSION_POW)
             continue;
         LOCK(pnode->cs_filter);
         if (pnode->pfilter)

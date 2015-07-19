@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
                 ClientModel clientModel(&optionsModel);
                 WalletModel walletModel(pwalletMain, &optionsModel);
 
-                //ReadVersionFile();
+                ReadVersionFile();
 
                 window.setClientModel(&clientModel);
                 window.setWalletModel(&walletModel);

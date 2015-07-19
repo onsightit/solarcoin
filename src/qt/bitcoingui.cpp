@@ -498,7 +498,7 @@ void BitcoinGUI::createActions()
     backupWalletAction->setToolTip(tr("Backup wallet to another location"));
     rescanWalletAction = new QAction(QIcon(":/icons/rescan"), tr("Re&scan Wallet"), this);
     rescanWalletAction->setToolTip(tr("Rescan the blockchain for your wallet transactions."));
-    reloadBlockchainAction = new QAction(QIcon(":/icons/blockchain-dark"), tr("&Reload PoST Blockchain"), this);
+    reloadBlockchainAction = new QAction(QIcon(":/icons/blockchain-dark"), tr("&Reload Blockchain"), this);
     reloadBlockchainAction->setToolTip(tr("Reload the blockchain from bootstrap."));
     changePassphraseAction = new QAction(QIcon(":/icons/key"), tr("&Change Password"), this);
     changePassphraseAction->setToolTip(tr("Change the passphrase used for wallet encryption"));
@@ -541,8 +541,8 @@ void BitcoinGUI::createActions()
     connect(forumAction, SIGNAL(triggered()), this, SLOT(forumClicked()));
     connect(webAction, SIGNAL(triggered()), this, SLOT(webClicked()));
 
-    // Enable after PoW
-    if (nBestHeight <= LAST_POW_BLOCK)
+    // Disable on testnet
+    if (fTestNet)
         reloadBlockchainActionEnabled(false);
 }
 
@@ -1635,7 +1635,7 @@ void BitcoinGUI::checkForUpdate()
     if (fMenuCheckForUpdate)
         fNewVersion = false; // Force a reload of the version file if the user requested a check and a new version was already found
 
-    //ReadVersionFile();
+    ReadVersionFile();
 
     // Set version icon good/bad
     setVersionIcon(fNewVersion);
