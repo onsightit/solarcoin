@@ -61,7 +61,7 @@ static const unsigned int MAX_TX_COMMENT_LEN_V2 = 528; // V2          512 bytes 
 static const unsigned int TX_COMMENT_V2_HEIGHT = 340000;
 
 static const uint256 hashGenesisBlock("0xedcf32dbfd327fe7f546d3a175d91b05e955ec1224e087961acc9a2aa8f592ee");
-static const uint256 hashGenesisBlockTestNet("0x0000d90349e5898a5cb76775e93f8774138d48cd2d763c7707ce87d42af0f66a");
+static const uint256 hashGenesisBlockTestNet("0x7f36de8d117a5c26feb00ca099bac0c7012de49a732206e0fe89ef1059e94fdd");
 
 inline int64_t PastDrift(int64_t nTime)   { return nTime - 10 * 60; } // up to 10 minutes from the past
 inline int64_t FutureDrift(int64_t nTime) { return nTime + 10 * 60; } // up to 10 minutes from the future

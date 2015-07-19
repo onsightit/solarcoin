@@ -3279,8 +3279,16 @@ bool LoadBlockIndex(bool fAllowNew)
         block.nVersion = 1;
         block.nTime    = 1384473600;
         block.nBits    = 0x1e0ffff0;
-        block.nNonce   = !fTestNet ? 1397766 : 712750;
+        block.nNonce   = !fTestNet ? 1397766 : 1;
 
+        if (fTestNet)
+        {
+            while (block.nNonce && block.GetHash() != hashGenesisBlockTestNet)
+            {
+                block.nNonce++;
+                MilliSleep(1);
+            }
+        }
         block.print();
 
         //// debug print
