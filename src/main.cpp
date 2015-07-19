@@ -1028,6 +1028,10 @@ int64_t GetProofOfWorkReward(int64_t nFees)
     // Subsidy is cut in half every 525600 blocks, which will occur approximately every 1 years
     nSubsidy >>= (nHeight / 525600); // SolarCoin: 525.6K blocks in ~1 years
 
+    if (fTestNet)
+    {
+        nSubsidy = 100000 * COIN;
+    }
     return nSubsidy + nFees;
 }
 
@@ -1988,7 +1992,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
             //    nTxValueOut = nTxValueOut-nNetworkDriftBuffer;
             //    nStakeReward = nTxValueOut - nTxValueIn;
             //}
-            if (tx.IsCoinStake() || (tx.IsCoinStake() && fTestNet))
+            if (tx.IsCoinStake())
             {
                 nStakeReward = nTxValueOut - nTxValueIn;
             }
@@ -3275,7 +3279,7 @@ bool LoadBlockIndex(bool fAllowNew)
         block.nVersion = 1;
         block.nTime    = 1384473600;
         block.nBits    = 0x1e0ffff0;
-        block.nNonce   = 1397766;
+        block.nNonce   = !fTestNet ? 1397766 : 712750;
 
         block.print();
 
