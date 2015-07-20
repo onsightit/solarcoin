@@ -199,7 +199,7 @@ void TransactionView::setModel(WalletModel *model)
         transactionView->horizontalHeader()->setResizeMode(
                 TransactionTableModel::ToAddress, QHeaderView::Stretch);
         transactionView->horizontalHeader()->resizeSection(
-                TransactionTableModel::TxComment, 100);
+                TransactionTableModel::TxComment, 200);
         transactionView->horizontalHeader()->resizeSection(
                 TransactionTableModel::Amount, 100 + (model->getOptionsModel()->getDecimalPoints() * 10));
         amountWidget->setFixedWidth(100 + (model->getOptionsModel()->getDecimalPoints() * 10));

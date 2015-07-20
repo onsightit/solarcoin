@@ -441,18 +441,22 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
 
 QString TransactionTableModel::formatTxComment(const TransactionRecord *wtx, bool tooltip) const
 {
+    QString wtxComment(wtx->txcomment.c_str());
+    if (wtx->txcomment.find("text:", 1, 5))
+        wtxComment = QString(wtx->txcomment.substr(5, wtx->txcomment.size()-5).c_str());
+
     switch(wtx->type)
     {
     case TransactionRecord::RecvFromOther:
-        return QString::fromStdString(wtx->txcomment);
+        return wtxComment;
     case TransactionRecord::RecvWithAddress:
-        return QString::fromStdString(wtx->txcomment);
+        return wtxComment;
     case TransactionRecord::SendToAddress:
-        return QString::fromStdString(wtx->txcomment);
+        return wtxComment;
     case TransactionRecord::SendToOther:
-        return QString::fromStdString(wtx->txcomment);
+        return wtxComment;
     case TransactionRecord::SendToSelf:
-        return QString::fromStdString(wtx->txcomment);
+        return wtxComment;
     case TransactionRecord::Generated:
         return "";
     default:
