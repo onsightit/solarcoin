@@ -3713,7 +3713,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     }
 
     // Bascially, don't push blocks/headers to PoW nodes.
-    bool isPoWNode = (pfrom->nVersion == PROTOCOL_VERSION_POW);
+    // DEBUG bool isPoWNode = (pfrom->nVersion == PROTOCOL_VERSION_POW);
+    bool isPoWNode = false;
 
     if (strCommand == "version")
     {
