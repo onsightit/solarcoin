@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Send Coins</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,0">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,0,0">
    <property name="bottomMargin">
     <number>8</number>
    </property>
@@ -537,7 +537,13 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayoutTxComment">
      <property name="spacing">
-      <number>0</number>
+      <number>6</number>
+     </property>
+     <property name="leftMargin">
+      <number>10</number>
+     </property>
+     <property name="rightMargin">
+      <number>10</number>
      </property>
      <item>
       <widget class="QLabel" name="labelTxComment">
@@ -553,7 +559,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QValidatedLineEdit" name="editTxComment" native="true">
+      <widget class="QValidatedLineEdit" name="editTxComment">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -578,7 +584,7 @@
         <x>0</x>
         <y>0</y>
         <width>1006</width>
-        <height>547</height>
+        <height>69</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -622,7 +628,7 @@
         <string>Add &amp;Recipient</string>
        </property>
        <property name="icon">
-        <iconset>
+        <iconset resource="../bitcoin.qrc">
          <normaloff>:/icons/add</normaloff>:/icons/add</iconset>
        </property>
        <property name="iconSize">
@@ -657,7 +663,7 @@
         <string>Clear &amp;All</string>
        </property>
        <property name="icon">
-        <iconset>
+        <iconset resource="../bitcoin.qrc">
          <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
        </property>
        <property name="iconSize">
@@ -744,7 +750,7 @@
         <string>Send</string>
        </property>
        <property name="icon">
-        <iconset>
+        <iconset resource="../bitcoin.qrc">
          <normaloff>:/icons/sendButton</normaloff>:/icons/sendButton</iconset>
        </property>
        <property name="iconSize">
@@ -765,6 +771,15 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <customwidgets>
+  <customwidget>
+   <class>QValidatedLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>qvalidatedlineedit.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="../bitcoin.qrc"/>
+ </resources>
  <connections/>
 </ui>
