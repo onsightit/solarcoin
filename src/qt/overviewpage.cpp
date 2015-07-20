@@ -23,7 +23,7 @@
 using namespace GUIUtil;
 
 #define DECORATION_SIZE 46
-#define NUM_ITEMS 3
+#define NUM_ITEMS 4
 
 class TxViewDelegate : public QAbstractItemDelegate
 {
