@@ -17,6 +17,7 @@ solarcoin-qt
 solarcoin-qt.pro.*
 solarcoin-qt.pro.user
 VERSION.json
+.autosave
 .*.swp
 *.*~*
 *.bak
