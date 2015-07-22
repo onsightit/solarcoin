@@ -572,8 +572,7 @@ public:
 
     bool IsCoinBase() const
     {
-        // DEBUG return (vin.size() == 1 && vin[0].prevout.IsNull() && vout.size() >= 1);
-        return (vin.size() == 1 && vin[0].prevout.IsNull());
+        return (vin.size() == 1 && vin[0].prevout.IsNull() && vout.size() >= 1);
     }
 
     bool IsCoinStake() const
@@ -1260,7 +1259,7 @@ public:
 
         // Flush stdio buffers and commit to disk before returning
         fflush(fileout);
-        if (!IsInitialBlockDownload() || (nBestHeight+1) % 500 == 0)
+        if (!IsInitialBlockDownload() || (nBestHeight+1) % 500 == 0 || fShutdown)
             FileCommit(fileout);
 
         return true;
