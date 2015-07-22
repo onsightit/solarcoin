@@ -1056,6 +1056,8 @@ int64_t GetStakeTimeFactoredWeight(int64_t timeWeight, int64_t bnCoinDayWeight, 
 double GetAverageStakeWeight(CBlockIndex* pindexPrev)
 {
     double weightSum = 0.0, weightAve = 0.0;
+    if (nBestHeight < 1)
+        return weightAve;
     int i;
     CBlockIndex* currentBlockIndex = pindexPrev;
     for (i = 0; i < 60; i++)
