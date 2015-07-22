@@ -87,6 +87,7 @@
         <file alias="logo">res/images/logo.png</file>
         <file alias="post">res/images/post.png</file>
         <file alias="aboutBackground">res/images/aboutBackground.png</file>
+        <file alias="headerAbout">res/images/headerAbout.png</file>
         <file alias="splash">res/images/splash.png</file>
         <file alias="headerOverview">res/images/headerOverview.png</file>
         <file alias="headerOverviewSmall">res/images/headerOverviewSmall.png</file>

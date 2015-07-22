@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
-    <height>400</height>
+    <width>606</width>
+    <height>620</height>
    </rect>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>606</width>
+    <height>16777215</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>About SolarCoin</string>
@@ -22,13 +28,38 @@
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
+     <property name="minimumSize">
+      <size>
+       <width>100</width>
+       <height>600</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>100</width>
+       <height>600</height>
+      </size>
+     </property>
      <property name="pixmap">
       <pixmap resource="../bitcoin.qrc">:/images/aboutBackground</pixmap>
+     </property>
+     <property name="scaledContents">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
    <item>
     <layout class="QVBoxLayout" name="verticalLayout_2">
+     <item>
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="pixmap">
+        <pixmap resource="../bitcoin.qrc">:/images/headerAbout</pixmap>
+       </property>
+      </widget>
+     </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
@@ -73,34 +104,18 @@
       </layout>
      </item>
      <item>
-      <widget class="QLabel" name="copyrightLabel">
-       <property name="cursor">
-        <cursorShape>IBeamCursor</cursorShape>
-       </property>
-       <property name="text">
-        <string>Copyright © 2009-2011 The Bitcoin developers
-Copyright © 2011-2012 The PeerCoin developers
-Copyright © 2012-2014 The NovaCoin developers
-Copyright © 2014 The BlackCoin developers
-Copyright © 2014-2015 The VeriCoin developers
-Copyright © 2014-2015 The SolarCoin developers
-
-</string>
-       </property>
-       <property name="textInteractionFlags">
-        <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QLabel" name="label_2">
+       <property name="maximumSize">
+        <size>
+         <width>480</width>
+         <height>16777215</height>
+        </size>
+       </property>
        <property name="cursor">
         <cursorShape>IBeamCursor</cursorShape>
        </property>
        <property name="text">
-        <string>This is experimental software.
-Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
-This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-family:'robotoregular'; font-size:16px; color:#656a6f;&quot;&gt;SolarCoin is a digital currency incentivizing solar electricity, governed by the SolarCoin Foundation.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'robotoregular'; font-size:16px; color:#656a6f;&quot;&gt;§ 1 SolarCoin represents 1 MWh of solar electricity generated.  99% of SolarCoins will be distributed to solar electricity generators helping produce 97,500 TWh. Any verified solar electricity producer is entitled to receive SolarCoins &lt;/span&gt;&lt;span style=&quot; font-family:'robotoitalic'; font-size:16px; color:#656a6f;&quot;&gt;for free&lt;/span&gt;&lt;span style=&quot; font-family:'robotoregular'; font-size:16px; color:#656a6f;&quot;&gt;.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="wordWrap">
         <bool>true</bool>
@@ -122,6 +137,45 @@ This product includes software developed by the OpenSSL Project for use in the O
         </size>
        </property>
       </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="copyrightLabel">
+       <property name="maximumSize">
+        <size>
+         <width>480</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>IBeamCursor</cursorShape>
+       </property>
+       <property name="text">
+        <string>This is experimental software.
+Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
+This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.
+
+
+Copyright © 2009-2011 The Bitcoin developers
+Copyright © 2011-2012 The PeerCoin developers
+Copyright © 2012-2014 The NovaCoin developers
+Copyright © 2014 The BlackCoin developers
+Copyright © 2014-2015 The VeriCoin developers
+Copyright © 2014-2015 The SolarCoin developers
+
+</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+       <property name="textInteractionFlags">
+        <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QDialogButtonBox" name="buttonBox">
