@@ -3270,25 +3270,50 @@ bool LoadBlockIndex(bool fAllowNew)
         txNew.vout[0].nValue = 100 * COIN;
         txNew.vout[0].scriptPubKey = CScript() << ParseHex("040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9") << OP_CHECKSIG;
         txNew.strTxComment = "text:SolarCoin genesis block";
-        txNew.nTime = 1384473600;
+        txNew.nTime = !fTestNet ? 1384473600 : 1437593031;
 
         CBlock block;
         block.vtx.push_back(txNew);
         block.hashPrevBlock = 0;
         block.hashMerkleRoot = block.BuildMerkleTree();
         block.nVersion = 1;
-        block.nTime    = 1384473600;
+        block.nTime    = !fTestNet ? 1384473600 : 1437593031;
         block.nBits    = 0x1e0ffff0;
-        block.nNonce   = !fTestNet ? 1397766 : 1;
+        // DEBUG block.nNonce   = !fTestNet ? 1397766 : 2084524493;
+        block.nNonce   = !fTestNet ? 1397766 : 302856;
 
-        if (fTestNet)
+
+        // DEBUG If genesis block hash does not match, then generate new genesis hash.
+        if (fTestNet && block.GetHash() != hashGenesisBlockTestNet)
         {
-            while (block.nNonce && block.GetHash() != hashGenesisBlockTestNet)
+            printf("Searching for genesis block...\n");
+            // This will figure out a valid hash and Nonce if you're
+            // creating a different genesis block:
+            uint256 hashTarget = CBigNum().SetCompact(block.nBits).getuint256();
+            uint256 thash;
+
+            while(true)
             {
-                block.nNonce++;
-                MilliSleep(1);
+                // Generic scrypt
+                thash = block.GetPoWHash();
+                if (thash <= hashTarget)
+                    break;
+                if ((block.nNonce & 0xFFF) == 0)
+                {
+                    printf("nonce %08X: hash = %s (target = %s)\n", block.nNonce, thash.ToString().c_str(), hashTarget.ToString().c_str());
+                }
+                ++block.nNonce;
+                if (block.nNonce == 0)
+                {
+                    printf("NONCE WRAPPED, incrementing time\n");
+                    ++block.nTime;
+                }
             }
+            printf("block.nTime = %u \n", block.nTime);
+            printf("block.nNonce = %u \n", block.nNonce);
+            printf("block.GetHash = %s\n", block.GetHash().ToString().c_str());
         }
+
         block.print();
 
         //// debug print
