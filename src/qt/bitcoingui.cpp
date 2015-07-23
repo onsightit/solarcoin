@@ -877,7 +877,7 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
 
     // Show a warning message if out of sync more than 500 blocks but not if more than 5000.
     int countDiff = nTotalBlocks - count;
-    if ((countDiff > 500 && countDiff < 5000) && nTotalBlocks > LAST_POW_BLOCK && !fBootstrapTurbo && strStatusBarWarnings.isEmpty() && !clientModel->isTestNet())
+    if ((countDiff > 500 && countDiff < 5000) && nTotalBlocks >= LAST_POW_BLOCK && !fBootstrapTurbo && strStatusBarWarnings.isEmpty() && !clientModel->isTestNet())
     {
         strStatusBarWarnings = tr("Go to File > Reload Blockchain to speed up or fix syncing issues.");
     }

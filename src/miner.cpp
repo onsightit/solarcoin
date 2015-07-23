@@ -542,7 +542,7 @@ void StakeMiner(CWallet *pwallet)
             return;
 
         // Special restriction for SolarCoin to not allow staking while still in PoW mode.
-        while (pwallet->IsLocked() || nBestHeight <= LAST_POW_BLOCK)
+        while (pwallet->IsLocked() || nBestHeight < LAST_POW_BLOCK)
         {
             MilliSleep(1000);
             if (fShutdown)

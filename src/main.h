@@ -27,8 +27,8 @@ class CRequestTracker;
 class CNode;
 
 // DEBUG
-//static const int LAST_POW_BLOCK = 750;
-static const int LAST_POW_BLOCK = 750000;
+static const int LAST_POW_BLOCK = 750;
+//static const int LAST_POW_BLOCK = 750000;
 
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/4;
@@ -497,7 +497,7 @@ public:
 
     void SetNull()
     {
-        if (nBestHeight > LAST_POW_BLOCK)
+        if (nBestHeight >= LAST_POW_BLOCK)
         {
             nVersion = CTransaction::CURRENT_VERSION;
         }
@@ -520,7 +520,7 @@ public:
 
     uint256 GetHash() const
     {
-        if (nBestHeight <= LAST_POW_BLOCK)
+        if (nBestHeight < LAST_POW_BLOCK)
             fLegacyHash = true;
         return SerializeHash(*this);
         fLegacyHash = false;
@@ -1133,7 +1133,7 @@ public:
 
     uint256 GetPoWHash() const
     {
-        if (nBestHeight <= LAST_POW_BLOCK)
+        if (nBestHeight < LAST_POW_BLOCK)
             fLegacyHash = true;
         return scrypt_blockhash(CVOIDBEGIN(nVersion));
         fLegacyHash = false;
