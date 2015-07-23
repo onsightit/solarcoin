@@ -1480,7 +1480,7 @@ unsigned int static GetNextWorkRequired_V2(const CBlockIndex* pindexLast, const 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock){
     int DiffMode = 1;
     if (fTestNet) {
-            if (pindexLast->nHeight+1 >= 1) { DiffMode = 1; }
+            if (pindexLast->nHeight+1 >= 1) { DiffMode = 2; }
     }
     else {
             if (pindexLast->nHeight+1 >= 310000) { DiffMode = 2; }
