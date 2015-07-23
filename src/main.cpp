@@ -3281,7 +3281,6 @@ bool LoadBlockIndex(bool fAllowNew)
         block.nVersion = 1;
         block.nTime    = !fTestNet ? 1384473600 : 1437593031;
         block.nBits    = 0x1e0ffff0;
-        // DEBUG block.nNonce   = !fTestNet ? 1397766 : 2084524493;
         block.nNonce   = !fTestNet ? 1397766 : 302856;
 
 
@@ -3747,10 +3746,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         return true;
     }
 
-    // Bascially, don't push blocks/headers to PoW nodes.
-    // DEBUG bool isPoWNode = (pfrom->nVersion == PROTOCOL_VERSION_POW);
-    bool isPoWNode = false;
-
     if (strCommand == "version")
     {
         // Each connection can only send one version message
@@ -4008,7 +4003,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     }
 
 
-    else if (strCommand == "getdata" && !isPoWNode)
+    else if (strCommand == "getdata")
     {
         vector<CInv> vInv;
         vRecv >> vInv;
@@ -4029,7 +4024,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     }
 
 
-    else if (strCommand == "getblocks" && !isPoWNode)
+    else if (strCommand == "getblocks")
     {
         CBlockLocator locator;
         uint256 hashStop;
@@ -4079,7 +4074,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     }
 
 
-    else if (strCommand == "getheaders" && !isPoWNode)
+    else if (strCommand == "getheaders")
     {
         CBlockLocator locator;
         uint256 hashStop;
@@ -4212,7 +4207,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     }
 
 
-    else if (strCommand == "mempool" && !isPoWNode)
+    else if (strCommand == "mempool")
     {
         std::vector<uint256> vtxid;
         mempool.queryHashes(vtxid);
@@ -4228,7 +4223,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     }
 
 
-    else if (strCommand == "checkorder" && !isPoWNode)
+    else if (strCommand == "checkorder")
     {
         uint256 hashReply;
         vRecv >> hashReply;
