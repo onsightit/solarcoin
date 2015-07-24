@@ -1378,7 +1378,7 @@ unsigned int static GetNextWorkRequired_V1(const CBlockIndex* pindexLast, const 
 
 unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, const CBlockHeader *pblock, uint64_t TargetBlocksSpacingSeconds, uint64_t PastBlocksMin, uint64_t PastBlocksMax) {
 
-    if (pindexLast->nHeight+1 == 160 && !fTestNet)
+    if (pindexLast->nHeight+1 == 160)
         return bnStartDiff.GetCompact();
 
     const CBlockIndex *BlockLastSolved  = pindexLast;
@@ -1482,7 +1482,7 @@ unsigned int static GetNextWorkRequired_V2(const CBlockIndex* pindexLast, const 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock){
     int DiffMode = 1;
     if (fTestNet) {
-            if (pindexLast->nHeight+1 >= 1) { DiffMode = 2; }
+            DiffMode = 1;
     }
     else {
             if (pindexLast->nHeight+1 >= 310000) { DiffMode = 2; }
