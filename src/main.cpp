@@ -651,7 +651,9 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
 
         // Don't accept it if it can't get into a block
         int64_t txMinFee = tx.GetMinFee(1000, GMF_RELAY, nSize, true);
-        if (nFees < txMinFee)
+        /* Fees can be 0 (limited number of free blocks) in the old SolarCoin PoW.
+         * We won't enforce it in 2.0 (PoST version) */
+        if (tx.IsCoinStake() && nFees < txMinFee)
             return error("CTxMemPool::accept() : not enough fees %s, %"PRId64" < %"PRId64,
                          hash.ToString().c_str(),
                          nFees, txMinFee);
