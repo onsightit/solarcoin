@@ -515,7 +515,7 @@ int64_t CTransaction::GetMinFee(unsigned int nBlockSize, enum GetMinFee_mode mod
     unsigned int nNewBlockSize = nBlockSize + nBytes;
     int64_t nMinFee = (1 + (int64_t)nBytes / 1000) * nBaseFee;
 
-    if (nBestHeight >= LAST_POW_BLOCK)
+    if (nBestHeight > LAST_POW_BLOCK)
     {
         // To limit dust spam, require MIN_TX_FEE/MIN_RELAY_TX_FEE if any output is less than 0.01
         if (nMinFee < nBaseFee)
@@ -830,7 +830,7 @@ int CMerkleTx::GetBlocksToMaturity() const
 {
     if (!(IsCoinBase() || IsCoinStake()))
         return 0;
-    int nMature = (nBestHeight >= LAST_POW_BLOCK ? nCoinbaseMaturity + 10 : nCoinbaseMaturity_PoW + 1);
+    int nMature = (nBestHeight > LAST_POW_BLOCK ? nCoinbaseMaturity + 10 : nCoinbaseMaturity_PoW + 1);
     return max(0, nMature - GetDepthInMainChain());
 }
 
@@ -1744,13 +1744,13 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
             // If prev is coinbase or coinstake, check that it's matured
             if (txPrev.IsCoinBase() || txPrev.IsCoinStake())
             {
-                int nMature = (nBestHeight >= LAST_POW_BLOCK ? nCoinbaseMaturity : nCoinbaseMaturity_PoW);
+                int nMature = (nBestHeight > LAST_POW_BLOCK ? nCoinbaseMaturity : nCoinbaseMaturity_PoW);
                 for (const CBlockIndex* pindex = pindexBlock; pindex && pindexBlock->nHeight - pindex->nHeight < nMature; pindex = pindex->pprev)
                     if (pindex->nBlockPos == txindex.pos.nBlockPos && pindex->nFile == txindex.pos.nFile)
                         return error("ConnectInputs() : tried to spend %s at depth %d", txPrev.IsCoinBase() ? "coinbase" : "coinstake", pindexBlock->nHeight - pindex->nHeight);
             }
             // ppcoin: check transaction timestamp
-            if (nBestHeight >= LAST_POW_BLOCK) // Don't care about PoW nTime
+            if (nBestHeight > LAST_POW_BLOCK) // Don't care about PoW nTime
                 if (txPrev.nTime > nTime)
                     return DoS(100, error("ConnectInputs() : transaction timestamp earlier than input transaction"));
 
@@ -1782,7 +1782,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
             if (!(fBlock && (nBestHeight < Checkpoints::GetTotalBlocksEstimate())))
             {
                 // Verify signature
-                if (nBestHeight >= LAST_POW_BLOCK) // Different signature rules for PoST
+                if (nBestHeight > LAST_POW_BLOCK) // Different signature rules for PoST
                 {
                     if (!VerifySignature(txPrev, *this, i, 0))
                     {
