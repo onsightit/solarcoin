@@ -45,7 +45,6 @@ CBigNum bnProofOfWorkLimit(~uint256(0) >> 20); // "standard" scrypt target limit
 CBigNum bnProofOfStakeLimit(~uint256(0) >> 20);
 CBigNum bnProofOfWorkLimitTestNet(~uint256(0) >> 16);
 static CBigNum bnStartDiff(~uint256(0) >> 26);
-static CBigNum bnStartDiffTestNet(~uint256(0) >> 16);
 
 unsigned int nTargetSpacing = 1 * 60; // 1 minute
 unsigned int nStakeMinAge = 8 * 60 * 60; // 8 hours
@@ -1379,8 +1378,8 @@ unsigned int static GetNextWorkRequired_V1(const CBlockIndex* pindexLast, const 
 
 unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, const CBlockHeader *pblock, uint64_t TargetBlocksSpacingSeconds, uint64_t PastBlocksMin, uint64_t PastBlocksMax) {
 
-    if (pindexLast->nHeight+1 == 160)
-        return (!fTestNet ? bnStartDiff.GetCompact() : bnStartDiffTestNet.GetCompact());
+    if (pindexLast->nHeight+1 == 160 && !fTestNet)
+        return bnStartDiff.GetCompact();
 
     const CBlockIndex *BlockLastSolved  = pindexLast;
     const CBlockIndex *BlockReading = pindexLast;
