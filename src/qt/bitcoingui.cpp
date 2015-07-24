@@ -90,6 +90,7 @@ using namespace GUIUtil;
 extern CWallet* pwalletMain;
 extern int64_t nLastCoinStakeSearchInterval;
 extern unsigned int nTargetSpacing;
+extern double GetPoSKernelPS(CBlockIndex* pindexPrev);
 double GetPoSKernelPS();
 bool blocksIcon = true;
 bool resizeGUICalled = false;
@@ -877,7 +878,7 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
 
     // Show a warning message if out of sync more than 500 blocks but not if more than 5000.
     int countDiff = nTotalBlocks - count;
-    if ((countDiff > 500 && countDiff < 5000) && nTotalBlocks >= LAST_POW_BLOCK && !fBootstrapTurbo && strStatusBarWarnings.isEmpty() && !clientModel->isTestNet())
+    if ((countDiff > 500 && countDiff < 5000) && nBestHeight >= LAST_POW_BLOCK && !fBootstrapTurbo && strStatusBarWarnings.isEmpty() && !clientModel->isTestNet())
     {
         strStatusBarWarnings = tr("Go to File > Reload Blockchain to speed up or fix syncing issues.");
     }
@@ -1447,10 +1448,12 @@ void BitcoinGUI::updateStakingIcon()
     pwalletMain->GetStakeWeight(*pwalletMain, nWeight);
     progressBar->setVisible(false);
     overviewPage->showOutOfSyncWarning(false);
-    double nNetworkWeight = GetPoSKernelPS();
+    double nNetworkWeight = GetPoSKernelPS(pindexBest->pprev);
     if (walletModel->getEncryptionStatus() == WalletModel::Unlocked && nLastCoinStakeSearchInterval && nWeight)
     {
-        unsigned nEstimateTime = nTargetSpacing * nNetworkWeight / nWeight;
+        u_int64_t nEstimateTime = nTargetSpacing * nNetworkWeight / nWeight;
+        // DEBUG
+        printf("*** DEBUG updateStakingIcon: nEstimateTime=%u\n", nEstimateTime);
         QString text;
         if (nEstimateTime < 60)
         {

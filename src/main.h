@@ -497,7 +497,7 @@ public:
 
     void SetNull()
     {
-        if (nBestHeight > LAST_POW_BLOCK)
+        if (nBestHeight >= LAST_POW_BLOCK)
         {
             nVersion = CTransaction::CURRENT_VERSION;
         }
@@ -505,7 +505,14 @@ public:
         {
             nVersion = CTransaction::LEGACY_VERSION_2;
         }
-        nTime = GetAdjustedTime();
+        if (nBestHeight >= LAST_POW_BLOCK)
+        {
+            nTime = GetAdjustedTime();
+        }
+        else
+        {
+            nTime = GetTime();
+        }
         vin.clear();
         vout.clear();
         nLockTime = 0;
@@ -520,7 +527,7 @@ public:
 
     uint256 GetHash() const
     {
-        if (nBestHeight <= LAST_POW_BLOCK)
+        if (nBestHeight < LAST_POW_BLOCK)
             fLegacyHash = true;
         return SerializeHash(*this);
         fLegacyHash = false;
@@ -1133,7 +1140,7 @@ public:
 
     uint256 GetPoWHash() const
     {
-        if (nBestHeight <= LAST_POW_BLOCK)
+        if (nBestHeight < LAST_POW_BLOCK)
             fLegacyHash = true;
         return scrypt_blockhash(CVOIDBEGIN(nVersion));
         fLegacyHash = false;

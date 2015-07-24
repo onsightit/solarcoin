@@ -515,7 +515,7 @@ int64_t CTransaction::GetMinFee(unsigned int nBlockSize, enum GetMinFee_mode mod
     unsigned int nNewBlockSize = nBlockSize + nBytes;
     int64_t nMinFee = (1 + (int64_t)nBytes / 1000) * nBaseFee;
 
-    if (nBestHeight > LAST_POW_BLOCK)
+    if (nBestHeight >= LAST_POW_BLOCK)
     {
         // To limit dust spam, require MIN_TX_FEE/MIN_RELAY_TX_FEE if any output is less than 0.01
         if (nMinFee < nBaseFee)
@@ -830,7 +830,7 @@ int CMerkleTx::GetBlocksToMaturity() const
 {
     if (!(IsCoinBase() || IsCoinStake()))
         return 0;
-    int nMature = (nBestHeight > LAST_POW_BLOCK ? nCoinbaseMaturity + 10 : nCoinbaseMaturity_PoW + 1);
+    int nMature = (nBestHeight >= LAST_POW_BLOCK ? nCoinbaseMaturity + 10 : nCoinbaseMaturity_PoW + 1);
     return max(0, nMature - GetDepthInMainChain());
 }
 
@@ -1744,15 +1744,15 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
             // If prev is coinbase or coinstake, check that it's matured
             if (txPrev.IsCoinBase() || txPrev.IsCoinStake())
             {
-                int nMature = (nBestHeight > LAST_POW_BLOCK ? nCoinbaseMaturity : nCoinbaseMaturity_PoW);
+                int nMature = (nBestHeight >= LAST_POW_BLOCK ? nCoinbaseMaturity : nCoinbaseMaturity_PoW);
                 for (const CBlockIndex* pindex = pindexBlock; pindex && pindexBlock->nHeight - pindex->nHeight < nMature; pindex = pindex->pprev)
                     if (pindex->nBlockPos == txindex.pos.nBlockPos && pindex->nFile == txindex.pos.nFile)
                         return error("ConnectInputs() : tried to spend %s at depth %d", txPrev.IsCoinBase() ? "coinbase" : "coinstake", pindexBlock->nHeight - pindex->nHeight);
             }
             // ppcoin: check transaction timestamp
-            if (nBestHeight > LAST_POW_BLOCK) // Don't care about PoW nTime
+            if (nBestHeight >= LAST_POW_BLOCK) // Don't care about PoW nTime
                 if (txPrev.nTime > nTime)
-                    return DoS(100, error("ConnectInputs() : transaction timestamp earlier than input transaction"));
+                    return DoS(100, error("ConnectInputs() : transaction timestamp earlier than input transaction. txPrev.nTime=%u nTime=%u", txPrev.nTime, nTime));
 
             // Check for negative or overflow input values
             nValueIn += txPrev.vout[prevout.n].nValue;
@@ -1782,7 +1782,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
             if (!(fBlock && (nBestHeight < Checkpoints::GetTotalBlocksEstimate())))
             {
                 // Verify signature
-                if (nBestHeight > LAST_POW_BLOCK) // Different signature rules for PoST
+                if (nBestHeight >= LAST_POW_BLOCK) // Different signature rules for PoST
                 {
                     if (!VerifySignature(txPrev, *this, i, 0))
                     {
@@ -2384,8 +2384,14 @@ bool CTransaction::GetStakeTime(CTxDB& txdb, uint64_t& nStakeTime, CBlockIndex* 
     CBigNum bnStakeTime = 0;  // coin age in the unit of cent-seconds
     nStakeTime = 0;
 
+    // DEBUG
+    printf("*** DEBUG GetStakeTime: entered\n");
+
     if (IsCoinBase())
         return true;
+
+    // DEBUG
+    printf("*** DEBUG GetStakeTime: is not coinbase\n");
 
     BOOST_FOREACH(const CTxIn& txin, vin)
     {
@@ -2394,6 +2400,10 @@ bool CTransaction::GetStakeTime(CTxDB& txdb, uint64_t& nStakeTime, CBlockIndex* 
         CTxIndex txindex;
         if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex))
             continue;  // previous transaction not in main chain
+
+        // DEBUG
+        printf("*** DEBUG GetStakeTime: read from disk. nTime=%u txPrev.nTime=%u\n", nTime, txPrev.nTime);
+
         if (nTime < txPrev.nTime)
             return false;  // Transaction timestamp violation
 
@@ -2401,14 +2411,22 @@ bool CTransaction::GetStakeTime(CTxDB& txdb, uint64_t& nStakeTime, CBlockIndex* 
         CBlock block;
         if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
             return false; // unable to read block of previous transaction
+
         if (block.GetBlockTime() + nStakeMinAge > nTime)
             continue; // only count coins meeting min age requirement
+
+        // DEBUG
+        printf("*** DEBUG GetStakeTime: block.GetBlockTime()=%u + nStakeMinAge=%u = %u\n", block.GetBlockTime(), nStakeMinAge, block.GetBlockTime() + nStakeMinAge);
 
         int64_t nValueIn = txPrev.vout[txin.prevout.n].nValue;
         int64_t timeWeight = nTime-txPrev.nTime;
         int64_t CoinDay = nValueIn * timeWeight / COIN / (24 * 60 * 60);
         int64_t factoredTimeWeight = GetStakeTimeFactoredWeight(timeWeight, CoinDay, pindexPrev);
         bnStakeTime += CBigNum(nValueIn) * factoredTimeWeight / COIN / (24 * 60 * 60);
+
+        // DEBUG
+        printf("*** DEBUG GetStakeTime: nValueIn=%d timeWeight=%d CoinDay=%d factoredTimeWeight=%d\n", nValueIn, timeWeight, CoinDay, factoredTimeWeight);
+
     }
     if (fDebug && GetBoolArg("-printcoinage"))
         printf("stake time bnStakeTime=%s\n", bnStakeTime.ToString().c_str());
@@ -3227,7 +3245,8 @@ bool LoadBlockIndex(bool fAllowNew)
 
         bnTrustedModulus.SetHex("f0d14cf72623dacfe738d0892b599be0f31052239cddd95a3f25101c801dc990453b38c9434efe3f372db39a32c2bb44cbaea72d62c8931fa785b0ec44531308df3e46069be5573e49bb29f4d479bfc3d162f57a5965db03810be7636da265bfced9c01a6b0296c77910ebdc8016f70174f0f18a57b3b971ac43a934c6aedbc5c866764a3622b5b7e3f9832b8b3f133c849dbcc0396588abcd1e41048555746e4823fb8aba5b3d23692c6857fccce733d6bb6ec1d5ea0afafecea14a0f6f798b6b27f77dc989c557795cc39a0940ef6bb29a7fc84135193a55bcfc2f01dd73efad1b69f45a55198bd0e6bef4d338e452f6a420f1ae2b1167b923f76633ab6e55");
         bnProofOfWorkLimit = bnProofOfWorkLimitTestNet; // 16 bits PoW target limit for testnet
-        nStakeMinAge = 1 * 60 * 60; // test net min age is 1 hour
+        // DEBUG nStakeMinAge = 1 * 60 * 60; // test net min age is 1 hour
+        nStakeMinAge = 10 * 60; // test net min age is 10 minutes
         nCoinbaseMaturity = 10; // test maturity is 10 blocks
     }
     else
