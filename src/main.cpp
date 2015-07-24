@@ -2425,7 +2425,7 @@ bool CTransaction::GetStakeTime(CTxDB& txdb, uint64_t& nStakeTime, CBlockIndex* 
         bnStakeTime += CBigNum(nValueIn) * factoredTimeWeight / COIN / (24 * 60 * 60);
 
         // DEBUG
-        printf("*** DEBUG GetStakeTime: nValueIn=%d timeWeight=%d CoinDay=%d factoredTimeWeight=%d\n", nValueIn, timeWeight, CoinDay, factoredTimeWeight);
+        printf("*** DEBUG GetStakeTime: nValueIn=%u timeWeight=%u CoinDay=%u factoredTimeWeight=%u\n", nValueIn, timeWeight, CoinDay, factoredTimeWeight);
 
     }
     if (fDebug && GetBoolArg("-printcoinage"))
