@@ -1032,7 +1032,7 @@ int64_t GetProofOfWorkReward(int64_t nFees)
 
     if (fTestNet)
     {
-        nSubsidy = 100000 * COIN;
+        nSubsidy = 1000000 * COIN;
     }
     return nSubsidy + nFees;
 }
