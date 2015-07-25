@@ -1750,7 +1750,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
                         return error("ConnectInputs() : tried to spend %s at depth %d", txPrev.IsCoinBase() ? "coinbase" : "coinstake", pindexBlock->nHeight - pindex->nHeight);
             }
             // ppcoin: check transaction timestamp
-            if (nBestHeight > LAST_POW_BLOCK) // Don't care about PoW nTime, but we need to be one block past end-of-pow (txn nTime bug).
+            if (nBestHeight >= LAST_POW_BLOCK) // Don't care about PoW nTime.
                 if (txPrev.nTime > nTime)
                     return DoS(100, error("ConnectInputs() : transaction timestamp earlier than input transaction. txPrev.nTime=%u nTime=%u", txPrev.nTime, nTime));
 

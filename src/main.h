@@ -505,14 +505,7 @@ public:
         {
             nVersion = CTransaction::LEGACY_VERSION_2;
         }
-        if (nBestHeight >= LAST_POW_BLOCK)
-        {
-            nTime = GetAdjustedTime();
-        }
-        else
-        {
-            nTime = GetTime();
-        }
+        nTime = GetAdjustedTime();
         vin.clear();
         vout.clear();
         nLockTime = 0;
