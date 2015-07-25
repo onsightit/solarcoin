@@ -1543,7 +1543,7 @@ bool CWallet::GetStakeWeight(const CKeyStore& keystore, uint64_t& nWeight)
         CBigNum bnCoinDayWeight = CBigNum(pcoin.first->vout[pcoin.second].nValue) * nTimeWeight / COIN / (24 * 60 * 60);
 
         // DEBUG
-        printf("*** DEBUG GetStakeWeight: pcoin.first->nTime=%u nTimeWeight=%u bnCoinDayWeight=%u\n", pcoin.first->nTime, nTimeWeight, bnCoinDayWeight.getuint64());
+        printf("*** DEBUG GetStakeWeight: pcoin.first->nTime=%u nTimeWeight=%u pcoin.first->vout[pcoin.second].nValue=%u bnCoinDayWeight=%u\n", pcoin.first->nTime, nTimeWeight, pcoin.first->vout[pcoin.second].nValue, bnCoinDayWeight.getuint64());
 
         // Weight is greater than zero
         if (nTimeWeight > 0)
