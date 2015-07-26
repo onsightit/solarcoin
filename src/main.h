@@ -104,6 +104,7 @@ extern unsigned int nDerivationMethodIndex;
 
 extern bool fEnforceCanonical;
 extern bool fLegacyHash;
+extern bool fLegacyBlock;
 
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64_t nMinDiskSpace = 52428800;
@@ -462,8 +463,7 @@ class CTransaction
 {
 public:
     static const int LEGACY_VERSION_1 = 1;
-    static const int LEGACY_VERSION_2 = 2;
-    static const int CURRENT_VERSION = 3;
+    static const int CURRENT_VERSION = 2;
     int nVersion;
     unsigned int nTime;
     std::vector<CTxIn> vin;
@@ -497,14 +497,7 @@ public:
 
     void SetNull()
     {
-        if (nBestHeight >= LAST_POW_BLOCK)
-        {
-            nVersion = CTransaction::CURRENT_VERSION;
-        }
-        else
-        {
-            nVersion = CTransaction::LEGACY_VERSION_2;
-        }
+        nVersion = CTransaction::CURRENT_VERSION;
         nTime = GetAdjustedTime();
         vin.clear();
         vout.clear();
@@ -520,7 +513,7 @@ public:
 
     uint256 GetHash() const
     {
-        if (nBestHeight < LAST_POW_BLOCK)
+        if (nBestHeight < LAST_POW_BLOCK || fLegacyBlock)
             fLegacyHash = true;
         return SerializeHash(*this);
         fLegacyHash = false;
@@ -644,7 +637,7 @@ public:
         return dPriority > COIN * 1440 / 250;
     }
 
-    bool ReadFromDisk(CDiskTxPos pos, FILE** pfileRet=NULL)
+    bool ReadFromDisk(CDiskTxPos pos, int nHeight, FILE** pfileRet=NULL)
     {
         CAutoFile filein = CAutoFile(OpenBlockFile(pos.nFile, 0, pfileRet ? "rb+" : "rb"), SER_DISK, CLIENT_VERSION);
         if (!filein)
@@ -655,9 +648,14 @@ public:
             return error("CTransaction::ReadFromDisk() : fseek failed");
 
         try {
+            // Handle condition when reading up to LAST_POW_BLOCK which has fLegacyHash txns
+            if (nHeight <= LAST_POW_BLOCK)
+                fLegacyBlock = true;
             filein >> *this;
+            fLegacyBlock = false;
         }
         catch (std::exception &e) {
+            fLegacyBlock = false;
             return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
         }
 
@@ -1133,7 +1131,7 @@ public:
 
     uint256 GetPoWHash() const
     {
-        if (nBestHeight < LAST_POW_BLOCK)
+        if (nBestHeight < LAST_POW_BLOCK || fLegacyBlock)
             fLegacyHash = true;
         return scrypt_blockhash(CVOIDBEGIN(nVersion));
         fLegacyHash = false;
@@ -1186,11 +1184,14 @@ public:
         return block;
     }
 
-    uint256 BuildMerkleTree() const
+    uint256 BuildMerkleTree(unsigned int nHeight) const
     {
         vMerkleTree.clear();
+        if (nHeight <= LAST_POW_BLOCK)
+            fLegacyBlock = true;
         BOOST_FOREACH(const CTransaction& tx, vtx)
             vMerkleTree.push_back(tx.GetHash());
+        fLegacyBlock = false;
         int j = 0;
         for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
         {
@@ -1211,10 +1212,10 @@ public:
         return vMerkleTree[nIndex];
     }
 
-    std::vector<uint256> GetMerkleBranch(int nIndex) const
+    std::vector<uint256> GetMerkleBranch(int nIndex, int nHeight) const
     {
         if (vMerkleTree.empty())
-            BuildMerkleTree();
+            BuildMerkleTree(nHeight);
         std::vector<uint256> vMerkleBranch;
         int j = 0;
         for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
@@ -1268,7 +1269,7 @@ public:
         return true;
     }
 
-    bool ReadFromDisk(unsigned int nFile, unsigned int nBlockPos, bool fReadTransactions=true)
+    bool ReadFromDisk(unsigned int nFile, unsigned int nBlockPos, int nHeight, bool fReadTransactions=true)
     {
         SetNull();
 
@@ -1281,9 +1282,14 @@ public:
 
         // Read block
         try {
+            // Handle condition when reading LAST_POW_BLOCK which has fLegacyHash header and txns
+            if (nHeight <= LAST_POW_BLOCK)
+                fLegacyBlock = true;
             filein >> *this;
+            fLegacyBlock = false;
         }
         catch (std::exception &e) {
+            fLegacyBlock = false;
             return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
         }
 

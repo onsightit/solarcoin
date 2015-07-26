@@ -231,7 +231,10 @@ bool CTxDB::AddTxIndex(const CTransaction& tx, const CDiskTxPos& pos, int nHeigh
     assert(!fClient);
 
     // Add to tx index
+    if (nHeight <= LAST_POW_BLOCK)
+        fLegacyBlock = true;
     uint256 hash = tx.GetHash();
+    fLegacyBlock = false;
     CTxIndex txindex(pos, tx.vout.size());
     return Write(make_pair(string("tx"), hash), txindex);
 }
@@ -256,7 +259,7 @@ bool CTxDB::ReadDiskTx(uint256 hash, CTransaction& tx, CTxIndex& txindex)
     tx.SetNull();
     if (!ReadTxIndex(hash, txindex))
         return false;
-    return (tx.ReadFromDisk(txindex.pos));
+    return (tx.ReadFromDisk(txindex.pos, txindex.GetDepthInMainChain()));
 }
 
 bool CTxDB::ReadDiskTx(uint256 hash, CTransaction& tx)
@@ -508,7 +511,10 @@ bool CTxDB::LoadBlockIndex()
             mapBlockPos[pos] = pindex;
             BOOST_FOREACH(const CTransaction &tx, block.vtx)
             {
+                if (pindex->nHeight <= LAST_POW_BLOCK)
+                    fLegacyBlock = true;
                 uint256 hashTx = tx.GetHash();
+                fLegacyBlock = false;
                 CTxIndex txindex;
                 if (ReadTxIndex(hashTx, txindex))
                 {
@@ -517,17 +523,22 @@ bool CTxDB::LoadBlockIndex()
                     {
                         // either an error or a duplicate transaction
                         CTransaction txFound;
-                        if (!txFound.ReadFromDisk(txindex.pos))
+                        if (!txFound.ReadFromDisk(txindex.pos, pindex->nHeight))
                         {
                             printf("LoadBlockIndex() : *** cannot read mislocated transaction %s\n", hashTx.ToString().c_str());
                             pindexFork = pindex->pprev;
                         }
                         else
+                        {
+                            if (pindex->nHeight <= LAST_POW_BLOCK)
+                                fLegacyBlock = true;
                             if (txFound.GetHash() != hashTx) // not a duplicate tx
                             {
                                 printf("LoadBlockIndex(): *** invalid tx position for %s\n", hashTx.ToString().c_str());
                                 pindexFork = pindex->pprev;
                             }
+                            fLegacyBlock = false;
+                        }
                     }
                     // check level 4: check whether spent txouts were spent within the main chain
                     unsigned int nOutput = 0;
@@ -547,7 +558,7 @@ bool CTxDB::LoadBlockIndex()
                                 if (nCheckLevel>5)
                                 {
                                     CTransaction txSpend;
-                                    if (!txSpend.ReadFromDisk(txpos))
+                                    if (!txSpend.ReadFromDisk(txpos, pindex->nHeight))
                                     {
                                         printf("LoadBlockIndex(): *** cannot read spending transaction of %s:%i from disk\n", hashTx.ToString().c_str(), nOutput);
                                         pindexFork = pindex->pprev;

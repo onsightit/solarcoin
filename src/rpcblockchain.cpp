@@ -154,13 +154,21 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool fPri
         {
             Object entry;
 
+            if (blockindex->nHeight <= LAST_POW_BLOCK)
+                fLegacyBlock = true;
             entry.push_back(Pair("txid", tx.GetHash().GetHex()));
+            fLegacyBlock = false;
             TxToJSON(tx, 0, entry);
 
             txinfo.push_back(entry);
         }
         else
+        {
+            if (blockindex->nHeight <= LAST_POW_BLOCK)
+                fLegacyBlock = true;
             txinfo.push_back(tx.GetHash().GetHex());
+            fLegacyBlock = false;
+        }
     }
 
     result.push_back(Pair("tx", txinfo));

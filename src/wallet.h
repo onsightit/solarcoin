@@ -680,7 +680,12 @@ public:
             if (mapPrev.empty())
             {
                 BOOST_FOREACH(const CMerkleTx& tx, vtxPrev)
+                {
+                    if (tx.GetDepthInMainChain() <= LAST_POW_BLOCK)
+                        fLegacyBlock = true;
                     mapPrev[tx.GetHash()] = &tx;
+                    fLegacyBlock = false;
+                }
             }
 
             BOOST_FOREACH(const CTxIn& txin, ptx->vin)

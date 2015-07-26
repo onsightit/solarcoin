@@ -443,7 +443,8 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
 
     // Read block header
     CBlock block;
-    if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
+    // We don't really care about the block height if just reading the block header.
+    if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, nBestHeight, false))
         return fDebug? error("CheckProofOfStake() : read block failed") : false; // unable to read block of previous transaction
 
     int currentHeight = pindexBest->pprev->nHeight+1;
