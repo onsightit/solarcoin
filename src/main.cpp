@@ -2574,10 +2574,6 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
         if (vtx[i].IsCoinBase())
             return DoS(100, error("CheckBlock() : more than one coinbase"));
 
-    // Check coinbase timestamp
-    if (GetBlockTime() > FutureDrift((int64_t)vtx[0].nTime))
-        return DoS(50, error("CheckBlock() : coinbase timestamp is too early"));
-
     if (fProofOfStake)
     {
         // Coinbase output should be empty if proof-of-stake block
@@ -3093,7 +3089,7 @@ bool CBlock::SignBlock(CWallet& wallet, int64_t nFees, int64_t nHeight)
                 }
             }
         }
-        else
+        else // old PoS
         {
             if (wallet.CreateCoinStake(wallet, nBits, nSearchTime-nLastCoinStakeSearchTime, nFees, txCoinStake, key))
             {

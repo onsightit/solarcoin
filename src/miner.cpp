@@ -291,8 +291,9 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake, int64_t* pFees)
                 continue;
 
             // Timestamp limit
-            if (tx.nTime > GetAdjustedTime() || (fProofOfStake && tx.nTime > pblock->vtx[0].nTime))
-                continue;
+            if (fProofOfStake)
+                if (tx.nTime > GetAdjustedTime() || (fProofOfStake && tx.nTime > pblock->vtx[0].nTime))
+                    continue;
 
             // Transaction fee
             int64_t nMinFee = tx.GetMinFee(nBlockSize, GMF_BLOCK);
