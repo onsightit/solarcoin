@@ -678,8 +678,7 @@ int CWalletTx::GetRequestCount() const
         else
         {
             // Did anyone request this transaction?
-            CBlockIndex* pindex = mapBlockIndex[hashBlock];
-            if (pindex->nHeight <= LAST_POW_BLOCK)
+            if (nHeight <= LAST_POW_BLOCK)
                 fLegacyBlock = true;
             map<uint256, int>::const_iterator mi = pwallet->mapRequestCount.find(GetHash());
             fLegacyBlock = false;
@@ -864,8 +863,7 @@ void CWalletTx::AddSupportingTransactions(CTxDB& txdb)
 
 bool CWalletTx::WriteToDisk()
 {
-    CBlockIndex* pindex = mapBlockIndex[hashBlock];
-    if (pindex->nHeight <= LAST_POW_BLOCK)
+    if (nHeight <= LAST_POW_BLOCK)
         fLegacyBlock = true;
     bool ret = CWalletDB(pwallet->strWalletFile).WriteTx(GetHash(), *this);
     fLegacyBlock = false;
@@ -930,8 +928,7 @@ void CWallet::ReacceptWalletTransactions()
 
             CTxIndex txindex;
             bool fUpdated = false;
-            CBlockIndex* pindex = mapBlockIndex[wtx.hashBlock];
-            if (pindex->nHeight <= LAST_POW_BLOCK)
+            if (wtx.nHeight <= LAST_POW_BLOCK)
                 fLegacyBlock = true;
             else
                 fLegacyBlock = false;
@@ -984,8 +981,7 @@ void CWalletTx::RelayWalletTransaction(CTxDB& txdb)
     {
         if (!(tx.IsCoinBase() || tx.IsCoinStake()))
         {
-            CBlockIndex* pindex = mapBlockIndex[tx.hashBlock];
-            if (pindex->nHeight <= LAST_POW_BLOCK)
+            if (nHeight <= LAST_POW_BLOCK)
                 fLegacyBlock = true;
             uint256 hash = tx.GetHash();
             fLegacyBlock = false;
@@ -995,8 +991,7 @@ void CWalletTx::RelayWalletTransaction(CTxDB& txdb)
     }
     if (!(IsCoinBase() || IsCoinStake()))
     {
-        CBlockIndex* pindex = mapBlockIndex[hashBlock];
-        if (pindex->nHeight <= LAST_POW_BLOCK)
+        if (nHeight <= LAST_POW_BLOCK)
             fLegacyBlock = true;
         uint256 hash = GetHash();
         fLegacyBlock = false;
@@ -1510,8 +1505,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
                 // Fill vin
                 BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
                 {
-                    CBlockIndex* pindex = mapBlockIndex[coin.first->hashBlock];
-                    if (pindex && pindex->nHeight <= LAST_POW_BLOCK)
+                    if (coin.first->nHeight <= LAST_POW_BLOCK)
                         fLegacyBlock = true;
                     wtxNew.vin.push_back(CTxIn(coin.first->GetHash(),coin.second));
                     fLegacyBlock = false;
@@ -1589,8 +1583,7 @@ bool CWallet::GetStakeWeight(const CKeyStore& keystore, uint64_t& nWeight)
     CTxDB txdb("r");
     BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
     {
-        CBlockIndex* pindex = mapBlockIndex[pcoin.first->hashBlock];
-        if (pindex && pindex->nHeight <= LAST_POW_BLOCK)
+        if (pcoin.first->nHeight <= LAST_POW_BLOCK)
             fLegacyBlock = true;
         else
             fLegacyBlock = false;
@@ -1670,8 +1663,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     CTxDB txdb("r");
     BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
     {
-        CBlockIndex* pindex = mapBlockIndex[pcoin.first->hashBlock];
-        if (pindex && pindex->nHeight <= LAST_POW_BLOCK)
+        if (pcoin.first->nHeight <= LAST_POW_BLOCK)
             fLegacyBlock = true;
         else
             fLegacyBlock = false;
@@ -1781,8 +1773,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
 
     BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
     {
-        CBlockIndex* pindex = mapBlockIndex[pcoin.first->hashBlock];
-        if (pindex && pindex->nHeight <= LAST_POW_BLOCK)
+        if (pcoin.first->nHeight <= LAST_POW_BLOCK)
             fLegacyBlock = true;
         else
             fLegacyBlock = false;
@@ -1895,8 +1886,7 @@ bool CWallet::CreateCoinTimeStake(const CKeyStore& keystore, unsigned int nBits,
     CTxDB txdb("r");
     BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
     {
-        CBlockIndex* pindex = mapBlockIndex[pcoin.first->hashBlock];
-        if (pindex && pindex->nHeight <= LAST_POW_BLOCK)
+        if (pcoin.first->nHeight <= LAST_POW_BLOCK)
             fLegacyBlock = true;
         else
             fLegacyBlock = false;
@@ -2008,8 +1998,7 @@ bool CWallet::CreateCoinTimeStake(const CKeyStore& keystore, unsigned int nBits,
 
     BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
     {
-        CBlockIndex* pindex = mapBlockIndex[pcoin.first->hashBlock];
-        if (pindex && pindex->nHeight <= LAST_POW_BLOCK)
+        if (pcoin.first->nHeight <= LAST_POW_BLOCK)
             fLegacyBlock = true;
         else
             fLegacyBlock = false;
@@ -2123,8 +2112,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
         }
 
         // Track how many getdata requests our transaction gets
-        CBlockIndex* pindex = mapBlockIndex[wtxNew.hashBlock];
-        if (pindex && pindex->nHeight <= LAST_POW_BLOCK)
+        if (wtxNew.nHeight <= LAST_POW_BLOCK)
             fLegacyBlock = true;
         mapRequestCount[wtxNew.GetHash()] = 0;
         fLegacyBlock = false;
@@ -2602,8 +2590,7 @@ void CWallet::FixSpentCoins(int& nMismatchFound, int64_t& nBalanceInQuestion, bo
     CTxDB txdb("r");
     BOOST_FOREACH(CWalletTx* pcoin, vCoins)
     {
-        CBlockIndex* pindex = mapBlockIndex[pcoin->hashBlock];
-        if (pindex && pindex->nHeight <= LAST_POW_BLOCK)
+        if (pcoin->nHeight <= LAST_POW_BLOCK)
             fLegacyBlock = true;
         else
             fLegacyBlock = false;

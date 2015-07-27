@@ -421,10 +421,15 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
         {
             // Load the block this tx is in
             CTxIndex txindex;
+            if (nHeight >= 0 && nHeight <= LAST_POW_BLOCK)
+                fLegacyBlock = true;
             if (!CTxDB("r").ReadTxIndex(GetHash(), txindex))
+            {
+                fLegacyBlock = false;
                 return 0;
-            int nHeight = txindex.GetHeightInMainChain();
-            if (!blockTmp.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, (nHeight ? nHeight : nBestHeight)))
+            }
+            fLegacyBlock = false;
+            if (!blockTmp.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, nHeight))
                 return 0;
             pblock = &blockTmp;
         }
@@ -440,9 +445,14 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
                 break;
         if (nIndex == (int)pblock->vtx.size())
         {
-            vMerkleBranch.clear();
-            nIndex = -1;
+            if (nHeight >= 0 && nHeight <= LAST_POW_BLOCK)
+                fLegacyBlock = true;
             printf("ERROR: SetMerkleBranch() : couldn't find tx in block\n");
+            fLegacyBlock = false;
+            vMerkleBranch.clear();
+            hashBlock = 0;
+            nIndex = -1;
+            nHeight = -1;
             return 0;
         }
 
@@ -831,7 +841,7 @@ int CMerkleTx::GetDepthInMainChainINTERNAL(CBlockIndex* &pindexRet) const
     // Make sure the merkle branch connects to this block
     if (!fMerkleVerified)
     {
-        if (pindex->nHeight <= LAST_POW_BLOCK)
+        if (pindex->nHeight >= 0 && pindex->nHeight <= LAST_POW_BLOCK)
             fLegacyBlock = true;
         if (CBlock::CheckMerkleBranch(GetHash(), vMerkleBranch, nIndex) != pindex->hashMerkleRoot)
         {
@@ -877,7 +887,7 @@ int CMerkleTx::GetHeightInMainChainINTERNAL(CBlockIndex* &pindexRet) const
     // Make sure the merkle branch connects to this block
     if (!fMerkleVerified)
     {
-        if (pindex->nHeight <= LAST_POW_BLOCK)
+        if (pindex->nHeight >= 0 && pindex->nHeight <= LAST_POW_BLOCK)
             fLegacyBlock = true;
         if (CBlock::CheckMerkleBranch(GetHash(), vMerkleBranch, nIndex) != pindex->hashMerkleRoot)
         {
@@ -917,7 +927,7 @@ int CMerkleTx::GetBlocksToMaturity() const
     if (!(IsCoinBase() || IsCoinStake()))
         return 0;
     int nMature = 0;
-    if (nHeight <= LAST_POW_BLOCK)
+    if (nHeight >= 0 && nHeight <= LAST_POW_BLOCK)
         nMature = nCoinbaseMaturity_PoW + 1;
     else
         nMature = nCoinbaseMaturity + 10;
@@ -1033,7 +1043,8 @@ bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock, i
             {
                 hashBlock = block.GetHash();
                 CBlockIndex* pindex = mapBlockIndex[hashBlock];
-                nHeight = pindex->nHeight;
+                if (pindex)
+                    nHeight = pindex->nHeight;
             }
             return true;
         }
@@ -1864,7 +1875,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
             // If prev is coinbase or coinstake, check that it's matured
             if (txPrev.IsCoinBase() || txPrev.IsCoinStake())
             {
-                int nMature = (nHeight <= LAST_POW_BLOCK ? nCoinbaseMaturity_PoW : nCoinbaseMaturity);
+                int nMature = (nHeight >= 0 && nHeight <= LAST_POW_BLOCK ? nCoinbaseMaturity_PoW : nCoinbaseMaturity);
                 for (const CBlockIndex* pindex = pindexBlock; pindex && pindexBlock->nHeight - pindex->nHeight < nMature; pindex = pindex->pprev)
                     if (pindex->nBlockPos == txindex.pos.nBlockPos && pindex->nFile == txindex.pos.nFile)
                         return error("ConnectInputs() : tried to spend %s at depth %d", txPrev.IsCoinBase() ? "coinbase" : "coinstake", pindexBlock->nHeight - pindex->nHeight);
@@ -2062,7 +2073,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
     unsigned int nSigOps = 0;
     BOOST_FOREACH(CTransaction& tx, vtx)
     {
-        if (pindex->nHeight <= LAST_POW_BLOCK)
+        if (pindex->nHeight >= 0 && pindex->nHeight <= LAST_POW_BLOCK)
             fLegacyBlock = true;
         uint256 hashTx = tx.GetHash();
         fLegacyBlock = false;
@@ -2628,7 +2639,7 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
         // Notify UI to display prev block's coinbase if it was ours
         static uint256 hashPrevBestCoinBase;
         UpdatedTransaction(hashPrevBestCoinBase);
-        if (pindexNew->nHeight <= LAST_POW_BLOCK)
+        if (pindexNew->nHeight >= 0 && pindexNew->nHeight <= LAST_POW_BLOCK)
             fLegacyBlock = true;
         hashPrevBestCoinBase = vtx[0].GetHash();
         fLegacyBlock = false;

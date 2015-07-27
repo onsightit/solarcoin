@@ -671,7 +671,13 @@ public:
 
     friend bool operator==(const CTransaction& a, const CTransaction& b)
     {
-        return (a.nVersion  == b.nVersion &&
+        if (nBestHeight < LAST_POW_BLOCK || fLegacyBlock)
+            return (a.nVersion  == b.nVersion &&
+                a.vin       == b.vin &&
+                a.vout      == b.vout &&
+                a.nLockTime == b.nLockTime);
+        else
+            return (a.nVersion  == b.nVersion &&
                 a.nTime     == b.nTime &&
                 a.vin       == b.vin &&
                 a.vout      == b.vout &&
