@@ -227,7 +227,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
         if (!wtx.strTxComment.empty())
             strHTML += "<b>" + tr("Transaction comment") + ":</b><br>" + wtx.strTxComment.c_str() + "<br>";
 
-        if (wtx.GetDepthInMainChain() <= LAST_POW_BLOCK)
+        if (wtx.nHeight >= 0 && wtx.nHeight <= LAST_POW_BLOCK)
             fLegacyBlock = true;
         strHTML += "<b>" + tr("Transaction ID") + ":</b> " + wtx.GetHash().ToString().c_str() + "<br>";
         fLegacyBlock = false;

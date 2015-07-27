@@ -172,7 +172,7 @@ CWalletDB::ReorderTransactions(CWallet* pwallet)
             // Since we're changing the order, write it back
             if (pwtx)
             {
-                if (pwtx->GetDepthInMainChain() <= LAST_POW_BLOCK)
+                if (pwtx->nHeight >= 0 && pwtx->nHeight <= LAST_POW_BLOCK)
                     fLegacyBlock = true;
                 if (!WriteTx(pwtx->GetHash(), *pwtx))
                 {
@@ -229,7 +229,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssKey >> hash;
             CWalletTx& wtx = pwallet->mapWallet[hash];
             ssValue >> wtx;
-            if (wtx.GetDepthInMainChain() <= LAST_POW_BLOCK)
+            if (wtx.nHeight >= 0 && wtx.nHeight <= LAST_POW_BLOCK)
                 fLegacyBlock = true;
             if (wtx.CheckTransaction() && (wtx.GetHash() == hash))
                 wtx.BindWallet(pwallet);

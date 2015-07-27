@@ -376,7 +376,7 @@ void CWallet::WalletUpdateSpent(const CTransaction &tx, bool fBlock)
             if (mi != mapWallet.end())
             {
                 CWalletTx& wtx = (*mi).second;
-                if (wtx.GetDepthInMainChain() <= LAST_POW_BLOCK)
+                if (wtx.nHeight >= 0 && wtx.nHeight <= LAST_POW_BLOCK)
                     fLegacyBlock = true;
                 else
                     fLegacyBlock = false;
@@ -424,7 +424,7 @@ void CWallet::MarkDirty()
 
 bool CWallet::AddToWallet(const CWalletTx& wtxIn)
 {
-    if (wtxIn.GetDepthInMainChain() <= LAST_POW_BLOCK)
+    if (wtxIn.nHeight >= 0 && wtxIn.nHeight <= LAST_POW_BLOCK)
         fLegacyBlock = true;
     else
         fLegacyBlock = false;
@@ -495,6 +495,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
             if (wtxIn.hashBlock != 0 && wtxIn.hashBlock != wtx.hashBlock)
             {
                 wtx.hashBlock = wtxIn.hashBlock;
+                wtx.nHeight = wtxIn.nHeight;
                 fUpdated = true;
             }
             if (wtxIn.nIndex != -1 && (wtxIn.vMerkleBranch != wtx.vMerkleBranch || wtxIn.nIndex != wtx.nIndex))
@@ -742,7 +743,7 @@ void CWalletTx::GetAmounts(list<pair<CTxDestination, int64_t> >& listReceived,
         CTxDestination address;
         if (!ExtractDestination(txout.scriptPubKey, address))
         {
-            if (GetDepthInMainChain() <= LAST_POW_BLOCK)
+            if (nHeight >= 0 && nHeight <= LAST_POW_BLOCK)
                 fLegacyBlock = true;
             printf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
                    this->GetHash().ToString().c_str());
@@ -826,7 +827,7 @@ void CWalletTx::AddSupportingTransactions(CTxDB& txdb)
                     tx = (*mi).second;
                     BOOST_FOREACH(const CMerkleTx& txWalletPrev, (*mi).second.vtxPrev)
                     {
-                        if (txWalletPrev.GetDepthInMainChain() <= LAST_POW_BLOCK)
+                        if (txWalletPrev.nHeight >= 0 && txWalletPrev.nHeight <= LAST_POW_BLOCK)
                             fLegacyBlock = true;
                         mapWalletPrev[txWalletPrev.GetHash()] = &txWalletPrev;
                         fLegacyBlock = false;
@@ -1052,7 +1053,7 @@ void CWallet::ResendWalletTransactions()
             if (wtx.CheckTransaction())
                 wtx.RelayWalletTransaction(txdb);
             else
-                if (wtx.GetDepthInMainChain() <= LAST_POW_BLOCK)
+                if (wtx.nHeight >= 0 && wtx.nHeight <= LAST_POW_BLOCK)
                     fLegacyBlock = true;
                 printf("ResendWalletTransactions() : CheckTransaction failed for transaction %s\n", wtx.GetHash().ToString().c_str());
                 fLegacyBlock = false;
@@ -2111,7 +2112,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
                 coin.BindWallet(this);
                 coin.MarkSpent(txin.prevout.n);
                 coin.WriteToDisk();
-                if (coin.GetDepthInMainChain() <= LAST_POW_BLOCK)
+                if (coin.nHeight >= 0 && coin.nHeight <= LAST_POW_BLOCK)
                     fLegacyBlock = true;
                 NotifyTransactionChanged(this, coin.GetHash(), CT_UPDATED);
                 fLegacyBlock = false;

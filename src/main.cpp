@@ -268,7 +268,7 @@ bool CTransaction::ReadFromDisk(CTxDB& txdb, COutPoint prevout, CTxIndex& txinde
     if (!txdb.ReadTxIndex(prevout.hash, txindexRet))
         return false;
 
-    int nHeight = txindexRet.GetDepthInMainChain();
+    int nHeight = txindexRet.GetHeightInMainChain();
 
     if (!ReadFromDisk(txindexRet.pos, nHeight))
         return false;
@@ -423,8 +423,8 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
             CTxIndex txindex;
             if (!CTxDB("r").ReadTxIndex(GetHash(), txindex))
                 return 0;
-            int nHeight = txindex.GetDepthInMainChain();
-            if (!blockTmp.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, nHeight))
+            int nHeight = txindex.GetHeightInMainChain();
+            if (!blockTmp.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, (nHeight ? nHeight : nBestHeight)))
                 return 0;
             pblock = &blockTmp;
         }
@@ -432,6 +432,7 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
         // Update the tx's hashBlock
         hashBlock = pblock->GetHash();
         CBlockIndex* pindex = mapBlockIndex[hashBlock];
+        nHeight = pindex->nHeight;
 
         // Locate the transaction
         for (nIndex = 0; nIndex < (int)pblock->vtx.size(); nIndex++)
@@ -446,7 +447,7 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
         }
 
         // Fill in merkle branch
-        vMerkleBranch = pblock->GetMerkleBranch(nIndex, pindex->nHeight);
+        vMerkleBranch = pblock->GetMerkleBranch(nIndex, nHeight);
     }
 
     // Is the tx in a block that's in the main chain
@@ -816,7 +817,7 @@ void CTxMemPool::queryHashes(std::vector<uint256>& vtxid)
 
 int CMerkleTx::GetDepthInMainChainINTERNAL(CBlockIndex* &pindexRet) const
 {
-    if (hashBlock == 0 || nIndex == -1)
+    if (hashBlock == 0 || nIndex == -1 || nHeight == -1)
         return 0;
 
     // Find the block it claims to be in
@@ -848,7 +849,58 @@ int CMerkleTx::GetDepthInMainChainINTERNAL(CBlockIndex* &pindexRet) const
 int CMerkleTx::GetDepthInMainChain(CBlockIndex* &pindexRet) const
 {
     int nResult = GetDepthInMainChainINTERNAL(pindexRet);
-    if (nResult <= LAST_POW_BLOCK)
+    if (nHeight >= 0 && nHeight <= LAST_POW_BLOCK)
+        fLegacyBlock = true;
+    if (nResult == 0 && !mempool.exists(GetHash()))
+    {
+        fLegacyBlock = false;
+        return -1; // Not in chain, not in mempool
+    }
+    fLegacyBlock = false;
+
+    return nResult;
+}
+
+int CMerkleTx::GetHeightInMainChainINTERNAL(CBlockIndex* &pindexRet) const
+{
+    if (hashBlock == 0 || nIndex == -1 || nHeight == -1)
+        return 0;
+
+    // Find the block it claims to be in
+    map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
+    if (mi == mapBlockIndex.end())
+        return 0;
+    CBlockIndex* pindex = (*mi).second;
+    if (!pindex || !pindex->IsInMainChain())
+        return 0;
+
+    // Make sure the merkle branch connects to this block
+    if (!fMerkleVerified)
+    {
+        if (pindex->nHeight <= LAST_POW_BLOCK)
+            fLegacyBlock = true;
+        if (CBlock::CheckMerkleBranch(GetHash(), vMerkleBranch, nIndex) != pindex->hashMerkleRoot)
+        {
+            fLegacyBlock = false;
+            return 0;
+        }
+        fLegacyBlock = false;
+        fMerkleVerified = true;
+    }
+
+    pindexRet = pindex;
+    return pindex->nHeight;
+}
+
+int CMerkleTx::GetHeightInMainChain(CBlockIndex* &pindexRet) const
+{
+    int nResult = GetHeightInMainChainINTERNAL(pindexRet);
+    if (nResult != nHeight)
+    {
+        printf("DEBUG: nHeight=%d and pindex->nHeight=%d mismatch\n", nHeight, nResult);
+        return -1; // Height verification mismatch
+    }
+    if (nHeight >= 0 && nHeight <= LAST_POW_BLOCK)
         fLegacyBlock = true;
     if (nResult == 0 && !mempool.exists(GetHash()))
     {
@@ -865,7 +917,7 @@ int CMerkleTx::GetBlocksToMaturity() const
     if (!(IsCoinBase() || IsCoinStake()))
         return 0;
     int nMature = 0;
-    if (GetDepthInMainChain() <= LAST_POW_BLOCK)
+    if (nHeight <= LAST_POW_BLOCK)
         nMature = nCoinbaseMaturity_PoW + 1;
     else
         nMature = nCoinbaseMaturity + 10;
@@ -905,7 +957,7 @@ bool CWalletTx::AcceptWalletTransaction(CTxDB& txdb, bool fCheckInputs)
         {
             if (!(tx.IsCoinBase() || tx.IsCoinStake()))
             {
-                if (tx.GetDepthInMainChain() <= LAST_POW_BLOCK)
+                if (tx.nHeight >= 0 && tx.nHeight <= LAST_POW_BLOCK)
                     fLegacyBlock = true;
                 uint256 hash = tx.GetHash();
                 fLegacyBlock = false;
@@ -941,8 +993,25 @@ int CTxIndex::GetDepthInMainChain() const
     return 1 + nBestHeight - pindex->nHeight;
 }
 
+int CTxIndex::GetHeightInMainChain() const
+{
+    // Read block header
+    CBlock block;
+    // We don't really care about the block height if just reading the block header.
+    if (!block.ReadFromDisk(pos.nFile, pos.nBlockPos, nBestHeight, false))
+        return nBestHeight;
+    // Find the block in the index
+    map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(block.GetHash());
+    if (mi == mapBlockIndex.end())
+        return nBestHeight;
+    CBlockIndex* pindex = (*mi).second;
+    if (!pindex || !pindex->IsInMainChain())
+        return nBestHeight;
+    return pindex->nHeight;
+}
+
 // Return transaction in tx, and if it was found inside a block, its hash is placed in hashBlock
-bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock)
+bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock, int &nHeight)
 {
     {
         LOCK(cs_main);
@@ -961,7 +1030,11 @@ bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock)
             CBlock block;
             // We don't really care about the block height if just reading the block header.
             if (block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, nBestHeight, false))
+            {
                 hashBlock = block.GetHash();
+                CBlockIndex* pindex = mapBlockIndex[hashBlock];
+                nHeight = pindex->nHeight;
+            }
             return true;
         }
     }
@@ -1692,7 +1765,7 @@ bool CTransaction::FetchInputs(CTxDB& txdb, const map<uint256, CTxIndex>& mapTes
         else
         {
             // Get prev tx from disk
-            int nHeight = txindex.GetDepthInMainChain();
+            int nHeight = txindex.GetHeightInMainChain();
             if (!txPrev.ReadFromDisk(txindex.pos, nHeight))
                 return error("FetchInputs() : %s ReadFromDisk prev tx %s failed", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
         }
@@ -1783,7 +1856,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
             assert(inputs.count(prevout.hash) > 0);
             CTxIndex& txindex = inputs[prevout.hash].first;
             CTransaction& txPrev = inputs[prevout.hash].second;
-            int nHeight = txindex.GetDepthInMainChain();
+            int nHeight = txindex.GetHeightInMainChain();
 
             if (prevout.n >= txPrev.vout.size() || prevout.n >= txindex.vSpent.size())
                 return DoS(100, error("ConnectInputs() : %s prevout.n out of range %d %"PRIszu" %"PRIszu" prev tx %s\n%s", GetHash().ToString().substr(0,10).c_str(), prevout.n, txPrev.vout.size(), txindex.vSpent.size(), prevout.hash.ToString().substr(0,10).c_str(), txPrev.ToString().c_str()));
@@ -1816,7 +1889,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
             assert(inputs.count(prevout.hash) > 0);
             CTxIndex& txindex = inputs[prevout.hash].first;
             CTransaction& txPrev = inputs[prevout.hash].second;
-            int nHeight = txindex.GetDepthInMainChain();
+            int nHeight = txindex.GetHeightInMainChain();
 
             // Check for conflicts (double-spend)
             // This doesn't trigger the DoS code on purpose; if it did, it would make it easier

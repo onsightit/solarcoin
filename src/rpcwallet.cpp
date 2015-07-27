@@ -44,7 +44,7 @@ void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
         entry.push_back(Pair("blockindex", wtx.nIndex));
         entry.push_back(Pair("blocktime", (boost::int64_t)(mapBlockIndex[wtx.hashBlock]->nTime)));
     }
-    if (wtx.GetDepthInMainChain() <= LAST_POW_BLOCK)
+    if (wtx.nHeight >= 0 && wtx.nHeight <= LAST_POW_BLOCK)
         fLegacyBlock = true;
     entry.push_back(Pair("txid", wtx.GetHash().GetHex()));
     fLegacyBlock = false;
@@ -1315,7 +1315,8 @@ Value gettransaction(const Array& params, bool fHelp)
     {
         CTransaction tx;
         uint256 hashBlock = 0;
-        if (GetTransaction(hash, tx, hashBlock))
+        int nHeight = 0;
+        if (GetTransaction(hash, tx, hashBlock, nHeight))
         {
             TxToJSON(tx, 0, entry);
             if (hashBlock == 0)
@@ -1323,6 +1324,7 @@ Value gettransaction(const Array& params, bool fHelp)
             else
             {
                 entry.push_back(Pair("blockhash", hashBlock.GetHex()));
+                entry.push_back(Pair("blockheight", nHeight));
                 map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
                 if (mi != mapBlockIndex.end() && (*mi).second)
                 {

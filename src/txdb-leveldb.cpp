@@ -259,7 +259,7 @@ bool CTxDB::ReadDiskTx(uint256 hash, CTransaction& tx, CTxIndex& txindex)
     tx.SetNull();
     if (!ReadTxIndex(hash, txindex))
         return false;
-    return (tx.ReadFromDisk(txindex.pos, txindex.GetDepthInMainChain()));
+    return (tx.ReadFromDisk(txindex.pos, txindex.GetHeightInMainChain()));
 }
 
 bool CTxDB::ReadDiskTx(uint256 hash, CTransaction& tx)

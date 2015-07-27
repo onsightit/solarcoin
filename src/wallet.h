@@ -681,7 +681,7 @@ public:
             {
                 BOOST_FOREACH(const CMerkleTx& tx, vtxPrev)
                 {
-                    if (tx.GetDepthInMainChain() <= LAST_POW_BLOCK)
+                    if (tx.nHeight >= 0 && tx.nHeight <= LAST_POW_BLOCK)
                         fLegacyBlock = true;
                     mapPrev[tx.GetHash()] = &tx;
                     fLegacyBlock = false;

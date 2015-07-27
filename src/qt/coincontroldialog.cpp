@@ -721,7 +721,7 @@ void CoinControlDialog::updateView()
             nInputSum    += nInputSize;
             
             // transaction hash
-            if (out.tx->GetDepthInMainChain() <= LAST_POW_BLOCK)
+            if (out.tx->GetHeightInMainChain() <= LAST_POW_BLOCK)
                 fLegacyBlock = true;
             uint256 txhash = out.tx->GetHash();
             fLegacyBlock = false;
