@@ -870,7 +870,7 @@ bool AppInit2()
                 CBlockIndex* pindex = (*mi).second;
                 CBlock block;
                 block.ReadFromDisk(pindex);
-                block.BuildMerkleTree(block.IsProofOfStake() ? LAST_POW_BLOCK + 1 : LAST_POW_BLOCK);
+                block.BuildMerkleTree();
                 block.print();
                 printf("\n");
                 nFound++;

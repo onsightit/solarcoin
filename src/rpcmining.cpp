@@ -141,7 +141,7 @@ Value getworkex(const Array& params, bool fHelp)
         uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
 
         CTransaction coinbaseTx = pblock->vtx[0];
-        std::vector<uint256> merkle = pblock->GetMerkleBranch(0, pindexBest->nHeight+1);
+        std::vector<uint256> merkle = pblock->GetMerkleBranch(0);
 
         Object result;
         result.push_back(Pair("data",     HexStr(BEGIN(pdata), END(pdata))));
@@ -193,7 +193,7 @@ Value getworkex(const Array& params, bool fHelp)
         else
             CDataStream(coinbase, SER_NETWORK, PROTOCOL_VERSION) >> pblock->vtx[0]; // FIXME - HACK!
 
-        pblock->hashMerkleRoot = pblock->BuildMerkleTree(nBestHeight+1);
+        pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 
         return CheckWork(pblock, *pwalletMain, reservekey);
     }
@@ -309,7 +309,7 @@ Value getwork(const Array& params, bool fHelp)
         pblock->nTime = pdata->nTime;
         pblock->nNonce = pdata->nNonce;
         pblock->vtx[0].vin[0].scriptSig = mapNewBlock[pdata->hashMerkleRoot].second;
-        pblock->hashMerkleRoot = pblock->BuildMerkleTree(nBestHeight+1);
+        pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 
         return CheckWork(pblock, *pwalletMain, reservekey);
     }
@@ -407,10 +407,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     CTxDB txdb("r");
     BOOST_FOREACH (CTransaction& tx, pblock->vtx)
     {
-        if (!pblock->IsProofOfStake())
-            fLegacyBlock = true;
         uint256 txHash = tx.GetHash();
-        fLegacyBlock = false;
         setTxIndex[txHash] = i++;
 
         if (tx.IsCoinBase() || tx.IsCoinStake())

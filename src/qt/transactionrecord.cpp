@@ -28,10 +28,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     int64_t nCredit = wtx.GetCredit(true);
     int64_t nDebit = wtx.GetDebit();
     int64_t nNet = nCredit - nDebit;
-    if (wtx.nHeight >= 0 && wtx.nHeight <= LAST_POW_BLOCK)
-        fLegacyBlock = true;
     uint256 hash = wtx.GetHash(), hashPrev = 0;
-    fLegacyBlock = false;
     std::string txcomment = "";
     if (!wtx.strTxComment.empty())
     {

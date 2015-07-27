@@ -103,8 +103,6 @@ extern bool fUseFastIndex;
 extern unsigned int nDerivationMethodIndex;
 
 extern bool fEnforceCanonical;
-extern bool fLegacyHash;
-extern bool fLegacyBlock;
 
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64_t nMinDiskSpace = 52428800;
@@ -463,7 +461,8 @@ class CTransaction
 {
 public:
     static const int LEGACY_VERSION_1 = 1;
-    static const int CURRENT_VERSION = 2;
+    static const int LEGACY_VERSION_2 = 2;
+    static const int CURRENT_VERSION = 3;
     int nVersion;
     unsigned int nTime;
     std::vector<CTxIn> vin;
@@ -484,7 +483,9 @@ public:
     (
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
-        if(!fLegacyHash) {
+        if(this->nVersion == CTransaction::CURRENT_VERSION) {
+        READWRITE(nTime);
+        } else if (!(nType & SER_GETHASH)) {
         READWRITE(nTime);
         }
         READWRITE(vin);
@@ -497,8 +498,16 @@ public:
 
     void SetNull()
     {
-        nVersion = CTransaction::CURRENT_VERSION;
-        nTime = GetAdjustedTime();
+        if (nBestHeight >= LAST_POW_BLOCK)
+        {
+            nVersion = CTransaction::CURRENT_VERSION;
+            nTime = GetAdjustedTime();
+        }
+        else
+        {
+            nVersion = CTransaction::LEGACY_VERSION_2;
+            nTime = 0;
+        }
         vin.clear();
         vout.clear();
         nLockTime = 0;
@@ -513,10 +522,7 @@ public:
 
     uint256 GetHash() const
     {
-        if (nBestHeight < LAST_POW_BLOCK || fLegacyBlock)
-            fLegacyHash = true;
         return SerializeHash(*this);
-        fLegacyHash = false;
     }
 
     bool IsFinal(int nBlockHeight=0, int64_t nBlockTime=0) const
@@ -637,7 +643,7 @@ public:
         return dPriority > COIN * 1440 / 250;
     }
 
-    bool ReadFromDisk(CDiskTxPos pos, int nHeight, FILE** pfileRet=NULL)
+    bool ReadFromDisk(CDiskTxPos pos, FILE** pfileRet=NULL)
     {
         CAutoFile filein = CAutoFile(OpenBlockFile(pos.nFile, 0, pfileRet ? "rb+" : "rb"), SER_DISK, CLIENT_VERSION);
         if (!filein)
@@ -648,14 +654,9 @@ public:
             return error("CTransaction::ReadFromDisk() : fseek failed");
 
         try {
-            // Handle condition when reading up to LAST_POW_BLOCK which has fLegacyHash txns
-            if (nHeight <= LAST_POW_BLOCK)
-                fLegacyBlock = true;
             filein >> *this;
-            fLegacyBlock = false;
         }
         catch (std::exception &e) {
-            fLegacyBlock = false;
             return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
         }
 
@@ -671,12 +672,12 @@ public:
 
     friend bool operator==(const CTransaction& a, const CTransaction& b)
     {
-        if (nBestHeight < LAST_POW_BLOCK || fLegacyBlock)
+        /* DEBUG if (nBestHeight < LAST_POW_BLOCK)
             return (a.nVersion  == b.nVersion &&
                 a.vin       == b.vin &&
                 a.vout      == b.vout &&
                 a.nLockTime == b.nLockTime);
-        else
+        else */
             return (a.nVersion  == b.nVersion &&
                 a.nTime     == b.nTime &&
                 a.vin       == b.vin &&
@@ -805,12 +806,10 @@ class CMerkleTx : public CTransaction
 {
 private:
     int GetDepthInMainChainINTERNAL(CBlockIndex* &pindexRet) const;
-    int GetHeightInMainChainINTERNAL(CBlockIndex* &pindexRet) const;
 public:
     uint256 hashBlock;
     std::vector<uint256> vMerkleBranch;
     int nIndex;
-    int nHeight;
 
     // memory only
     mutable bool fMerkleVerified;
@@ -830,7 +829,6 @@ public:
     {
         hashBlock = 0;
         nIndex = -1;
-        nHeight = -1;
         fMerkleVerified = false;
     }
 
@@ -842,7 +840,6 @@ public:
         READWRITE(hashBlock);
         READWRITE(vMerkleBranch);
         READWRITE(nIndex);
-        READWRITE(nHeight);
     )
 
 
@@ -854,8 +851,6 @@ public:
     // >=1 : this many blocks deep in the main chain
     int GetDepthInMainChain(CBlockIndex* &pindexRet) const;
     int GetDepthInMainChain() const { CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet); }
-    int GetHeightInMainChain(CBlockIndex* &pindexRet) const;
-    int GetHeightInMainChain() const { CBlockIndex *pindexRet; return GetHeightInMainChain(pindexRet); }
     bool IsInMainChain() const { CBlockIndex *pindexRet; return GetDepthInMainChainINTERNAL(pindexRet) > 0; }
     int GetBlocksToMaturity() const;
     bool AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs=true);
@@ -916,8 +911,6 @@ public:
         return !(a == b);
     }
     int GetDepthInMainChain() const;
-    int GetHeightInMainChain() const;
-
 };
 
 
@@ -1035,7 +1028,8 @@ class CBlockHeader
 {
 public:
     // header
-    static const int CURRENT_VERSION = 2;
+    static const int LEGACY_VERSION_2 = 2;
+    static const int CURRENT_VERSION = 3;
     int nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
@@ -1061,7 +1055,14 @@ public:
 
     void SetNull()
     {
-        nVersion = CBlockHeader::CURRENT_VERSION;
+        if (nBestHeight >= LAST_POW_BLOCK)
+        {
+            nVersion = CBlockHeader::CURRENT_VERSION;
+        }
+        else
+        {
+            nVersion = CBlockHeader::LEGACY_VERSION_2;
+        }
         hashPrevBlock = 0;
         hashMerkleRoot = 0;
         nTime = 0;
@@ -1122,10 +1123,9 @@ public:
         if (!(nType & (SER_GETHASH|SER_BLOCKHEADERONLY)))
         {
             READWRITE(vtx);
-            if(!fLegacyHash) {
+            if (this->nVersion == CBlockHeader::CURRENT_VERSION) {
             READWRITE(vchBlockSig);
-            }
-        }
+            }        }
         else if (fRead)
         {
             const_cast<CBlock*>(this)->vtx.clear();
@@ -1144,10 +1144,7 @@ public:
 
     uint256 GetPoWHash() const
     {
-        if (nBestHeight < LAST_POW_BLOCK || fLegacyBlock)
-            fLegacyHash = true;
         return scrypt_blockhash(CVOIDBEGIN(nVersion));
-        fLegacyHash = false;
     }
 
     // ppcoin: entropy bit for stake modifier if chosen by modifier
@@ -1197,14 +1194,11 @@ public:
         return block;
     }
 
-    uint256 BuildMerkleTree(unsigned int nHeight) const
+    uint256 BuildMerkleTree() const
     {
         vMerkleTree.clear();
-        if (nHeight <= LAST_POW_BLOCK)
-            fLegacyBlock = true;
         BOOST_FOREACH(const CTransaction& tx, vtx)
             vMerkleTree.push_back(tx.GetHash());
-        fLegacyBlock = false;
         int j = 0;
         for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
         {
@@ -1225,10 +1219,10 @@ public:
         return vMerkleTree[nIndex];
     }
 
-    std::vector<uint256> GetMerkleBranch(int nIndex, int nHeight) const
+    std::vector<uint256> GetMerkleBranch(int nIndex) const
     {
         if (vMerkleTree.empty())
-            BuildMerkleTree(nHeight);
+            BuildMerkleTree();
         std::vector<uint256> vMerkleBranch;
         int j = 0;
         for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
@@ -1282,7 +1276,7 @@ public:
         return true;
     }
 
-    bool ReadFromDisk(unsigned int nFile, unsigned int nBlockPos, int nHeight, bool fReadTransactions=true)
+    bool ReadFromDisk(unsigned int nFile, unsigned int nBlockPos, bool fReadTransactions=true)
     {
         SetNull();
 
@@ -1295,14 +1289,9 @@ public:
 
         // Read block
         try {
-            // Handle condition when reading LAST_POW_BLOCK which has fLegacyHash header and txns
-            if (nHeight <= LAST_POW_BLOCK)
-                fLegacyBlock = true;
             filein >> *this;
-            fLegacyBlock = false;
         }
         catch (std::exception &e) {
-            fLegacyBlock = false;
             return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
         }
 
@@ -1891,7 +1880,7 @@ public:
 
 public:
     // Public only for unit testing and relay testing
-    // (not relayed)☻
+    // (not relayed)
     std::vector<std::pair<unsigned int, uint256> > vMatchedTxn;
 
     // Create from a CBlock, filtering transactions according to filter

@@ -214,10 +214,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QString &txcomment, co
         {
             return TransactionCommitFailed;
         }
-        if (wtx.nHeight >= 0 && wtx.nHeight <= LAST_POW_BLOCK)
-            fLegacyBlock = true;
         hex = QString::fromStdString(wtx.GetHash().GetHex());
-        fLegacyBlock = false;
     }
 
     // Add addresses / update labels that we've sent to to the address book

@@ -172,14 +172,8 @@ CWalletDB::ReorderTransactions(CWallet* pwallet)
             // Since we're changing the order, write it back
             if (pwtx)
             {
-                if (pwtx->nHeight >= 0 && pwtx->nHeight <= LAST_POW_BLOCK)
-                    fLegacyBlock = true;
                 if (!WriteTx(pwtx->GetHash(), *pwtx))
-                {
-                    fLegacyBlock = false;
                     return DB_LOAD_FAIL;
-                }
-                fLegacyBlock = false;
             }
             else
                 if (!WriteAccountingEntry(pacentry->nEntryNo, *pacentry))
@@ -229,17 +223,13 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssKey >> hash;
             CWalletTx& wtx = pwallet->mapWallet[hash];
             ssValue >> wtx;
-            if (wtx.nHeight >= 0 && wtx.nHeight <= LAST_POW_BLOCK)
-                fLegacyBlock = true;
             if (wtx.CheckTransaction() && (wtx.GetHash() == hash))
                 wtx.BindWallet(pwallet);
             else
             {
                 pwallet->mapWallet.erase(hash);
-                fLegacyBlock = false;
                 return false;
             }
-            fLegacyBlock = false;
 
             // Undo serialize changes in 31600
             if (31404 <= wtx.fTimeReceivedIsTxTime && wtx.fTimeReceivedIsTxTime <= 31703)
