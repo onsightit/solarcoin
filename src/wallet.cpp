@@ -1511,8 +1511,8 @@ bool CWallet::GetStakeWeight(const CKeyStore& keystore, uint64_t& nWeight)
     int64_t nBalance = GetBalance();
 
 
-    // DEBUG
-    printf("*** DEBUG GetStakeWeight: nBalance=%u\n", nBalance);
+    if (fDebug)
+        printf("*** GetStakeWeight: nBalance=%u\n", nBalance);
 
     if (nBalance <= nReserveBalance)
         return false;
@@ -1525,8 +1525,8 @@ bool CWallet::GetStakeWeight(const CKeyStore& keystore, uint64_t& nWeight)
     if (!SelectCoinsSimple(nBalance - nReserveBalance, GetTime(), nCoinbaseMaturity + 10, setCoins, nValueIn))
         return false;
 
-    // DEBUG
-    printf("*** DEBUG GetStakeWeight: nValueIn=%u\n", nValueIn);
+    if (fDebug)
+        printf("*** GetStakeWeight: nValueIn=%u\n", nValueIn);
 
     if (setCoins.empty())
         return false;
@@ -1544,8 +1544,8 @@ bool CWallet::GetStakeWeight(const CKeyStore& keystore, uint64_t& nWeight)
         int64_t nTimeWeight = GetWeight((int64_t)pcoin.first->nTime, (int64_t)GetTime());
         CBigNum bnCoinDayWeight = CBigNum(pcoin.first->vout[pcoin.second].nValue) * nTimeWeight / COIN / (24 * 60 * 60);
 
-        // DEBUG
-        printf("*** DEBUG GetStakeWeight: pcoin.first->nTime=%u nTimeWeight=%u pcoin.first->vout[pcoin.second].nValue=%u bnCoinDayWeight=%u\n", pcoin.first->nTime, nTimeWeight, pcoin.first->vout[pcoin.second].nValue, bnCoinDayWeight.getuint64());
+        if (fDebug)
+            printf("*** GetStakeWeight: pcoin.first->nTime=%u nTimeWeight=%u pcoin.first->vout[pcoin.second].nValue=%u bnCoinDayWeight=%u\n", pcoin.first->nTime, nTimeWeight, pcoin.first->vout[pcoin.second].nValue, bnCoinDayWeight.getuint64());
 
         // Weight is greater than zero
         if (nTimeWeight > 0)

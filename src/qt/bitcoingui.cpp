@@ -1452,8 +1452,8 @@ void BitcoinGUI::updateStakingIcon()
     if (walletModel->getEncryptionStatus() == WalletModel::Unlocked && nLastCoinStakeSearchInterval && nWeight)
     {
         u_int64_t nEstimateTime = nTargetSpacing * nNetworkWeight / nWeight;
-        // DEBUG
-        printf("*** DEBUG updateStakingIcon: nEstimateTime=%u\n", nEstimateTime);
+        if (fDebug)
+            printf("*** updateStakingIcon: nEstimateTime=%u\n", nEstimateTime);
         QString text;
         if (nEstimateTime < 60)
         {

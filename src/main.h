@@ -27,8 +27,8 @@ class CRequestTracker;
 class CNode;
 
 // DEBUG
-static const int LAST_POW_BLOCK = 80;
-//static const int LAST_POW_BLOCK = 800000;
+//static const int LAST_POW_BLOCK = 80; // testnet
+static const int LAST_POW_BLOCK = 800000;
 
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/4;
@@ -485,8 +485,6 @@ public:
         nVersion = this->nVersion;
         if(this->nVersion == CTransaction::CURRENT_VERSION) {
         READWRITE(nTime);
-        } else if (!(nType & SER_GETHASH)) {
-        READWRITE(nTime);
         }
         READWRITE(vin);
         READWRITE(vout);
@@ -574,7 +572,7 @@ public:
 
     bool IsCoinBase() const
     {
-        return (vin.size() == 1 && vin[0].prevout.IsNull() && vout.size() >= 1);
+        return (vin.size() == 1 && vin[0].prevout.IsNull());
     }
 
     bool IsCoinStake() const

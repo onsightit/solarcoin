@@ -481,25 +481,8 @@ bool CTxDB::LoadBlockIndex()
         // check level 7: verify block signature too
         if (nCheckLevel>0 && !block.CheckBlock(true, true, (nCheckLevel>6)))
         {
-            // DEBUG - This fixes a bug in the way pindexBest is initialized
-            if (pindex == pindexBest)
-            {
-                pindex = pindex->pprev;
-                pindex = pindex->pnext;
-                printf("LoadBlockIndex() : *** Retrying block at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
-                if (!block.ReadFromDisk(pindex))
-                    return error("LoadBlockIndex() : block.ReadFromDisk failed");
-                if (!block.CheckBlock(true, true, (nCheckLevel>6)))
-                {
-                    printf("LoadBlockIndex() : *** found bad block again at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
-                    pindexFork = pindex->pprev;
-                }
-            }
-            else
-            {
-                printf("LoadBlockIndex() : *** found bad block at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
-                pindexFork = pindex->pprev;
-            }
+            printf("LoadBlockIndex() : *** found bad block at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
+            pindexFork = pindex->pprev;
         }
         // check level 2: verify transaction index validity
         if (nCheckLevel>1)

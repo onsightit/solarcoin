@@ -2034,8 +2034,6 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
         mapQueuedChanges[hashTx] = CTxIndex(posThisTx, tx.vout.size());
     }
 
-    //printf("*** DEBUG *** ConnectBlock: nValueIn=%"PRIu64", nValueOut=%"PRIu64"\n", nValueIn, nValueOut);
-
     if (IsProofOfWork())
     {
         int64_t nReward = GetProofOfWorkReward(nFees);
@@ -2404,14 +2402,8 @@ bool CTransaction::GetStakeTime(CTxDB& txdb, uint64_t& nStakeTime, CBlockIndex* 
     CBigNum bnStakeTime = 0;  // coin age in the unit of cent-seconds
     nStakeTime = 0;
 
-    // DEBUG
-    printf("*** DEBUG GetStakeTime: entered\n");
-
     if (IsCoinBase())
         return true;
-
-    // DEBUG
-    printf("*** DEBUG GetStakeTime: is not coinbase\n");
 
     BOOST_FOREACH(const CTxIn& txin, vin)
     {
@@ -2421,8 +2413,8 @@ bool CTransaction::GetStakeTime(CTxDB& txdb, uint64_t& nStakeTime, CBlockIndex* 
         if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex))
             continue;  // previous transaction not in main chain
 
-        // DEBUG
-        printf("*** DEBUG GetStakeTime: read from disk. nTime=%u txPrev.nTime=%u\n", nTime, txPrev.nTime);
+        if (fDebug)
+            printf("*** GetStakeTime: read from disk. nTime=%u txPrev.nTime=%u\n", nTime, txPrev.nTime);
 
         if (nTime < txPrev.nTime)
             return false;  // Transaction timestamp violation
@@ -2435,8 +2427,8 @@ bool CTransaction::GetStakeTime(CTxDB& txdb, uint64_t& nStakeTime, CBlockIndex* 
         if (block.GetBlockTime() + nStakeMinAge > nTime)
             continue; // only count coins meeting min age requirement
 
-        // DEBUG
-        printf("*** DEBUG GetStakeTime: block.GetBlockTime()=%u + nStakeMinAge=%u = %u\n", block.GetBlockTime(), nStakeMinAge, block.GetBlockTime() + nStakeMinAge);
+        if (fDebug)
+            printf("*** GetStakeTime: block.GetBlockTime()=%u + nStakeMinAge=%u = %u\n", block.GetBlockTime(), nStakeMinAge, block.GetBlockTime() + nStakeMinAge);
 
         int64_t nValueIn = txPrev.vout[txin.prevout.n].nValue;
         int64_t timeWeight = nTime-txPrev.nTime;
@@ -2444,8 +2436,8 @@ bool CTransaction::GetStakeTime(CTxDB& txdb, uint64_t& nStakeTime, CBlockIndex* 
         int64_t factoredTimeWeight = GetStakeTimeFactoredWeight(timeWeight, CoinDay, pindexPrev);
         bnStakeTime += CBigNum(nValueIn) * factoredTimeWeight / COIN / (24 * 60 * 60);
 
-        // DEBUG
-        printf("*** DEBUG GetStakeTime: nValueIn=%u timeWeight=%u CoinDay=%u factoredTimeWeight=%u\n", nValueIn, timeWeight, CoinDay, factoredTimeWeight);
+        if (fDebug)
+            printf("*** GetStakeTime: nValueIn=%u timeWeight=%u CoinDay=%u factoredTimeWeight=%u\n", nValueIn, timeWeight, CoinDay, factoredTimeWeight);
 
     }
     if (fDebug && GetBoolArg("-printcoinage"))
@@ -3316,7 +3308,7 @@ bool LoadBlockIndex(bool fAllowNew)
         block.nNonce   = !fTestNet ? 1397766 : 302856;
 
 
-        // DEBUG If genesis block hash does not match, then generate new genesis hash.
+        // TestNet: If genesis block hash does not match, then generate new genesis hash.
         if (fTestNet && block.GetHash() != hashGenesisBlockTestNet)
         {
             printf("Searching for genesis block...\n");
