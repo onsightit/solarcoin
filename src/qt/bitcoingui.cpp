@@ -1448,6 +1448,10 @@ void BitcoinGUI::updateStakingIcon()
     progressBar->setVisible(false);
     overviewPage->showOutOfSyncWarning(false);
     double nNetworkWeight = GetPoSKernelPS();
+
+    if (fDebug)
+        printf("*** updateStakingIcon: nLastCoinStakeSearchInterval=%u nWeight=%u\n", nLastCoinStakeSearchInterval, nWeight);
+
     if (walletModel->getEncryptionStatus() == WalletModel::Unlocked && nLastCoinStakeSearchInterval && nWeight)
     {
         u_int64_t nEstimateTime = nTargetSpacing * nNetworkWeight / nWeight;

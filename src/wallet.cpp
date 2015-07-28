@@ -1510,10 +1510,6 @@ bool CWallet::GetStakeWeight(const CKeyStore& keystore, uint64_t& nWeight)
     // Choose coins to use
     int64_t nBalance = GetBalance();
 
-
-    if (fDebug)
-        printf("*** GetStakeWeight: nBalance=%u\n", nBalance);
-
     if (nBalance <= nReserveBalance)
         return false;
 
@@ -1524,9 +1520,6 @@ bool CWallet::GetStakeWeight(const CKeyStore& keystore, uint64_t& nWeight)
 
     if (!SelectCoinsSimple(nBalance - nReserveBalance, GetTime(), nCoinbaseMaturity + 10, setCoins, nValueIn))
         return false;
-
-    if (fDebug)
-        printf("*** GetStakeWeight: nValueIn=%u\n", nValueIn);
 
     if (setCoins.empty())
         return false;
@@ -1545,12 +1538,14 @@ bool CWallet::GetStakeWeight(const CKeyStore& keystore, uint64_t& nWeight)
         CBigNum bnCoinDayWeight = CBigNum(pcoin.first->vout[pcoin.second].nValue) * nTimeWeight / COIN / (24 * 60 * 60);
 
         if (fDebug)
-            printf("*** GetStakeWeight: pcoin.first->nTime=%u nTimeWeight=%u pcoin.first->vout[pcoin.second].nValue=%u bnCoinDayWeight=%u\n", pcoin.first->nTime, nTimeWeight, pcoin.first->vout[pcoin.second].nValue, bnCoinDayWeight.getuint64());
+            printf("*** GetStakeWeight: pcoin.first->nTime=%"PRIu64" nTimeWeight=%"PRId64" pcoin.first->vout[pcoin.second].nValue=%"PRId64" bnCoinDayWeight=%"PRIu64"\n", pcoin.first->nTime, nTimeWeight, pcoin.first->vout[pcoin.second].nValue, bnCoinDayWeight.getuint64());
 
         // Weight is greater than zero
         if (nTimeWeight > 0)
         {
             nWeight += bnCoinDayWeight.getuint64();
+            if (fDebug)
+                printf("*** GetStakeWeight: nWeight=%"PRIu64"\n", nWeight);
         }
     }
 
