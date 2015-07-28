@@ -368,7 +368,7 @@ void BitcoinGUI::logout()
 
 void BitcoinGUI::lockWalletFeatures(bool lock)
 {
-    if (lock)
+    if (lock && !fTestNet)
     {
         appMenuBar->setVisible(false);
         toolbar->setVisible(false);
