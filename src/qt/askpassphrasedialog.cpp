@@ -148,8 +148,8 @@ void AskPassphraseDialog::accept()
                                          "For security reasons, previous backups of the unencrypted wallet file "
                                          "will become useless as soon as you start using the new, encrypted wallet.") + 
                                          "</b></qt>");
+                    MilliSleep(1 * 1000);
                     fRestart = true;
-                    MilliSleep(7 * 1000);
                     StartShutdown();
                 }
                 else
