@@ -90,7 +90,6 @@ using namespace GUIUtil;
 extern CWallet* pwalletMain;
 extern int64_t nLastCoinStakeSearchInterval;
 extern unsigned int nTargetSpacing;
-extern double GetPoSKernelPS(CBlockIndex* pindexPrev);
 double GetPoSKernelPS();
 bool blocksIcon = true;
 bool resizeGUICalled = false;
@@ -1448,12 +1447,12 @@ void BitcoinGUI::updateStakingIcon()
     pwalletMain->GetStakeWeight(*pwalletMain, nWeight);
     progressBar->setVisible(false);
     overviewPage->showOutOfSyncWarning(false);
-    double nNetworkWeight = GetPoSKernelPS(pindexBest->pprev);
+    double nNetworkWeight = GetPoSKernelPS();
     if (walletModel->getEncryptionStatus() == WalletModel::Unlocked && nLastCoinStakeSearchInterval && nWeight)
     {
         u_int64_t nEstimateTime = nTargetSpacing * nNetworkWeight / nWeight;
         if (fDebug)
-            printf("*** updateStakingIcon: nEstimateTime=%u\n", nEstimateTime);
+            printf("*** updateStakingIcon: nEstimateTime=%u = nTargetSpacing=%u * nNetworkWeight=%u / nWeight=%u\n", nEstimateTime, nTargetSpacing, nNetworkWeight, nWeight);
         QString text;
         if (nEstimateTime < 60)
         {

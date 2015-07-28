@@ -48,7 +48,7 @@ static const int64_t DUST_SOFT_LIMIT = 100000; // 0.001 LTC
 /** Dust Hard Limit, ignored as wallet inputs (mininput default) */
 static const int64_t DUST_HARD_LIMIT = 1000;   // 0.00001 SLR mininput
 
-inline bool PoSTprotocol(int nHeight) { return nHeight > LAST_POW_BLOCK; }
+inline bool PoSTprotocol(int nHeight) { return nHeight >= LAST_POW_BLOCK; }
 inline bool MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 // Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp.
 static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
