@@ -1453,13 +1453,13 @@ void BitcoinGUI::updateStakingIcon()
     double nNetworkWeight = GetPoSKernelPS();
 
     if (fDebug)
-        printf("*** updateStakingIcon: nLastCoinStakeSearchInterval=%u nWeight=%u\n", nLastCoinStakeSearchInterval, nWeight);
+        printf("*** updateStakingIcon: nLastCoinStakeSearchInterval=%"PRIi64" nWeight=%"PRIu64"\n", nLastCoinStakeSearchInterval, nWeight);
 
     if (walletModel->getEncryptionStatus() == WalletModel::Unlocked && nLastCoinStakeSearchInterval && nWeight)
     {
-        u_int64_t nEstimateTime = nTargetSpacing * nNetworkWeight / nWeight;
+        uint64_t nEstimateTime = nTargetSpacing * nNetworkWeight / nWeight;
         if (fDebug)
-            printf("*** updateStakingIcon: nEstimateTime=%u = nTargetSpacing=%u * nNetworkWeight=%u / nWeight=%u\n", nEstimateTime, nTargetSpacing, nNetworkWeight, nWeight);
+            printf("*** updateStakingIcon: nEstimateTime=%"PRIu64" = nTargetSpacing=%"PRIu64" * nNetworkWeight=%.9g / nWeight=%"PRIu64"\n", nEstimateTime, nTargetSpacing, nNetworkWeight, nWeight);
         QString text;
         if (nEstimateTime < 60)
         {
