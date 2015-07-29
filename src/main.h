@@ -499,12 +499,13 @@ public:
         if (nBestHeight >= LAST_POW_BLOCK)
         {
             nVersion = CTransaction::CURRENT_VERSION;
+            nTime = GetAdjustedTime();
         }
         else
         {
             nVersion = CTransaction::LEGACY_VERSION_2;
+            nTime = 0;
         }
-        nTime = GetAdjustedTime();
         vin.clear();
         vout.clear();
         nLockTime = 0;

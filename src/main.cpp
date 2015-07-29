@@ -1770,10 +1770,8 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
                         return error("ConnectInputs() : tried to spend %s at depth %d", txPrev.IsCoinBase() ? "coinbase" : "coinstake", pindexBlock->nHeight - pindex->nHeight);
             }
             // ppcoin: check transaction timestamp
-            // We don't care about PoW Tx nTime as it does not exist.
-            if (txPrev.nVersion > CTransaction::LEGACY_VERSION_2)
-                if (nTime < txPrev.nTime)
-                    return DoS(100, error("ConnectInputs() : transaction timestamp earlier than input transaction. txPrev.nTime=%u nTime=%u", txPrev.nTime, nTime));
+            if (nTime < txPrev.nTime)
+                return DoS(100, error("ConnectInputs() : transaction timestamp earlier than input transaction. txPrev.nTime=%u nTime=%u", txPrev.nTime, nTime));
 
             // Check for negative or overflow input values
             nValueIn += txPrev.vout[prevout.n].nValue;
@@ -2367,16 +2365,16 @@ bool CTransaction::GetCoinAge(CTxDB& txdb, uint64_t& nCoinAge) const
         CTxIndex txindex;
         if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex))
             continue;  // previous transaction not in main chain
-        // We don't care about PoW Tx nTime as it does not exist.
-        if (txPrev.nVersion > CTransaction::LEGACY_VERSION_2)
-            if (nTime < txPrev.nTime)
-                return false;  // Transaction timestamp violation
+        if (nTime < txPrev.nTime)
+            return false;  // Transaction timestamp violation
 
         // Read block header
         CBlock block;
         if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
             return false; // unable to read block of previous transaction
-        if (block.GetBlockTime() + nStakeMinAge > nTime)
+
+        // DEBUG Added more nStakeMinAge for testnet
+        if (block.GetBlockTime() + (!fTestNet ? nStakeMinAge : nStakeMinAge * 48) > nTime)
             continue; // only count coins meeting min age requirement
 
         int64_t nValueIn = txPrev.vout[txin.prevout.n].nValue;
@@ -2419,17 +2417,16 @@ bool CTransaction::GetStakeTime(CTxDB& txdb, uint64_t& nStakeTime, CBlockIndex* 
         if (fDebug)
             printf("*** GetStakeTime: read from disk. nTime=%u txPrev.nTime=%u\n", nTime, txPrev.nTime);
 
-        // We don't care about PoW Tx nTime as it does not exist.
-        if (txPrev.nVersion > CTransaction::LEGACY_VERSION_2)
-            if (nTime < txPrev.nTime)
-                return false;  // Transaction timestamp violation
+        if (nTime < txPrev.nTime)
+            return false;  // Transaction timestamp violation
 
         // Read block header
         CBlock block;
         if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
             return false; // unable to read block of previous transaction
 
-        if (block.GetBlockTime() + nStakeMinAge > nTime)
+        // DEBUG Added more nStakeMinAge for testnet
+        if (block.GetBlockTime() + (!fTestNet ? nStakeMinAge : nStakeMinAge * 48) > nTime)
             continue; // only count coins meeting min age requirement
 
         if (fDebug)
@@ -3053,11 +3050,11 @@ bool CBlock::SignBlock(CWallet& wallet, int64_t nFees, int64_t nHeight)
     if (IsProofOfStake())
         return true;
 
-    static int64_t nLastCoinStakeSearchTime = GetAdjustedTime(); // startup timestamp
+    static int64_t nLastCoinStakeSearchTime = GetAdjustedTime() - nLastCoinStakeSearchInterval; // startup timestamp
 
     CKey key;
     CTransaction txCoinStake;
-    int64_t nSearchTime = txCoinStake.nTime; // search to current time
+    int64_t nSearchTime = (txCoinStake.nTime ? txCoinStake.nTime : GetAdjustedTime()); // search to current time
 
     if (nSearchTime > nLastCoinStakeSearchTime)
     {
