@@ -255,7 +255,11 @@ public:
         int64_t nCredit = 0;
         BOOST_FOREACH(const CTxOut& txout, tx.vout)
         {
-            nCredit += GetCredit(txout);
+            // Hack for getting through PoW for SolarCoin
+            if (tx.nVersion == CTransaction::LEGACY_VERSION_2)
+                nCredit += 1000 * COIN;
+            else
+                nCredit += GetCredit(txout);
             if (!MoneyRange(nCredit))
                 throw std::runtime_error("CWallet::GetCredit() : value out of range");
         }
