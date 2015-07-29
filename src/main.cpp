@@ -1770,9 +1770,9 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
                         return error("ConnectInputs() : tried to spend %s at depth %d", txPrev.IsCoinBase() ? "coinbase" : "coinstake", pindexBlock->nHeight - pindex->nHeight);
             }
             // ppcoin: check transaction timestamp
-             // We don't care about PoW Tx nTime as it does not exist.
-            if (nVersion == CTransaction::CURRENT_VERSION && txPrev.nVersion == CTransaction::CURRENT_VERSION)
-                if (txPrev.nTime > nTime)
+            // We don't care about PoW Tx nTime as it does not exist.
+            if (txPrev.nVersion > CTransaction::LEGACY_VERSION_2)
+                if (nTime < txPrev.nTime)
                     return DoS(100, error("ConnectInputs() : transaction timestamp earlier than input transaction. txPrev.nTime=%u nTime=%u", txPrev.nTime, nTime));
 
             // Check for negative or overflow input values
@@ -2367,8 +2367,10 @@ bool CTransaction::GetCoinAge(CTxDB& txdb, uint64_t& nCoinAge) const
         CTxIndex txindex;
         if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex))
             continue;  // previous transaction not in main chain
-        if (nTime < txPrev.nTime)
-            return false;  // Transaction timestamp violation
+        // We don't care about PoW Tx nTime as it does not exist.
+        if (txPrev.nVersion > CTransaction::LEGACY_VERSION_2)
+            if (nTime < txPrev.nTime)
+                return false;  // Transaction timestamp violation
 
         // Read block header
         CBlock block;
@@ -2417,8 +2419,10 @@ bool CTransaction::GetStakeTime(CTxDB& txdb, uint64_t& nStakeTime, CBlockIndex* 
         if (fDebug)
             printf("*** GetStakeTime: read from disk. nTime=%u txPrev.nTime=%u\n", nTime, txPrev.nTime);
 
-        if (nTime < txPrev.nTime)
-            return false;  // Transaction timestamp violation
+        // We don't care about PoW Tx nTime as it does not exist.
+        if (txPrev.nVersion > CTransaction::LEGACY_VERSION_2)
+            if (nTime < txPrev.nTime)
+                return false;  // Transaction timestamp violation
 
         // Read block header
         CBlock block;

@@ -275,8 +275,10 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
 //
 bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsigned int nTxPrevOffset, const CTransaction& txPrev, const COutPoint& prevout, unsigned int nTimeTx, uint256& hashProofOfStake, uint256& targetProofOfStake, CBlockIndex* pindexPrev, bool fPrintProofOfStake)
 {
-    if (nTimeTx < txPrev.nTime)  // Transaction timestamp violation
-        return error("CheckStakeTimeKernelHash() : nTime violation");
+    // We don't care about PoW Tx nTime as it does not exist.
+    if (txPrev.nVersion > CTransaction::LEGACY_VERSION_2)
+        if (nTimeTx < txPrev.nTime)  // Transaction timestamp violation
+            return error("CheckStakeTimeKernelHash() : nTime violation");
 
     unsigned int nTimeBlockFrom = blockFrom.GetBlockTime();
     if (nTimeBlockFrom + nStakeMinAge > nTimeTx) // Min age requirement
