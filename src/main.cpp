@@ -1770,7 +1770,8 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
                         return error("ConnectInputs() : tried to spend %s at depth %d", txPrev.IsCoinBase() ? "coinbase" : "coinstake", pindexBlock->nHeight - pindex->nHeight);
             }
             // ppcoin: check transaction timestamp
-            if (nVersion == CTransaction::CURRENT_VERSION) // Don't care about PoW Tx nTime.
+             // We don't care about PoW Tx nTime as it does not exist.
+            if (nVersion == CTransaction::CURRENT_VERSION && txPrev.nVersion == CTransaction::CURRENT_VERSION)
                 if (txPrev.nTime > nTime)
                     return DoS(100, error("ConnectInputs() : transaction timestamp earlier than input transaction. txPrev.nTime=%u nTime=%u", txPrev.nTime, nTime));
 
