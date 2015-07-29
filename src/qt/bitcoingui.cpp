@@ -1277,7 +1277,6 @@ void BitcoinGUI::setEncryptionStatus(int status)
     switch(status)
     {
     case WalletModel::Unencrypted:
-        encryptWalletAction->setChecked(false);
         changePassphraseAction->setEnabled(false);
         logoutAction->setEnabled(false);
         lockWalletAction->setVisible(false);
@@ -1286,7 +1285,6 @@ void BitcoinGUI::setEncryptionStatus(int status)
         encryptWalletAction->setVisible(true);
         break;
     case WalletModel::Unlocked:
-        encryptWalletAction->setChecked(true);
         changePassphraseAction->setEnabled(true);
         logoutAction->setEnabled(true);
         lockWalletAction->setEnabled(true);
@@ -1296,7 +1294,6 @@ void BitcoinGUI::setEncryptionStatus(int status)
         encryptWalletAction->setVisible(false);
         break;
     case WalletModel::Locked:
-        encryptWalletAction->setChecked(true);
         changePassphraseAction->setEnabled(true);
         logoutAction->setEnabled(true);
         lockWalletAction->setVisible(false);
