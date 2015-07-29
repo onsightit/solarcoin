@@ -1446,6 +1446,7 @@ void BitcoinGUI::updateStakingIcon()
     {
         return;
     }
+
     uint64_t nWeight = 0;
     pwalletMain->GetStakeWeight(*pwalletMain, nWeight);
     progressBar->setVisible(false);
@@ -1457,9 +1458,11 @@ void BitcoinGUI::updateStakingIcon()
 
     if (walletModel->getEncryptionStatus() == WalletModel::Unlocked && nLastCoinStakeSearchInterval && nWeight)
     {
-        uint64_t nEstimateTime = nTargetSpacing * nNetworkWeight / nWeight;
+        unsigned nEstimateTime = nTargetSpacing * nNetworkWeight / nWeight;
+
         if (fDebug)
-            printf("*** updateStakingIcon: nEstimateTime=%"PRIu64" = nTargetSpacing=%"PRIu64" * nNetworkWeight=%.9g / nWeight=%"PRIu64"\n", nEstimateTime, nTargetSpacing, nNetworkWeight, nWeight);
+            printf("*** updateStakingIcon: nEstimateTime=%u = nTargetSpacing=%u * nNetworkWeight=%.5g / nWeight=%"PRIu64"\n", nEstimateTime, nTargetSpacing, nNetworkWeight, nWeight);
+
         QString text;
         if (nEstimateTime < 60)
         {
