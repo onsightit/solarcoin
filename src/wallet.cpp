@@ -1619,7 +1619,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
 
         static int nMaxStakeSearchInterval = 60;
         // DEBUG Added more nStakeMinAge for testnet
-        if (block.GetBlockTime() + (!fTestNet ? nStakeMinAge : nStakeMinAge * 48) > txNew.nTime - nMaxStakeSearchInterval)
+        if (block.GetBlockTime() + nStakeMinAge > txNew.nTime - nMaxStakeSearchInterval)
             continue; // only count coins meeting min age requirement
 
         bool fKernelFound = false;
@@ -1832,7 +1832,7 @@ bool CWallet::CreateCoinTimeStake(const CKeyStore& keystore, unsigned int nBits,
 
         static int nMaxStakeSearchInterval = 60;
         // DEBUG Added more nStakeMinAge for testnet
-        if (block.GetBlockTime() + (!fTestNet ? nStakeMinAge : nStakeMinAge * 48) > txNew.nTime - nMaxStakeSearchInterval)
+        if (block.GetBlockTime() + nStakeMinAge > txNew.nTime - nMaxStakeSearchInterval)
             continue; // only count coins meeting min age requirement
 
         bool fKernelFound = false;

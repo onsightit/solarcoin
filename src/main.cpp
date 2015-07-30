@@ -2374,7 +2374,7 @@ bool CTransaction::GetCoinAge(CTxDB& txdb, uint64_t& nCoinAge) const
             return false; // unable to read block of previous transaction
 
         // DEBUG Added more nStakeMinAge for testnet
-        if (block.GetBlockTime() + (!fTestNet ? nStakeMinAge : nStakeMinAge * 48) > nTime)
+        if (block.GetBlockTime() + nStakeMinAge > nTime)
             continue; // only count coins meeting min age requirement
 
         int64_t nValueIn = txPrev.vout[txin.prevout.n].nValue;
@@ -2426,7 +2426,7 @@ bool CTransaction::GetStakeTime(CTxDB& txdb, uint64_t& nStakeTime, CBlockIndex* 
             return false; // unable to read block of previous transaction
 
         // DEBUG Added more nStakeMinAge for testnet
-        if (block.GetBlockTime() + (!fTestNet ? nStakeMinAge : nStakeMinAge * 48) > nTime)
+        if (block.GetBlockTime() + nStakeMinAge > nTime)
             continue; // only count coins meeting min age requirement
 
         if (fDebug)
@@ -3050,15 +3050,13 @@ bool CBlock::SignBlock(CWallet& wallet, int64_t nFees, int64_t nHeight)
     if (IsProofOfStake())
         return true;
 
-    static int64_t nLastCoinStakeSearchTime = GetAdjustedTime(); // startup timestamp
+    static int64_t nLastCoinStakeSearchTime = GetAdjustedTime() - nLastCoinStakeSearchInterval; // startup timestamp
 
     CKey key;
     CTransaction txCoinStake;
     txCoinStake.SetNull();
-    int64_t nSearchTime = txCoinStake.nTime; // search to current time
 
-    if (fDebug)
-        printf("*** SignBlock: nLastCoinStakeSearchTime=%u nSearchTime=%u\n", nLastCoinStakeSearchTime, nSearchTime);
+    int64_t nSearchTime = txCoinStake.nTime; // search to current time
 
     if (nSearchTime > nLastCoinStakeSearchTime)
     {
