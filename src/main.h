@@ -461,7 +461,8 @@ class CTransaction
 {
 public:
     static const int LEGACY_VERSION_1 = 1;
-    static const int CURRENT_VERSION = 2;
+    static const int LEGACY_VERSION_2 = 2;
+    static const int CURRENT_VERSION = 3;
     int nVersion;
     unsigned int nTime;
     std::vector<CTxIn> vin;
@@ -494,7 +495,10 @@ public:
 
     void SetNull()
     {
-        nVersion = CTransaction::CURRENT_VERSION;
+        if (nBestHeight >= LAST_POW_BLOCK)
+            nVersion = CTransaction::CURRENT_VERSION;
+        else
+            nVersion = CTransaction::LEGACY_VERSION_2;
         nTime = GetAdjustedTime();
         vin.clear();
         vout.clear();

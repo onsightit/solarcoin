@@ -207,7 +207,11 @@ bool AddOrphanTx(const CTransaction& tx)
     // 10,000 orphans, each of which is at most 5,000 bytes big is
     // at most 500 megabytes of orphans:
 
-    size_t nSize = tx.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
+    size_t nSize;
+    if (tx.nVersion == CTransaction::CURRENT_VERSION)
+        nSize = tx.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
+    else
+        nSize = tx.GetSerializeSize(SER_NETWORK, CTransaction::LEGACY_VERSION_2);
     if (nSize > 5000)
     {
         printf("ignoring large orphan tx (size: %"PRIszu", hash: %s)\n", nSize, hash.ToString().substr(0,10).c_str());
@@ -3050,7 +3054,11 @@ bool CBlock::SignBlock(CWallet& wallet, int64_t nFees, int64_t nHeight)
 
     CKey key;
     CTransaction txCoinStake;
+    txCoinStake.SetNull();
     int64_t nSearchTime = txCoinStake.nTime; // search to current time
+
+    if (fDebug)
+        printf("*** SignBlock: nLastCoinStakeSearchTime=%u nSearchTime=%u\n", nLastCoinStakeSearchTime, nSearchTime);
 
     if (nSearchTime > nLastCoinStakeSearchTime)
     {
@@ -3287,7 +3295,7 @@ bool LoadBlockIndex(bool fAllowNew)
         //   vMerkleTree: 97ddfbbae6
         const char* pszTimestamp = "One Megawatt Hour";
         CTransaction txNew;
-        txNew.nVersion = CTransaction::CURRENT_VERSION;
+        txNew.nVersion = CTransaction::LEGACY_VERSION_2;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
         txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));

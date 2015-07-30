@@ -1544,8 +1544,6 @@ bool CWallet::GetStakeWeight(const CKeyStore& keystore, uint64_t& nWeight)
         if (nTimeWeight > 0)
         {
             nWeight += bnCoinDayWeight.getuint64();
-            if (fDebug)
-                printf("*** GetStakeWeight: nWeight=%"PRIu64"\n", nWeight);
         }
     }
 
