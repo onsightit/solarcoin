@@ -473,10 +473,6 @@ bool CTransaction::CheckTransaction() const
     if (::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
         return DoS(100, error("CTransaction::CheckTransaction() : size limits failed"));
 
-    // Fix for Legacy transactions that get initialized with current time if not in a block before LAST_POW_BLOCK
-    if (nVersion == CTransaction::LEGACY_VERSION_2 && nTime != 0)
-        nTime = 0;
-
     // Check for negative or overflow output values
     int64_t nValueOut = 0;
     for (unsigned int i = 0; i < vout.size(); i++)
@@ -577,6 +573,10 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
 {
     if (pfMissingInputs)
         *pfMissingInputs = false;
+
+    // Fix for Legacy transactions that get initialized with current time if not in a block before LAST_POW_BLOCK
+    if (tx.nVersion == CTransaction::LEGACY_VERSION_2)
+        tx.nTime = 0;
 
     if (!tx.CheckTransaction())
         return error("CTxMemPool::accept() : CheckTransaction failed");
