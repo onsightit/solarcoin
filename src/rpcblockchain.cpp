@@ -24,6 +24,9 @@ double GetDifficulty(const CBlockIndex* blockindex)
             blockindex = GetLastBlockIndex(pindexBest, false);
     }
 
+    if (!blockindex->IsProofOfStake())
+        return 1.0;
+
     int nShift = (blockindex->nBits >> 24) & 0xff;
 
     double dDiff =
@@ -80,13 +83,10 @@ double GetPoSKernelPS(CBlockIndex* pindexPrev)
 
     while (pindexPrev && nStakesHandled < nPoSInterval)
     {
-        if (nBestHeight >= LAST_POW_BLOCK)
-        {
-            dStakeKernelsTriedAvg += GetDifficulty(pindexPrev) * 4294967296.0;
-            nStakesTime += pindexPrevStake ? (pindexPrevStake->nTime - pindexPrev->nTime) : 0;
-            pindexPrevStake = pindexPrev;
-            nStakesHandled++;
-        }
+        dStakeKernelsTriedAvg += GetDifficulty(pindexPrev) * 4294967296.0;
+        nStakesTime += pindexPrevStake ? (pindexPrevStake->nTime - pindexPrev->nTime) : 0;
+        pindexPrevStake = pindexPrev;
+        nStakesHandled++;
 
         pindexPrev = pindexPrev->pprev;
     }
