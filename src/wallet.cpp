@@ -1555,7 +1555,7 @@ int CWallet::StakeTimeEarned(uint64_t nWeight, CBlockIndex* pindexPrev)
     int factor;
     double weightFraction = (nWeight+1) / (GetAverageStakeWeight(pindexPrev));
     // DEBUG This function is only used in updateStakingIcon(),
-    // so we don't care if the factor is > 0.45.
+    // so we don't care if the weightFraction is > 0.45.
     //if (weightFraction > 0.45)
     //{
     //    factor = 0;
