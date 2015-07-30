@@ -473,6 +473,10 @@ bool CTransaction::CheckTransaction() const
     if (::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
         return DoS(100, error("CTransaction::CheckTransaction() : size limits failed"));
 
+    // Fix for Legacy transactions that get initialized with current time if not in a block before LAST_POW_BLOCK
+    if (nVersion == CTransaction::LEGACY_VERSION_2 && nTime != 0)
+        nTime = 0;
+
     // Check for negative or overflow output values
     int64_t nValueOut = 0;
     for (unsigned int i = 0; i < vout.size(); i++)
@@ -1771,7 +1775,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
             }
             // ppcoin: check transaction timestamp
             if (nTime < txPrev.nTime)
-                return DoS(100, error("ConnectInputs() : transaction timestamp earlier than input transaction. txPrev.nTime=%u nTime=%u", txPrev.nTime, nTime));
+                return DoS(100, error("ConnectInputs() : transaction timestamp earlier than input transaction. txPrev.nTime=%u nTime=%u txPrev.nVersion=%d nVersion=%d", txPrev.nTime, nTime, txPrev.nVersion, nVersion));
 
             // Check for negative or overflow input values
             nValueIn += txPrev.vout[prevout.n].nValue;
@@ -2378,7 +2382,7 @@ bool CTransaction::GetCoinAge(CTxDB& txdb, uint64_t& nCoinAge) const
             continue; // only count coins meeting min age requirement
 
         int64_t nValueIn = txPrev.vout[txin.prevout.n].nValue;
-        bnCentSecond += CBigNum(nValueIn) * (nTime-txPrev.nTime) / CENT;
+        bnCentSecond += CBigNum(nValueIn) * (nTime - txPrev.nTime) / CENT;
 
         if (fDebug && GetBoolArg("-printcoinage"))
             printf("coin age nValueIn=%"PRId64" nTimeDiff=%d bnCentSecond=%s\n", nValueIn, nTime - txPrev.nTime, bnCentSecond.ToString().c_str());
@@ -2433,7 +2437,7 @@ bool CTransaction::GetStakeTime(CTxDB& txdb, uint64_t& nStakeTime, CBlockIndex* 
             printf("*** GetStakeTime: block.GetBlockTime()=%u + nStakeMinAge=%u = %u\n", block.GetBlockTime(), nStakeMinAge, block.GetBlockTime() + nStakeMinAge);
 
         int64_t nValueIn = txPrev.vout[txin.prevout.n].nValue;
-        int64_t timeWeight = nTime-txPrev.nTime;
+        int64_t timeWeight = nTime - txPrev.nTime;
         int64_t CoinDay = nValueIn * timeWeight / COIN / (24 * 60 * 60);
         int64_t factoredTimeWeight = GetStakeTimeFactoredWeight(timeWeight, CoinDay, pindexPrev);
         bnStakeTime += CBigNum(nValueIn) * factoredTimeWeight / COIN / (24 * 60 * 60);
@@ -3050,11 +3054,11 @@ bool CBlock::SignBlock(CWallet& wallet, int64_t nFees, int64_t nHeight)
     if (IsProofOfStake())
         return true;
 
-    static int64_t nLastCoinStakeSearchTime = GetAdjustedTime() - nLastCoinStakeSearchInterval; // startup timestamp
+    static int64_t nLastCoinStakeSearchTime = GetAdjustedTime(); // startup timestamp
 
     CKey key;
     CTransaction txCoinStake;
-    int64_t nSearchTime = (txCoinStake.nTime ? txCoinStake.nTime : GetAdjustedTime()); // search to current time
+    int64_t nSearchTime = txCoinStake.nTime; // search to current time
 
     if (nSearchTime > nLastCoinStakeSearchTime)
     {
