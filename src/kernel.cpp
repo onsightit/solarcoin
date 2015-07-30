@@ -464,7 +464,7 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
 bool CheckCoinStakeTimestamp(int64_t nTimeBlock, int64_t nTimeTx)
 {
     // v0.3 protocol
-    return (nTimeBlock == nTimeTx || nTimeTx == 0); // CTransaction::LEGACY_VERSION_2 has no timestamp
+    return (nTimeBlock == nTimeTx);
 }
 
 // Get stake modifier checksum

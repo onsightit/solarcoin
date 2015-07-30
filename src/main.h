@@ -461,8 +461,7 @@ class CTransaction
 {
 public:
     static const int LEGACY_VERSION_1 = 1;
-    static const int LEGACY_VERSION_2 = 2;
-    static const int CURRENT_VERSION = 3;
+    static const int CURRENT_VERSION = 2;
     int nVersion;
     unsigned int nTime;
     std::vector<CTxIn> vin;
@@ -483,9 +482,8 @@ public:
     (
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
-        if(this->nVersion == CTransaction::CURRENT_VERSION) {
+        if (!(nType & SER_GETHASH))
         READWRITE(nTime);
-        }
         READWRITE(vin);
         READWRITE(vout);
         READWRITE(nLockTime);
@@ -496,16 +494,8 @@ public:
 
     void SetNull()
     {
-        if (nBestHeight >= LAST_POW_BLOCK)
-        {
-            nVersion = CTransaction::CURRENT_VERSION;
-            nTime = GetAdjustedTime();
-        }
-        else
-        {
-            nVersion = CTransaction::LEGACY_VERSION_2;
-            nTime = 0;
-        }
+        nVersion = CTransaction::CURRENT_VERSION;
+        nTime = GetAdjustedTime();
         vin.clear();
         vout.clear();
         nLockTime = 0;
