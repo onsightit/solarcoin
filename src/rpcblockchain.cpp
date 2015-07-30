@@ -25,7 +25,7 @@ double GetDifficulty(const CBlockIndex* blockindex)
     }
 
     if (!blockindex->IsProofOfStake())
-        return 10.0;
+        return 0.1;
 
     int nShift = (blockindex->nBits >> 24) & 0xff;
 
