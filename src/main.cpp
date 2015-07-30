@@ -574,10 +574,6 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
     if (pfMissingInputs)
         *pfMissingInputs = false;
 
-    // Fix for Legacy transactions that get initialized with current time if not in a block before LAST_POW_BLOCK
-    if (tx.nVersion == CTransaction::LEGACY_VERSION_2)
-        tx.nTime = 0;
-
     if (!tx.CheckTransaction())
         return error("CTxMemPool::accept() : CheckTransaction failed");
 
