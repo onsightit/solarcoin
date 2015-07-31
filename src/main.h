@@ -80,7 +80,6 @@ extern unsigned int nNodeLifespan;
 extern int nCoinbaseMaturity;
 extern int nCoinbaseMaturity_PoW;
 extern int nBestHeight;
-extern unsigned int nBestBlocktime;
 extern uint256 nBestChainTrust;
 extern uint256 nBestInvalidTrust;
 extern uint256 hashBestChain;
@@ -505,7 +504,7 @@ public:
         else
         {
             nVersion = CTransaction::LEGACY_VERSION_2;
-            nTime = nBestBlocktime + 1; // Something realistic but not Now!
+            nTime = nTimeBestReceived + 1; // Something realistic but not Now!
         }
         vin.clear();
         vout.clear();
