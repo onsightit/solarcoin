@@ -504,7 +504,7 @@ public:
         else
         {
             nVersion = CTransaction::LEGACY_VERSION_2;
-            nTime = nTimeBestReceived + 1; // Something realistic but not Now!
+            nTime = nTimeBestReceived; // Something realistic but not Now!
         }
         vin.clear();
         vout.clear();
