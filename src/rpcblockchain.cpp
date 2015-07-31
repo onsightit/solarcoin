@@ -25,7 +25,7 @@ double GetDifficulty(const CBlockIndex* blockindex)
     }
 
     if (!blockindex->IsProofOfStake())
-        return 0.01; // DEBUG We don't care about PoW difficulty, so set it low.
+        return 0.001; // DEBUG We don't care about PoW difficulty, so set it low.
 
     int nShift = (blockindex->nBits >> 24) & 0xff;
 
