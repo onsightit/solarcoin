@@ -111,7 +111,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 {
     QDesktopWidget desktop;
     QRect screenSize = desktop.availableGeometry(desktop.primaryScreen());
-    //QRect screenSize = QRect(0, 0, 1024, 728); // SDW DEBUG
+    //QRect screenSize = QRect(0, 0, 1024, 728); // for testing
     if (screenSize.height() <= WINDOW_MIN_HEIGHT)
     {
         GUIUtil::refactorGUI(screenSize);

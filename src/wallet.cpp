@@ -1554,7 +1554,7 @@ int CWallet::StakeTimeEarned(uint64_t nWeight, CBlockIndex* pindexPrev)
 {
     int factor;
     double weightFraction = (nWeight+1) / (GetAverageStakeWeight(pindexPrev));
-    // DEBUG This function is only used in updateStakingIcon(),
+    // This function is only used in updateStakingIcon(),
     // so we don't care if the weightFraction is > 0.45.
     //if (weightFraction > 0.45)
     //{
@@ -1620,7 +1620,6 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         }
 
         static int nMaxStakeSearchInterval = 60;
-        // DEBUG Added more nStakeMinAge for testnet
         if (block.GetBlockTime() + nStakeMinAge > txNew.nTime - nMaxStakeSearchInterval)
             continue; // only count coins meeting min age requirement
 
@@ -1833,7 +1832,6 @@ bool CWallet::CreateCoinTimeStake(const CKeyStore& keystore, unsigned int nBits,
         }
 
         static int nMaxStakeSearchInterval = 60;
-        // DEBUG Added more nStakeMinAge for testnet
         if (block.GetBlockTime() + nStakeMinAge > txNew.nTime - nMaxStakeSearchInterval)
             continue; // only count coins meeting min age requirement
 
