@@ -1216,7 +1216,10 @@ bool CWallet::SelectCoinsMinConf(int64_t nTargetValue, unsigned int nSpendTime, 
 
         // Follow the timestamp rules
         if (pcoin->nTime > nSpendTime)
+        {
+            printf("*** DEBUG pcoin->nTime=%u nSpendTime=%u\n", pcoin->nTime, nSpendTime);
             continue;
+        }
 
         int64_t n = pcoin->vout[i].nValue;
 
