@@ -54,6 +54,7 @@ int nCoinbaseMaturity = 500;
 int nCoinbaseMaturity_PoW = 10;
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
+unsigned int nBestBlocktime = 0;
 
 uint256 nBestChainTrust = 0;
 uint256 nBestInvalidTrust = 0;
@@ -1770,7 +1771,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
                         return error("ConnectInputs() : tried to spend %s at depth %d", txPrev.IsCoinBase() ? "coinbase" : "coinstake", pindexBlock->nHeight - pindex->nHeight);
             }
             // ppcoin: check transaction timestamp
-            if (nTime < txPrev.nTime)
+            if (nTime < txPrev.nTime && txPrev.nVersion > CTransaction::LEGACY_VERSION_2)
                 return DoS(100, error("ConnectInputs() : transaction timestamp earlier than input transaction. txPrev.nTime=%u nTime=%u txPrev.nVersion=%d nVersion=%d", txPrev.nTime, nTime, txPrev.nVersion, nVersion));
 
             // Check for negative or overflow input values
@@ -2302,6 +2303,7 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
     pindexBest = pindexNew;
     pblockindexFBBHLast = NULL;
     nBestHeight = pindexBest->nHeight;
+    nBestBlocktime = pindexBest->nTime;
     nBestChainTrust = pindexNew->nChainTrust;
     nTimeBestReceived = GetTime();
     nTransactionsUpdated++;

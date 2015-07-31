@@ -80,6 +80,7 @@ extern unsigned int nNodeLifespan;
 extern int nCoinbaseMaturity;
 extern int nCoinbaseMaturity_PoW;
 extern int nBestHeight;
+extern unsigned int nBestBlocktime;
 extern uint256 nBestChainTrust;
 extern uint256 nBestInvalidTrust;
 extern uint256 hashBestChain;
@@ -483,14 +484,6 @@ public:
     (
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
-        //if(this->nVersion > LEGACY_VERSION_2) {
-        //if (fRead) {
-        //    READWRITE(nTime);
-        //} else if(this->nVersion > LEGACY_VERSION_2) {
-        //    READWRITE(nTime);
-        //} else if(nBestHeight >= LAST_POW_BLOCK) {
-        //    READWRITE(nTime);
-        //}
         if ((nType & SER_DISK) || this->nVersion > LEGACY_VERSION_2) {
             READWRITE(nTime);
         }
@@ -505,10 +498,15 @@ public:
     void SetNull()
     {
         if (nBestHeight >= LAST_POW_BLOCK)
+        {
             nVersion = CTransaction::CURRENT_VERSION;
+            nTime = GetAdjustedTime();
+        }
         else
+        {
             nVersion = CTransaction::LEGACY_VERSION_2;
-        nTime = GetAdjustedTime();
+            nTime = nBestBlocktime + 60; // Something realistic but not Now!
+        }
         vin.clear();
         vout.clear();
         nLockTime = 0;
