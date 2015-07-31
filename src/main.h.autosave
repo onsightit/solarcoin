@@ -483,14 +483,6 @@ public:
     (
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
-        //if(this->nVersion > LEGACY_VERSION_2) {
-        //if (fRead) {
-        //    READWRITE(nTime);
-        //} else if(this->nVersion > LEGACY_VERSION_2) {
-        //    READWRITE(nTime);
-        //} else if(nBestHeight >= LAST_POW_BLOCK) {
-        //    READWRITE(nTime);
-        //}
         if ((nType & SER_DISK) || this->nVersion > LEGACY_VERSION_2) {
             READWRITE(nTime);
         }
