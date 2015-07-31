@@ -90,6 +90,7 @@ extern uint64_t nLastBlockSize;
 extern int64_t nLastCoinStakeSearchInterval;
 extern const std::string strMessageMagic;
 extern int64_t nTimeBestReceived;
+extern int64_t nBestBlockTime;
 extern CCriticalSection cs_setpwalletRegistered;
 extern std::set<CWallet*> setpwalletRegistered;
 extern unsigned char pchMessageStart[4];
@@ -504,7 +505,7 @@ public:
         else
         {
             nVersion = CTransaction::LEGACY_VERSION_2;
-            nTime = nTimeBestReceived; // Something realistic but not Now!
+            nTime = nBestBlockTime; // Something realistic but not Now!
         }
         vin.clear();
         vout.clear();
