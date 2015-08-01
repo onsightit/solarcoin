@@ -1216,10 +1216,7 @@ bool CWallet::SelectCoinsMinConf(int64_t nTargetValue, unsigned int nSpendTime, 
 
         // Follow the timestamp rules
         if (pcoin->nTime > nSpendTime)
-        {
-            printf("*** DEBUG pcoin->nTime=%u nSpendTime=%u\n", pcoin->nTime, nSpendTime);
             continue;
-        }
 
         int64_t n = pcoin->vout[i].nValue;
 
@@ -1395,6 +1392,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
                 wtxNew.vin.clear();
                 wtxNew.vout.clear();
                 wtxNew.fFromMe = true;
+                wtxNew.nTime = GetAdjustedTime();
 
                 int64_t nTotalValue = nValue + nFeeRet;
                 double dPriority = 0;
