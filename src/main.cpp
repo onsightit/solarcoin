@@ -2790,7 +2790,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         if (!mapProofOfStake.count(hash)) // add to mapProofOfStake
             mapProofOfStake.insert(make_pair(hash, hashProofOfStake));
     }
-    else // DEBUG
+    else if (pfrom) // DEBUG
     {
         uint256 hashProofOfStake = 0, targetProofOfStake = 0;
         if (!CheckProofOfStakePoW(pblock->vtx[0], pblock->nBits, hashProofOfStake, targetProofOfStake))
