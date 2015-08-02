@@ -448,7 +448,7 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
     // Read block header
     CBlock block;
     if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
-        return fDebug? error("CheckProofOfStake() : read block failed") : false; // unable to read block of previous transaction
+        return fDebug ? error("CheckProofOfStake() : read block failed") : false; // unable to read block of previous transaction
 
     int currentHeight = pindexBest->pprev->nHeight+1;
     if (PoSTprotocol(currentHeight) || fTestNet) //PoST
@@ -477,13 +477,13 @@ bool CheckProofOfStakePoW(const CTransaction& tx, unsigned int nBits, uint256& h
     CTxIndex txindex;
     if (!CTxDB("r").ReadTxIndex(tx.GetHash(), txindex))
     {
-        return false;
+        return fDebug ? error("CheckProofOfStakePoW() : read Tx failed") : false; // unable to read transaction
     }
 
     // Read block header
     CBlock block;
     if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
-        return fDebug? error("CheckProofOfStakePoW() : read block failed") : false; // unable to read block of previous transaction
+        return fDebug ? error("CheckProofOfStakePoW() : read block failed") : false; // unable to read block of previous transaction
 
     if (!CheckStakeTimeKernelHash(nBits, block, txindex.pos.nTxPos - txindex.pos.nBlockPos, tx, txout, tx.nTime + nStakeMinAge, hashProofOfStake, targetProofOfStake, pindexBest->pprev, fDebug))
         return tx.DoS(1, error("CheckProofOfStakePoW() : INFO: check kernel failed on coinstake %s, hashProof=%s", tx.GetHash().ToString().c_str(), hashProofOfStake.ToString().c_str())); // may occur during initial download or if behind on block chain sync
