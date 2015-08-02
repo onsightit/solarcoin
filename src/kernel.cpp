@@ -469,6 +469,9 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
 // We need to fill out the pindex staking parameters for PoW blocks.
 bool CheckProofOfStakePoW(const CTransaction& tx, unsigned int nBits, uint256& hashProofOfStake, uint256& targetProofOfStake)
 {
+    if (pindexBest->nHeight == 0)
+        return false;
+
     if (!tx.IsCoinBase())
         return error("CheckProofOfStakePoW() : called on non-coinbase %s", tx.GetHash().ToString().c_str());
 
