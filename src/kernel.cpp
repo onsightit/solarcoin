@@ -486,10 +486,9 @@ bool CheckProofOfStakePoW(const CTransaction& tx, unsigned int nBits, uint256& h
     unsigned int nTimeBlockFrom = block.GetBlockTime();
     CBigNum bnTargetPerCoinDay;
     bnTargetPerCoinDay.SetCompact(nBits);
-    CTransaction txPrev = block.vtx[0];
-    int64_t nValueIn = txPrev.GetValueOut();
+    int64_t nValueIn = block.vtx[0].GetValueOut();
     uint256 hashBlockFrom = block.GetHash();
-    int64_t timeWeight = GetWeight((int64_t)txPrev.nTime, tx.nTime);
+    int64_t timeWeight = GetWeight((int64_t)block.vtx[0].nTime, tx.nTime);
     int64_t bnCoinDayWeight = nValueIn * timeWeight / COIN / (24 * 60 * 60);
 
     // Stake Time factored weight
@@ -511,7 +510,7 @@ bool CheckProofOfStakePoW(const CTransaction& tx, unsigned int nBits, uint256& h
     }
     ss << nStakeModifier;
 
-    ss << nTimeBlockFrom << 81 << txPrev.nTime << 0 << tx.nTime;
+    ss << nTimeBlockFrom << 81 << block.vtx[0].nTime << 0 << tx.nTime;
     hashProofOfStake = Hash(ss.begin(), ss.end());
 
     // Now check if proof-of-stake hash meets target protocol
