@@ -484,7 +484,7 @@ bool CheckProofOfStakePoW(const CTransaction& tx, unsigned int nBits, uint256& h
         return fDebug ? error("CheckProofOfStakePoW() : read block failed") : false; // unable to read block of previous transaction
 
     if (fDebug)
-        block.vtx[0].print();
+        block.print();
 
     unsigned int nTimeBlockFrom = block.GetBlockTime();
     CBigNum bnTargetPerCoinDay;
