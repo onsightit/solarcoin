@@ -2793,7 +2793,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     else // DEBUG
     {
         uint256 hashProofOfStake = 0, targetProofOfStake = 0;
-        if (!CheckProofOfStakePoW(pblock->vtx[0], pblock->nBits, hashProofOfStake, targetProofOfStake))
+        if (!CheckProofOfStakePoW(pblock, pblock->vtx[0], pblock->nBits, hashProofOfStake, targetProofOfStake))
         {
             printf("WARNING: ProcessBlock(): check proof-of-stake-pow failed for block %s\n", hash.ToString().c_str());
             return false; // do not error here as we expect this during initial block download
