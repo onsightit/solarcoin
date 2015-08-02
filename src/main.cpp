@@ -2042,6 +2042,9 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
             return DoS(50, error("ConnectBlock() : coinbase reward exceeded (actual=%"PRIu64" vs calculated=%"PRIu64")",
                    vtx[0].GetValueOut(),
                    nReward));
+        // DEBUG Need to fill in nStakeTime and nStakeReward for PoW to PoST transition
+        pindex->nStakeTime = nTime;
+        nStakeReward = 1 * COIN;
     }
     if (IsProofOfStake())
     {
@@ -2475,7 +2478,8 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
         return error("AddToBlockIndex() : SetStakeEntropyBit() failed");
 
     // ppcoin: record proof-of-stake hash value
-    if (pindexNew->IsProofOfStake())
+    // DEBUG if (pindexNew->IsProofOfStake())
+    if (pindexNew->nHeight > 0)
     {
         if (!mapProofOfStake.count(hash))
             return error("AddToBlockIndex() : hashProofOfStake not found in map");
@@ -2494,7 +2498,7 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
 
     // Add to mapBlockIndex
     map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(hash, pindexNew)).first;
-    if (pindexNew->IsProofOfStake())
+    // DEBUG if (pindexNew->IsProofOfStake())
         setStakeSeen.insert(make_pair(pindexNew->prevoutStake, pindexNew->nStakeTime));
     pindexNew->phashBlock = &((*mi).first);
 
@@ -2786,6 +2790,17 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         if (!mapProofOfStake.count(hash)) // add to mapProofOfStake
             mapProofOfStake.insert(make_pair(hash, hashProofOfStake));
     }
+    else // DEBUG
+    {
+        uint256 hashProofOfStake = 0, targetProofOfStake = 0;
+        if (!CheckProofOfStakePoW(pblock->vtx[0], pblock->nBits, hashProofOfStake, targetProofOfStake))
+        {
+            printf("WARNING: ProcessBlock(): check proof-of-stake-pow failed for block %s\n", hash.ToString().c_str());
+            return false; // do not error here as we expect this during initial block download
+        }
+        if (!mapProofOfStake.count(hash)) // add to mapProofOfStake
+            mapProofOfStake.insert(make_pair(hash, hashProofOfStake));
+    }
 
     CBlockIndex* pcheckpoint = Checkpoints::GetLastSyncCheckpoint();
     if (pcheckpoint && pblock->hashPrevBlock != hashBestChain && !Checkpoints::WantedByPendingSyncCheckpoint(hash))
@@ -3054,16 +3069,24 @@ bool CBlock::SignBlock(CWallet& wallet, int64_t nFees, int64_t nHeight)
 
     CKey key;
     CTransaction txCoinStake;
-    txCoinStake.SetNull();
 
     int64_t nSearchTime = txCoinStake.nTime; // search to current time
 
     if (nSearchTime > nLastCoinStakeSearchTime)
     {
+        if (fDebug)
+            printf("*** DEBUG SignBlock: nSearchTime=%"PRIi64" nLastCoinStakeSearchTime=%"PRIi64"\n", nSearchTime, nLastCoinStakeSearchTime);
+
         if (PoSTprotocol(nHeight) || fTestNet)// PoST
         {
             if (wallet.CreateCoinTimeStake(wallet, nBits, nSearchTime-nLastCoinStakeSearchTime, nFees, txCoinStake, key))
             {
+                if (fDebug)
+                    printf("*** DEBUG SignBlock: CreatCoinTimeStake passed\n");
+
+                if (fDebug)
+                    printf("*** DEBUG SignBlock: txCoinStake.nTime=%u >= max=%"PRIi64"\n", txCoinStake.nTime, max(pindexBest->GetMedianTimePast()+1, PastDrift(pindexBest->GetBlockTime())));
+
                 if (txCoinStake.nTime >= max(pindexBest->GetMedianTimePast()+1, PastDrift(pindexBest->GetBlockTime())))
                 {
                     // make sure coinstake would meet timestamp protocol
@@ -3079,6 +3102,9 @@ bool CBlock::SignBlock(CWallet& wallet, int64_t nFees, int64_t nHeight)
 
                     vtx.insert(vtx.begin() + 1, txCoinStake);
                     hashMerkleRoot = BuildMerkleTree();
+
+                    if (fDebug)
+                        printf("*** DEBUG SignBlock: hashMerkleRoot=%s\n", hashMerkleRoot.ToString().c_str());
 
                     // append a signature to our block
                     return key.Sign(GetHash(), vchBlockSig);

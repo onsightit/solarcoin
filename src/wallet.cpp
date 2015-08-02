@@ -1812,6 +1812,9 @@ bool CWallet::CreateCoinTimeStake(const CKeyStore& keystore, unsigned int nBits,
     if (setCoins.empty())
         return false;
 
+    if (fDebug)
+        printf("*** DEBUG CreateCoinTimeStake: passed initial checks\n");
+
     int64_t nCredit = 0;
     CScript scriptPubKeyKernel;
     CTxDB txdb("r");
@@ -1834,7 +1837,12 @@ bool CWallet::CreateCoinTimeStake(const CKeyStore& keystore, unsigned int nBits,
 
         static int nMaxStakeSearchInterval = 60;
         if (block.GetBlockTime() + nStakeMinAge > txNew.nTime - nMaxStakeSearchInterval)
+        {
+            if (fDebug)
+                printf("*** DEBUG CreateCoinTimeStake: block.GetBlockTime()+nStakeMinAge=%"PRIi64" txNew.nTime-nMaxStakeSearchInterval=%u\n", block.GetBlockTime() + nStakeMinAge, txNew.nTime - nMaxStakeSearchInterval);
+
             continue; // only count coins meeting min age requirement
+        }
 
         bool fKernelFound = false;
         for (unsigned int n=0; n<min(nSearchInterval,(int64_t)nMaxStakeSearchInterval) && !fKernelFound && !fShutdown && pindexPrev == pindexBest; n++)

@@ -1437,8 +1437,10 @@ public:
         }
         else
         {
-            prevoutStake.SetNull();
-            nStakeTime = 0;
+            // DEBUG prevoutStake.SetNull();
+            // DEBUG nStakeTime = 0;
+            prevoutStake = block.vtx[0].vin[0].prevout;
+            nStakeTime = block.nTime;
         }
 
         nVersion       = block.nVersion;
