@@ -470,7 +470,7 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
 bool CheckProofOfStakePoW(const CTransaction& tx, unsigned int nBits, uint256& hashProofOfStake, uint256& targetProofOfStake)
 {
     if (pindexBest->nHeight == 0)
-        return false;
+        return true;
 
     if (!tx.IsCoinBase())
         return error("CheckProofOfStakePoW() : called on non-coinbase %s", tx.GetHash().ToString().c_str());
