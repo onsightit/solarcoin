@@ -483,8 +483,8 @@ bool CheckProofOfStakePoW(const CTransaction& tx, unsigned int nBits, uint256& h
 
     // Read block header
     CBlock block;
-    if (!block.ReadFromDisk(pindexBest, false))
-        return fDebug ? error("CheckProofOfStakePoW() : read block failed") : true; // unable to read block of previous transaction
+    if (!block.ReadFromDisk(pindexBest, true))
+        return fDebug ? error("CheckProofOfStakePoW() : read block failed") : false; // unable to read block of previous transaction
 
     unsigned int nTimeBlockFrom = block.GetBlockTime();
     CBigNum bnTargetPerCoinDay;
