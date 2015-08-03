@@ -85,14 +85,15 @@ static bool SelectBlockFromCandidates(vector<pair<int64_t, uint256> >& vSortedBy
             continue;
         // compute the selection hash by hashing its proof-hash and the
         // previous proof-of-stake modifier
-        uint256 hashProof = pindex->IsProofOfStake()? pindex->hashProofOfStake : pindex->GetBlockHash();
+        // DEBUG uint256 hashProof = pindex->IsProofOfStake()? pindex->hashProofOfStake : pindex->GetBlockHash();
+        uint256 hashProof = pindex->hashProofOfStake;
         CDataStream ss(SER_GETHASH, 0);
         ss << hashProof << nStakeModifierPrev;
         uint256 hashSelection = Hash(ss.begin(), ss.end());
         // the selection hash is divided by 2**32 so that proof-of-stake block
         // is always favored over proof-of-work block. this is to preserve
         // the energy efficiency property
-        if (pindex->IsProofOfStake())
+        // DEBUG if (pindex->IsProofOfStake())
             hashSelection >>= 32;
         if (fSelected && hashSelection < hashBest)
         {
@@ -168,7 +169,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     sort(vSortedByTimestamp.begin(), vSortedByTimestamp.end());
 
     // Select 64 blocks from candidate blocks to generate stake modifier
-    uint64_t nStakeModifierNew = 0;
+    uint64_t nStakeModifierNew = nStakeModifier; // DEBUG Was 0
     int64_t nSelectionIntervalStop = nSelectionIntervalStart;
     map<uint256, const CBlockIndex*> mapSelectedBlocks;
     for (int nRound=0; nRound<min(64, (int)vSortedByTimestamp.size()); nRound++)
@@ -180,6 +181,9 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
             return error("ComputeNextStakeModifier: unable to select block at round %d", nRound);
         // write the entropy bit of the selected block
         nStakeModifierNew |= (((uint64_t)pindex->GetStakeEntropyBit()) << nRound);
+        // DEBUG Once we have a non-zero stake modifier, don't go back to zero
+        if (!nStakeModifierNew && nStakeModifier)
+            nStakeModifierNew = nStakeModifier;
         // add the selected block from candidates to selected list
         mapSelectedBlocks.insert(make_pair(pindex->GetBlockHash(), pindex));
         if (fDebug && GetBoolArg("-printstakemodifier"))
@@ -326,7 +330,7 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     }
 
     // Now check if proof-of-stake hash meets target protocol
-    if (CBigNum(hashProofOfStake) > bnStakeTimeWeight * bnTargetPerCoinDay)
+    if (nStakeModifier && CBigNum(hashProofOfStake) > bnStakeTimeWeight * bnTargetPerCoinDay)
         return false;
     if (fDebug && !fPrintProofOfStake)
     {
