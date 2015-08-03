@@ -1961,6 +1961,12 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
     unsigned int nSigOps = 0;
     BOOST_FOREACH(CTransaction& tx, vtx)
     {
+        // DEBUG
+        if (pindex->pprev->nHeight > 74 && pindex->pprev->nHeight < 84) // problem at 84
+        {
+            printf("*** DEBUG tx.print()\n");
+            tx.print();
+        }
         uint256 hashTx = tx.GetHash();
 
         // Do not allow blocks that contain transactions which 'overwrite' older transactions,
@@ -2069,6 +2075,9 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
 
         if (nStakeReward > nCalculatedStakeReward)
             return DoS(100, error("ConnectBlock() : coinstake pays too much(actual=%"PRId64" vs calculated=%"PRId64")", nStakeReward, nCalculatedStakeReward));
+        else
+            if (fDebug)
+                printf("ConnectBlock() : coinstake (actual=%"PRId64" vs calculated=%"PRId64")\n", nStakeReward, nCalculatedStakeReward);
     }
 
     // ppcoin: track money supply and mint amount info
@@ -2418,9 +2427,6 @@ bool CTransaction::GetStakeTime(CTxDB& txdb, uint64_t& nStakeTime, CBlockIndex* 
         if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex))
             continue;  // previous transaction not in main chain
 
-        if (fDebug)
-            printf("*** GetStakeTime: read from disk. nTime=%u txPrev.nTime=%u\n", nTime, txPrev.nTime);
-
         if (nTime < txPrev.nTime)
             return false;  // Transaction timestamp violation
 
@@ -2432,18 +2438,11 @@ bool CTransaction::GetStakeTime(CTxDB& txdb, uint64_t& nStakeTime, CBlockIndex* 
         if (block.GetBlockTime() + nStakeMinAge > nTime)
             continue; // only count coins meeting min age requirement
 
-        if (fDebug)
-            printf("*** GetStakeTime: block.GetBlockTime()=%u + nStakeMinAge=%u = %u\n", block.GetBlockTime(), nStakeMinAge, block.GetBlockTime() + nStakeMinAge);
-
         int64_t nValueIn = txPrev.vout[txin.prevout.n].nValue;
         int64_t timeWeight = nTime - txPrev.nTime;
         int64_t CoinDay = nValueIn * timeWeight / COIN / (24 * 60 * 60);
         int64_t factoredTimeWeight = GetStakeTimeFactoredWeight(timeWeight, CoinDay, pindexPrev);
         bnStakeTime += CBigNum(nValueIn) * factoredTimeWeight / COIN / (24 * 60 * 60);
-
-        if (fDebug)
-            printf("*** GetStakeTime: nValueIn=%u timeWeight=%u CoinDay=%u factoredTimeWeight=%u\n", nValueIn, timeWeight, CoinDay, factoredTimeWeight);
-
     }
     if (fDebug && GetBoolArg("-printcoinage"))
         printf("stake time bnStakeTime=%s\n", bnStakeTime.ToString().c_str());
@@ -3066,7 +3065,8 @@ bool CBlock::SignBlock(CWallet& wallet, int64_t nFees, int64_t nHeight)
     if (IsProofOfStake())
         return true;
 
-    static int64_t nLastCoinStakeSearchTime = GetAdjustedTime() - nLastCoinStakeSearchInterval; // startup timestamp
+    // DEBUG static int64_t nLastCoinStakeSearchTime = GetAdjustedTime() - nLastCoinStakeSearchInterval; // startup timestamp
+    static int64_t nLastCoinStakeSearchTime = GetAdjustedTime(); // startup timestamp
 
     CKey key;
     CTransaction txCoinStake;
@@ -3075,16 +3075,10 @@ bool CBlock::SignBlock(CWallet& wallet, int64_t nFees, int64_t nHeight)
 
     if (nSearchTime > nLastCoinStakeSearchTime)
     {
-        if (fDebug)
-            printf("*** DEBUG SignBlock: nSearchTime=%"PRIi64" nLastCoinStakeSearchTime=%"PRIi64"\n", nSearchTime, nLastCoinStakeSearchTime);
-
         if (PoSTprotocol(nHeight) || fTestNet)// PoST
         {
-            if (wallet.CreateCoinTimeStake(wallet, nBits, nSearchTime-nLastCoinStakeSearchTime, nFees, txCoinStake, key))
+            if (wallet.CreateCoinTimeStake(wallet, nBits, nSearchTime - nLastCoinStakeSearchTime, nFees, txCoinStake, key))
             {
-                if (fDebug)
-                    printf("*** DEBUG SignBlock: txCoinStake.nTime=%u >= max=%"PRIi64"\n", txCoinStake.nTime, max(pindexBest->GetMedianTimePast()+1, PastDrift(pindexBest->GetBlockTime())));
-
                 if (txCoinStake.nTime >= max(pindexBest->GetMedianTimePast()+1, PastDrift(pindexBest->GetBlockTime())))
                 {
                     // make sure coinstake would meet timestamp protocol
