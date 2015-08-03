@@ -469,34 +469,15 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
 // We need to fill out the pindex staking parameters for PoW blocks.
 bool CheckProofOfStakePoW(const CTransaction& tx, unsigned int nBits, uint256& hashProofOfStake, uint256& targetProofOfStake)
 {
-    if (pindexBest->nHeight == 0)
-        return true;
-
     if (!tx.IsCoinBase())
-        return error("CheckProofOfStakePoW() : called on non-coinbase %s", tx.GetHash().ToString().c_str());
+        return error("CheckProofOfStakePoW() called on non-coinbase %s", tx.GetHash().ToString().c_str());
 
     // Kernel (input 0) must match the stake hash target per coin age (nBits)
-    const COutPoint txout = COutPoint(tx.GetHash(), 0);
-
-    //if (!CheckStakeTimeKernelHash(nBits, block, 81, tx, txout, tx.nTime + nStakeMinAge, hashProofOfStake, targetProofOfStake, pindexBest->pprev, fDebug))
-    //    return tx.DoS(1, error("CheckProofOfStakePoW() : INFO: check kernel failed on coinstake %s, hashProof=%s", tx.GetHash().ToString().c_str(), hashProofOfStake.ToString().c_str())); // may occur during initial download or if behind on block chain sync
-
-    // Read block header
-    CBlock block;
-    if (!block.ReadFromDisk(pindexBest, true))
-        return fDebug ? error("CheckProofOfStakePoW() : read block failed") : false; // unable to read block of previous transaction
-
-    unsigned int nTimeBlockFrom = block.GetBlockTime();
+    unsigned int nTimeBlockFrom = pindexBest->nTime;
     CBigNum bnTargetPerCoinDay;
     bnTargetPerCoinDay.SetCompact(nBits);
-    int64_t nValueIn = block.vtx[0].GetValueOut();
-    if (fDebug)
-        printf("nValueIn=%"PRIi64"\n", nValueIn);
-    uint256 hashBlockFrom = block.GetHash();
-    int64_t timeWeight = GetWeight((int64_t)block.vtx[0].nTime, tx.nTime);
-    if (fDebug)
-        printf("timeWeight=%"PRIi64"\n", timeWeight);
-
+    int64_t nValueIn = tx.GetValueOut();
+    int64_t timeWeight = GetWeight((int64_t)tx.nTime, nTimeBlockFrom);
     int64_t bnCoinDayWeight = nValueIn * timeWeight / COIN / (24 * 60 * 60);
 
     // Stake Time factored weight
@@ -507,23 +488,16 @@ bool CheckProofOfStakePoW(const CTransaction& tx, unsigned int nBits, uint256& h
     // Calculate hash
     CDataStream ss(SER_GETHASH, 0);
     uint64_t nStakeModifier = 0;
-    int nStakeModifierHeight = 0;
-    int64_t nStakeModifierTime = 0;
 
-    if (!GetKernelStakeModifier(hashBlockFrom, nStakeModifier, nStakeModifierHeight, nStakeModifierTime, false))
-    {
-        if (fDebug)
-            printf("*** DEBUG CheckProofOfStakePoW: failed GetKernelStakeModifier\n");
-        return false;
-    }
     ss << nStakeModifier;
 
-    ss << nTimeBlockFrom << 81 << block.vtx[0].nTime << 0 << tx.nTime;
+    //ss << nTimeBlockFrom << nTxPrevOffset << txPrev.nTime << prevout.n << nTimeTx;
+    ss << nTimeBlockFrom << 81 << nTimeBlockFrom << 0 << tx.nTime;
     hashProofOfStake = Hash(ss.begin(), ss.end());
 
     // Now check if proof-of-stake hash meets target protocol
     if (CBigNum(hashProofOfStake) > bnStakeTimeWeight * bnTargetPerCoinDay)
-        return false;
+        return error("CheckProofOfStakePoW() proof-of-stake-pow hash doesn't meet target protocol %s", hashProofOfStake.ToString().c_str());
 
     return true;
 }
