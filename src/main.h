@@ -26,7 +26,6 @@ class CInv;
 class CRequestTracker;
 class CNode;
 
-// DEBUG
 static const int LAST_POW_BLOCK = 80; // testnet
 //static const int LAST_POW_BLOCK = 800000;
 

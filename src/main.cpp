@@ -2042,7 +2042,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
             return DoS(50, error("ConnectBlock() : coinbase reward exceeded (actual=%"PRIu64" vs calculated=%"PRIu64")",
                    vtx[0].GetValueOut(),
                    nReward));
-        // DEBUG Need to fill in nStakeTime and nStakeReward for PoW to PoST transition
+        // Need to fill in nStakeTime and nStakeReward for PoW to PoST transition
         pindex->nStakeTime = nTime;
         nStakeReward = 1 * COIN;
     }
@@ -3083,9 +3083,6 @@ bool CBlock::SignBlock(CWallet& wallet, int64_t nFees, int64_t nHeight)
             if (wallet.CreateCoinTimeStake(wallet, nBits, nSearchTime-nLastCoinStakeSearchTime, nFees, txCoinStake, key))
             {
                 if (fDebug)
-                    printf("*** DEBUG SignBlock: CreatCoinTimeStake passed\n");
-
-                if (fDebug)
                     printf("*** DEBUG SignBlock: txCoinStake.nTime=%u >= max=%"PRIi64"\n", txCoinStake.nTime, max(pindexBest->GetMedianTimePast()+1, PastDrift(pindexBest->GetBlockTime())));
 
                 if (txCoinStake.nTime >= max(pindexBest->GetMedianTimePast()+1, PastDrift(pindexBest->GetBlockTime())))
@@ -3103,9 +3100,6 @@ bool CBlock::SignBlock(CWallet& wallet, int64_t nFees, int64_t nHeight)
 
                     vtx.insert(vtx.begin() + 1, txCoinStake);
                     hashMerkleRoot = BuildMerkleTree();
-
-                    if (fDebug)
-                        printf("*** DEBUG SignBlock: hashMerkleRoot=%s\n", hashMerkleRoot.ToString().c_str());
 
                     // append a signature to our block
                     return key.Sign(GetHash(), vchBlockSig);
