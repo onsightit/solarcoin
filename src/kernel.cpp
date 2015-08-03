@@ -464,16 +464,15 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
     return true;
 }
 
-// Check kernel hash target and coinstake signature on PoW block
-// This is just a hack to get PoST staking with pure PoW blocks/transactions.
-// We need to fill out the pindex staking parameters for PoW blocks.
-bool CheckProofOfStakePoW(const CTransaction& tx, unsigned int nBits, uint256& hashProofOfStake, uint256& targetProofOfStake)
+// This is just a hack to get PoST to stake with pure PoW blocks/transactions behind it.
+// We need to fill out the pindex staking parameters. And we need to map a hashProofOfStake with the block hash.
+bool CheckProofOfStakePoW(CBlock* pblock, const CTransaction& tx, unsigned int nBits, uint256& hashProofOfStake)
 {
     if (!tx.IsCoinBase())
         return error("CheckProofOfStakePoW() called on non-coinbase %s", tx.GetHash().ToString().c_str());
 
     // Kernel (input 0) must match the stake hash target per coin age (nBits)
-    unsigned int nTimeBlockFrom = pindexBest->nTime;
+    unsigned int nTimeBlockFrom = pblock->nTime;
     CBigNum bnTargetPerCoinDay;
     bnTargetPerCoinDay.SetCompact(nBits);
     int64_t nValueIn = tx.GetValueOut();
@@ -483,21 +482,7 @@ bool CheckProofOfStakePoW(const CTransaction& tx, unsigned int nBits, uint256& h
     // Stake Time factored weight
     int64_t factoredTimeWeight = GetStakeTimeFactoredWeight(timeWeight, bnCoinDayWeight, pindexBest->pprev);
     CBigNum bnStakeTimeWeight = CBigNum(nValueIn) * factoredTimeWeight / COIN / (24 * 60 * 60);
-    targetProofOfStake = (bnStakeTimeWeight * bnTargetPerCoinDay).getuint256();
-
-    // Calculate hash
-    CDataStream ss(SER_GETHASH, 0);
-    uint64_t nStakeModifier = 0;
-
-    ss << nStakeModifier;
-
-    //ss << nTimeBlockFrom << nTxPrevOffset << txPrev.nTime << prevout.n << nTimeTx;
-    ss << nTimeBlockFrom << 81 << nTimeBlockFrom << 0 << tx.nTime;
-    hashProofOfStake = Hash(ss.begin(), ss.end());
-
-    // Now check if proof-of-stake hash meets target protocol
-    if (CBigNum(hashProofOfStake) > bnStakeTimeWeight * bnTargetPerCoinDay)
-        return error("CheckProofOfStakePoW() proof-of-stake-pow hash doesn't meet target protocol %s", hashProofOfStake.ToString().c_str());
+    hashProofOfStake = (bnStakeTimeWeight * bnTargetPerCoinDay).getuint256();
 
     return true;
 }
