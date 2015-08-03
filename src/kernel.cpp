@@ -40,10 +40,10 @@ static bool GetLastStakeModifier(const CBlockIndex* pindex, uint64_t& nStakeModi
 {
     if (!pindex)
         return error("GetLastStakeModifier: null pindex");
-    while (pindex && pindex->pprev && !pindex->GeneratedStakeModifier())
+    while (pindex && pindex->pprev && pindex->nHeight > LAST_POW_BLOCK && !pindex->GeneratedStakeModifier())
         pindex = pindex->pprev;
-    if (!pindex->GeneratedStakeModifier())
-        return error("GetLastStakeModifier: no generation at genesis block");
+    if (pindex->nHeight > LAST_POW_BLOCK && !pindex->GeneratedStakeModifier())
+        return error("GetLastStakeModifier: non generated stake modifier found");
     nStakeModifier = pindex->nStakeModifier;
     nModifierTime = pindex->GetBlockTime();
     return true;
