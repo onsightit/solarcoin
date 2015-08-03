@@ -484,10 +484,7 @@ bool CheckProofOfStakePoW(const CTransaction& tx, unsigned int nBits, uint256& h
     // Read block header
     CBlock block;
     if (!block.ReadFromDisk(pindexBest, false))
-        return fDebug ? error("CheckProofOfStakePoW() : read block failed") : false; // unable to read block of previous transaction
-
-    if (fDebug)
-        block.print();
+        return fDebug ? error("CheckProofOfStakePoW() : read block failed") : true; // unable to read block of previous transaction
 
     unsigned int nTimeBlockFrom = block.GetBlockTime();
     CBigNum bnTargetPerCoinDay;
@@ -495,6 +492,7 @@ bool CheckProofOfStakePoW(const CTransaction& tx, unsigned int nBits, uint256& h
     int64_t nValueIn = block.vtx[0].GetValueOut();
     uint256 hashBlockFrom = block.GetHash();
     int64_t timeWeight = GetWeight((int64_t)block.vtx[0].nTime, tx.nTime);
+
     int64_t bnCoinDayWeight = nValueIn * timeWeight / COIN / (24 * 60 * 60);
 
     // Stake Time factored weight
