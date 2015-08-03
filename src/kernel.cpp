@@ -490,8 +490,12 @@ bool CheckProofOfStakePoW(const CTransaction& tx, unsigned int nBits, uint256& h
     CBigNum bnTargetPerCoinDay;
     bnTargetPerCoinDay.SetCompact(nBits);
     int64_t nValueIn = block.vtx[0].GetValueOut();
+    if (fDebug)
+        printf("nValueIn=%"PRIi64"\n", nValueIn);
     uint256 hashBlockFrom = block.GetHash();
     int64_t timeWeight = GetWeight((int64_t)block.vtx[0].nTime, tx.nTime);
+    if (fDebug)
+        printf("timeWeight=%"PRIi64"\n", timeWeight);
 
     int64_t bnCoinDayWeight = nValueIn * timeWeight / COIN / (24 * 60 * 60);
 
