@@ -1457,20 +1457,20 @@ void BitcoinGUI::updateStakingIcon()
         if (fDebug)
             printf("*** updateStakingIcon: nLastCoinStakeSearchInterval=%"PRIi64" nEstimateTime=%u = nTargetSpacing=%u * nNetworkWeight=%.5g / nWeight=%"PRIu64"\n", nLastCoinStakeSearchInterval, nEstimateTime, nTargetSpacing, nNetworkWeight, nWeight);
 
-        QString text;
-        if (nEstimateTime < 60)
+        QString text = "unknown";
+        if (nEstimateTime && nEstimateTime < 60)
         {
             text = tr("%n second(s)", "", nEstimateTime);
         }
-        else if (nEstimateTime < 60*60)
+        else if (nEstimateTime && nEstimateTime < 60*60)
         {
             text = tr("%n minute(s)", "", nEstimateTime/60);
         }
-        else if (nEstimateTime < 24*60*60)
+        else if (nEstimateTime && nEstimateTime < 24*60*60)
         {
             text = tr("%n hour(s)", "", nEstimateTime/(60*60));
         }
-        else
+        else if (nEstimateTime)
         {
             text = tr("%n day(s)", "", nEstimateTime/(60*60*24));
         }

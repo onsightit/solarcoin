@@ -834,8 +834,7 @@ void CWalletTx::AddSupportingTransactions(CTxDB& txdb)
 
 bool CWalletTx::WriteToDisk()
 {
-    bool ret = CWalletDB(pwallet->strWalletFile).WriteTx(GetHash(), *this);
-    return ret;
+    return CWalletDB(pwallet->strWalletFile).WriteTx(GetHash(), *this);
 }
 
 // Scan the block chain (starting in pindexStart) for transactions
@@ -1392,7 +1391,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
                 wtxNew.vin.clear();
                 wtxNew.vout.clear();
                 wtxNew.fFromMe = true;
-                wtxNew.nTime = GetAdjustedTime();
+                // DEBUG wtxNew.nTime = GetAdjustedTime();
 
                 int64_t nTotalValue = nValue + nFeeRet;
                 double dPriority = 0;
