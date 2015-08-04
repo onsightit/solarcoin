@@ -477,31 +477,20 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
 bool CheckProofOfStakePoW(CBlock* pblock, const CTransaction& tx, uint256& hashProofOfStake)
 {
     if (!tx.IsCoinBase())
-        return error("CheckProofOfStakePoW() called on non-coinbase %s", tx.GetHash().ToString().c_str());
+        return error("CheckProofOfStakePoW() called on non-coinbase %s\n", tx.GetHash().ToString().c_str());
 
     uint256 hashBlockFrom = pblock->GetHash();
 
     // Calculate hash
     CDataStream ss(SER_GETHASH, 0);
-    uint64_t nStakeModifier = 0;
-    int nStakeModifierHeight = 0;
-    int64_t nStakeModifierTime = 0;
+    uint64_t nStakeModifier = 1; // PoW stake modifier
 
-    bool fPrintProofOfStake = fDebug;
-    if (!GetKernelStakeModifier(hashBlockFrom, nStakeModifier, nStakeModifierHeight, nStakeModifierTime, fPrintProofOfStake))
-        return false;
     ss << nStakeModifier;
-
     ss << hashBlockFrom;
     hashProofOfStake = Hash(ss.begin(), ss.end());
 
-    if (fPrintProofOfStake)
+    if (fDebug)
     {
-        printf("CheckProofOfStakePoW() : using modifier 0x%016"PRIx64" at height=%d timestamp=%s for block from height=%d timestamp=%s\n",
-            nStakeModifier, nStakeModifierHeight,
-            DateTimeStrFormat(nStakeModifierTime).c_str(),
-            pblock->GetBlockTime(),
-            DateTimeStrFormat(pblock->GetBlockTime()).c_str());
         printf("CheckProofOfStakePoW() : check modifier=0x%016"PRIx64" tx.nTime=%u hashProof=%s\n",
             nStakeModifier,
             tx.nTime,
