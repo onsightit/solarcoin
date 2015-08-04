@@ -1391,7 +1391,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
                 wtxNew.vin.clear();
                 wtxNew.vout.clear();
                 wtxNew.fFromMe = true;
-                // DEBUG wtxNew.nTime = GetAdjustedTime();
+                wtxNew.nTime = GetAdjustedTime(); // Needed if creating V2 txns
 
                 int64_t nTotalValue = nValue + nFeeRet;
                 double dPriority = 0;
