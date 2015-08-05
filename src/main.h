@@ -483,7 +483,7 @@ public:
     (
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
-        if ((nType & SER_DISK) || this->nVersion > LEGACY_VERSION_2) {
+        if (!(nType & SER_HASH) || this->nVersion > LEGACY_VERSION_2) { // Serialize nTime unless SER_HASH
             READWRITE(nTime);
         }
         READWRITE(vin);

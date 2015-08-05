@@ -2306,8 +2306,8 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
     pblockindexFBBHLast = NULL;
     nBestHeight = pindexBest->nHeight;
     nBestChainTrust = pindexNew->nChainTrust;
-    nTimeBestReceived = GetTime();
     nBestBlockTime = pindexBest->nTime;
+    nTimeBestReceived = GetTime();
     nTransactionsUpdated++;
 
     uint256 nBestBlockTrust = pindexBest->nHeight != 0 ? (pindexBest->nChainTrust - pindexBest->pprev->nChainTrust) : pindexBest->nChainTrust;
