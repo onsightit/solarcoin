@@ -2575,8 +2575,8 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
             return DoS(100, error("CheckBlock() : more than one coinbase"));
 
     // Check coinbase timestamp
-    if (!IsInitialBlockDownload())
-        if (nBestHeight > 0 && GetBlockTime() > FutureDrift((int64_t)vtx[0].nTime))
+    if (hashPrevBlock != (fTestNet ? hashGenesisBlockTestNet : hashGenesisBlock))
+        if (GetBlockTime() > FutureDrift((int64_t)vtx[0].nTime))
             return DoS(50, error("CheckBlock() : coinbase timestamp is too early"));
 
     if (fProofOfStake)
