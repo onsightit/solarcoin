@@ -2472,7 +2472,7 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
 
     // ppcoin: record proof-of-stake hash value
     // DEBUG if (pindexNew->IsProofOfStake())
-    //if (pindexNew->nHeight > 0)
+    if (pindexNew->nHeight > 0)
     {
         if (!mapProofOfStake.count(hash))
             return error("AddToBlockIndex() : hashProofOfStake not found in map");
