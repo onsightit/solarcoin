@@ -147,7 +147,7 @@ Value getworkex(const Array& params, bool fHelp)
         result.push_back(Pair("data",     HexStr(BEGIN(pdata), END(pdata))));
         result.push_back(Pair("target",   HexStr(BEGIN(hashTarget), END(hashTarget))));
 
-        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+        CDataStream ssTx(SER_DISK, PROTOCOL_VERSION); // Use SER_DISK to get nTime
         ssTx << coinbaseTx;
         result.push_back(Pair("coinbase", HexStr(ssTx.begin(), ssTx.end())));
 
@@ -191,7 +191,7 @@ Value getworkex(const Array& params, bool fHelp)
         if(coinbase.size() == 0)
             pblock->vtx[0].vin[0].scriptSig = mapNewBlock[pdata->hashMerkleRoot].second;
         else
-            CDataStream(coinbase, SER_NETWORK, PROTOCOL_VERSION) >> pblock->vtx[0]; // FIXME - HACK!
+            CDataStream(coinbase, SER_DISK, PROTOCOL_VERSION) >> pblock->vtx[0]; // FIXME - HACK! // Use SER_DISK to get nTime
 
         pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 
