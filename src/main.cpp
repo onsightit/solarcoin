@@ -208,7 +208,11 @@ bool AddOrphanTx(const CTransaction& tx)
     // 10,000 orphans, each of which is at most 5,000 bytes big is
     // at most 500 megabytes of orphans:
 
-    size_t nSize = tx.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
+    size_t nSize;
+    if (tx.nVersion == CTransaction::CURRENT_VERSION)
+        nSize = tx.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
+    else
+        nSize = tx.GetSerializeSize(SER_NETWORK, CTransaction::LEGACY_VERSION_2);
     if (nSize > 5000)
     {
         printf("ignoring large orphan tx (size: %"PRIszu", hash: %s)\n", nSize, hash.ToString().substr(0,10).c_str());
@@ -419,9 +423,7 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
             // Load the block this tx is in
             CTxIndex txindex;
             if (!CTxDB("r").ReadTxIndex(GetHash(), txindex))
-            {
                 return 0;
-            }
             if (!blockTmp.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos))
                 return 0;
             pblock = &blockTmp;
@@ -438,6 +440,7 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
         {
             printf("ERROR: SetMerkleBranch() : couldn't find tx in block\n");
             vMerkleBranch.clear();
+            hashBlock = 0;
             nIndex = -1;
             return 0;
         }
@@ -661,7 +664,7 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
         int64_t txMinFee = tx.GetMinFee(1000, GMF_RELAY, nSize, true);
         /* Fees can be 0 (limited number of free blocks) in the old SolarCoin PoW.
          * We won't enforce it in 2.0 (PoST version) */
-        if (tx.nVersion == CTransaction::CURRENT_VERSION && nFees < txMinFee)
+        if (tx.IsCoinStake() && nFees < txMinFee)
             return error("CTxMemPool::accept() : not enough fees %s, %"PRId64" < %"PRId64,
                          hash.ToString().c_str(),
                          nFees, txMinFee);
@@ -898,7 +901,6 @@ int CTxIndex::GetDepthInMainChain() const
 {
     // Read block header
     CBlock block;
-    // We don't really care about the block height if just reading the block header.
     if (!block.ReadFromDisk(pos.nFile, pos.nBlockPos, false))
         return 0;
     // Find the block in the index
@@ -912,7 +914,7 @@ int CTxIndex::GetDepthInMainChain() const
 }
 
 // Return transaction in tx, and if it was found inside a block, its hash is placed in hashBlock
-bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock, int &nHeight)
+bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock)
 {
     {
         LOCK(cs_main);
@@ -930,12 +932,7 @@ bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock, i
         {
             CBlock block;
             if (block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
-            {
                 hashBlock = block.GetHash();
-                CBlockIndex* pindex = mapBlockIndex[hashBlock];
-                if (pindex)
-                    nHeight = pindex->nHeight;
-            }
             return true;
         }
     }
@@ -1946,8 +1943,8 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
         // Since we're just checking the block and not actually connecting it, it might not (and probably shouldn't) be on the disk to get the transaction from
         nTxPos = 1;
     else
-        nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK, CLIENT_VERSION) - (2 * GetSizeOfCompactSize(0)) + GetSizeOfCompactSize(vtx.size());
-        // DEBUG nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK, CLIENT_VERSION);
+        // DEBUG nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK, CLIENT_VERSION) - (2 * GetSizeOfCompactSize(0)) + GetSizeOfCompactSize(vtx.size());
+        nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK, CLIENT_VERSION);
 
     map<uint256, CTxIndex> mapQueuedChanges;
     int64_t nFees = 0;
@@ -2047,7 +2044,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
                    nReward));
         // Need to fill in nStakeTime and nStakeReward for PoW to PoST transition
         pindex->nStakeTime = nTime;
-        nStakeReward = 0; // DEBUG
+        nStakeReward = 0 * COIN; // DEBUG
     }
     if (IsProofOfStake())
     {
@@ -2475,7 +2472,7 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
 
     // ppcoin: record proof-of-stake hash value
     // DEBUG if (pindexNew->IsProofOfStake())
-    if (pindexNew->nHeight > 0)
+    //if (pindexNew->nHeight > 0)
     {
         if (!mapProofOfStake.count(hash))
             return error("AddToBlockIndex() : hashProofOfStake not found in map");
@@ -2485,7 +2482,7 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
     // ppcoin: compute stake modifier
     uint64_t nStakeModifier = 0;
     bool fGeneratedStakeModifier = false;
-    if (nVersion == CBlockHeader::CURRENT_VERSION)
+    if (pindexNew->IsProofOfStake())
     {
         if (!ComputeNextStakeModifier(pindexNew, nStakeModifier, fGeneratedStakeModifier))
             return error("AddToBlockIndex() : ComputeNextStakeModifier() failed");
@@ -2576,6 +2573,10 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
     for (unsigned int i = 1; i < vtx.size(); i++)
         if (vtx[i].IsCoinBase())
             return DoS(100, error("CheckBlock() : more than one coinbase"));
+
+    // Check coinbase timestamp
+    if (GetBlockTime() > FutureDrift((int64_t)vtx[0].nTime))
+        return DoS(50, error("CheckBlock() : coinbase timestamp is too early"));
 
     if (fProofOfStake)
     {
@@ -4096,6 +4097,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             if (pindex->GetBlockHash() == hashStop)
             {
                 printf("  getblocks stopping at %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
+                // ppcoin: tell downloading node about the latest block if it's
+                // without risk being rejected due to stake connection check
+                if (hashStop != hashBestChain && pindex->GetBlockTime() + nStakeMinAge > pindexBest->GetBlockTime())
+                    pfrom->PushInventory(CInv(MSG_BLOCK, hashBestChain));
                 break;
             }
             pfrom->PushInventory(CInv(MSG_BLOCK, pindex->GetBlockHash()));

@@ -1312,8 +1312,7 @@ Value gettransaction(const Array& params, bool fHelp)
     {
         CTransaction tx;
         uint256 hashBlock = 0;
-        int nHeight = 0;
-        if (GetTransaction(hash, tx, hashBlock, nHeight))
+        if (GetTransaction(hash, tx, hashBlock))
         {
             TxToJSON(tx, 0, entry);
             if (hashBlock == 0)
@@ -1321,7 +1320,6 @@ Value gettransaction(const Array& params, bool fHelp)
             else
             {
                 entry.push_back(Pair("blockhash", hashBlock.GetHex()));
-                entry.push_back(Pair("blockheight", nHeight));
                 map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
                 if (mi != mapBlockIndex.end() && (*mi).second)
                 {
