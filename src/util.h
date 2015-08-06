@@ -147,6 +147,7 @@ extern std::map<std::string, std::vector<std::string> > mapMultiArgs;
 extern const char *walletUrl;
 extern const char *walletDownloadsUrl;
 extern const char *forumsUrl;
+extern const char *chatUrl;
 extern const char *blockchainUrl;
 extern bool fRestart;
 extern bool fBootstrapTurbo;

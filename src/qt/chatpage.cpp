@@ -56,6 +56,6 @@ void ChatPage::setModel(WalletModel *model)
 {
     this->walletModel = model;
 
-    QUrl url(QString(walletUrl).append("wallet/chat.html"));
+    QUrl url(chatUrl);
     ui->webView->myOpenUrl(url);
 }
