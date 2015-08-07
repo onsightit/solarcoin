@@ -445,7 +445,7 @@ bool CTxDB::LoadBlockIndex()
     pindexBest = mapBlockIndex[hashBestChain];
     nBestHeight = pindexBest->nHeight;
     nBestChainTrust = pindexBest->nChainTrust;
-    nBestBlockTime = pindexBest->nTime;
+    nBestBlockTime = pindexBest->nTime; // Used to create Txn timestamps for LEGACY_VERSION_2 txns
 
     printf("LoadBlockIndex(): hashBestChain=%s  height=%d  trust=%s  date=%s\n",
       hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, CBigNum(nBestChainTrust).ToString().c_str(),
@@ -485,6 +485,9 @@ bool CTxDB::LoadBlockIndex()
             printf("LoadBlockIndex() : *** found bad block at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
             pindexFork = pindex->pprev;
         }
+        if (pindex->pprev) // DEBUG
+            nBestBlockTime = pindex->pprev->nTime; // Used to create Txn timestamps for LEGACY_VERSION_2 txns
+
         // check level 2: verify transaction index validity
         if (nCheckLevel>1)
         {
@@ -580,6 +583,8 @@ bool CTxDB::LoadBlockIndex()
     }
     if (pindexFork && !fRequestShutdown)
     {
+        if (pindexFork->pprev) // DEBUG
+            nBestBlockTime = pindexFork->pprev->nTime; // Used to create Txn timestamps for LEGACY_VERSION_2 txns
         // Reorg back to the fork
         printf("LoadBlockIndex() : *** moving best chain pointer back to block %d\n", pindexFork->nHeight);
         CBlock block;
@@ -588,6 +593,7 @@ bool CTxDB::LoadBlockIndex()
         CTxDB txdb;
         block.SetBestChain(txdb, pindexFork);
     }
+    nBestBlockTime = pindexBest->nTime; // Used to create Txn timestamps for LEGACY_VERSION_2 txns
 
     return true;
 }
