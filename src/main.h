@@ -26,8 +26,8 @@ class CInv;
 class CRequestTracker;
 class CNode;
 
-static const int LAST_POW_BLOCK = 80; // testnet
-//static const int LAST_POW_BLOCK = 800000;
+//static const int LAST_POW_BLOCK = 80; // testnet
+static const int LAST_POW_BLOCK = 800000;
 
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/4;
@@ -483,7 +483,7 @@ public:
     (
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
-        if (!(nType & SER_GETHASH) || this->nVersion > LEGACY_VERSION_2) { // Serialize nTime unless SER_GETHASH
+        if (!(nType & (SER_GETHASH|SER_LEGACYPROTOCOL))) {
             READWRITE(nTime);
         }
         READWRITE(vin);
@@ -504,7 +504,7 @@ public:
         else
         {
             nVersion = CTransaction::LEGACY_VERSION_2;
-            nTime = nBestBlockTime; // Something realistic but not Now!
+            nTime = nBestBlockTime; // Something realistic. Note: Coinbase txns get set to their block's timestamp.
         }
         vin.clear();
         vout.clear();
@@ -1121,7 +1121,7 @@ public:
         if (!(nType & (SER_GETHASH|SER_BLOCKHEADERONLY)))
         {
             READWRITE(vtx);
-            if (this->nVersion == CBlockHeader::CURRENT_VERSION) {
+            if (this->nVersion >= CBlockHeader::CURRENT_VERSION) {
             READWRITE(vchBlockSig);
             }        }
         else if (fRead)
@@ -1274,7 +1274,7 @@ public:
         return true;
     }
 
-    bool ReadFromDisk(unsigned int nFile, unsigned int nBlockPos, bool fReadTransactions=true)
+    bool ReadFromDisk(unsigned int nFile, unsigned int nBlockPos, bool fReadTransactions=true, bool fLegacyProtocol=false)
     {
         SetNull();
 
@@ -1284,6 +1284,8 @@ public:
             return error("CBlock::ReadFromDisk() : OpenBlockFile failed");
         if (!fReadTransactions)
             filein.nType |= SER_BLOCKHEADERONLY;
+        if (fLegacyProtocol && fReadTransactions)
+            filein.nType |= SER_LEGACYPROTOCOL;
 
         // Read block
         try {
@@ -1328,7 +1330,7 @@ public:
 
     bool DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex);
     bool ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck=false);
-    bool ReadFromDisk(const CBlockIndex* pindex, bool fReadTransactions=true);
+    bool ReadFromDisk(const CBlockIndex* pindex, bool fReadTransactions=true, bool fLegacyProtocol=false);
     bool SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew);
     bool AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos);
     bool CheckBlock(bool fCheckPOW=true, bool fCheckMerkleRoot=true, bool fCheckSig=true) const;

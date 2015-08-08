@@ -959,7 +959,7 @@ CBlockIndex* FindBlockByHeight(int nHeight)
     return pblockindex;
 }
 
-bool CBlock::ReadFromDisk(const CBlockIndex* pindex, bool fReadTransactions)
+bool CBlock::ReadFromDisk(const CBlockIndex* pindex, bool fReadTransactions, bool fLegacyProtocol)
 {
     if (!fReadTransactions)
     {
@@ -967,7 +967,7 @@ bool CBlock::ReadFromDisk(const CBlockIndex* pindex, bool fReadTransactions)
         return true;
     }
 
-    if (!ReadFromDisk(pindex->nFile, pindex->nBlockPos, fReadTransactions))
+    if (!ReadFromDisk(pindex->nFile, pindex->nBlockPos, fReadTransactions, fLegacyProtocol))
         return false;
     if (GetHash() != pindex->GetBlockHash())
         return error("CBlock::ReadFromDisk() : GetHash() doesn't match index");
@@ -1761,7 +1761,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
                         return error("ConnectInputs() : tried to spend %s at depth %d", txPrev.IsCoinBase() ? "coinbase" : "coinstake", pindexBlock->nHeight - pindex->nHeight);
             }
             // ppcoin: check transaction timestamp
-            if (txPrev.nTime > nTime)
+            if (txPrev.nVersion > CTransaction::LEGACY_VERSION_2 && txPrev.nTime > nTime) // DEBUG
                 return DoS(100, error("ConnectInputs() : transaction timestamp earlier than input transaction. txPrev.nTime=%u nTime=%u txPrev.nVersion=%d nVersion=%d", txPrev.nTime, nTime, txPrev.nVersion, nVersion));
 
             // Check for negative or overflow input values
@@ -1939,7 +1939,6 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
         // Since we're just checking the block and not actually connecting it, it might not (and probably shouldn't) be on the disk to get the transaction from
         nTxPos = 1;
     else
-        // DEBUG nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK, CLIENT_VERSION) - (2 * GetSizeOfCompactSize(0)) + GetSizeOfCompactSize(vtx.size());
         nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK, CLIENT_VERSION);
 
     map<uint256, CTxIndex> mapQueuedChanges;
@@ -2033,7 +2032,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
                    nReward));
         // Need to fill in nStakeTime and nStakeReward for PoW to PoST transition
         pindex->nStakeTime = nTime;
-        nStakeReward = 0 * COIN; // DEBUG
+        nStakeReward = 0 * COIN;
     }
     if (IsProofOfStake())
     {
@@ -2299,7 +2298,7 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
     pblockindexFBBHLast = NULL;
     nBestHeight = pindexBest->nHeight;
     nBestChainTrust = pindexNew->nChainTrust;
-    nBestBlockTime = pindexBest->nTime;
+    nBestBlockTime = pindexBest->nTime; // Used to create Txn timestamps for LEGACY_VERSION_2 txns
     nTimeBestReceived = GetTime();
     nTransactionsUpdated++;
 
@@ -2460,7 +2459,7 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
         return error("AddToBlockIndex() : SetStakeEntropyBit() failed");
 
     // ppcoin: record proof-of-stake hash value
-    // DEBUG if (pindexNew->IsProofOfStake())
+    // SolarCoin: Record proof of stake in PoW indexes
     if (pindexNew->nHeight > 0)
     {
         if (!mapProofOfStake.count(hash))
@@ -2489,8 +2488,8 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
 
     // Add to mapBlockIndex
     map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(hash, pindexNew)).first;
-    // DEBUG if (pindexNew->IsProofOfStake())
-        setStakeSeen.insert(make_pair(pindexNew->prevoutStake, pindexNew->nStakeTime));
+    // SolarCoin: Record proof of stake in PoW indexes
+    setStakeSeen.insert(make_pair(pindexNew->prevoutStake, pindexNew->nStakeTime));
     pindexNew->phashBlock = &((*mi).first);
 
     // Write to disk block index
@@ -2523,6 +2522,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 {
     // These are checks that are independent of context
     // that can be verified before saving an orphan block.
+    int64_t blocktime = GetBlockTime();
 
     // Size limits
     if (vtx.empty() || vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
@@ -2531,7 +2531,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
     bool fProofOfStake = IsProofOfStake(); // RTI: Only need to call this once
 
     // SolarCoin: Special short-term limits to avoid 10,000 BDB lock limit:
-    if (GetBlockTime() < 1376568000)  // stop enforcing 15 August 2013 00:00:00
+    if (blocktime < 1376568000)  // stop enforcing 15 August 2013 00:00:00
     {
         // Rule is: #unique txids referenced <= 4,500
         // ... to prevent 10,000 BDB lock exhaustion on old clients
@@ -2553,20 +2553,27 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
         return DoS(50, error("CheckBlock() : proof of work failed"));
 
     // Check timestamp
-    if (GetBlockTime() > FutureDrift(GetAdjustedTime()))
+    if (blocktime > FutureDrift(GetAdjustedTime()))
         return error("CheckBlock() : block timestamp too far in the future");
 
     // First transaction must be coinbase, the rest must not be
     if (vtx.empty() || !vtx[0].IsCoinBase())
+    {
+        if (fDebug) // DEBUG
+            this->print();
         return DoS(100, error("CheckBlock() : first tx is not coinbase"));
+    }
     for (unsigned int i = 1; i < vtx.size(); i++)
         if (vtx[i].IsCoinBase())
             return DoS(100, error("CheckBlock() : more than one coinbase"));
 
+    if (fDebug)
+        printf("*** DEBUG BlockTime=%"PRId64" Coinbase.nTime=%"PRId64" (w/FutureDrift=%"PRId64")\n", blocktime, (int64_t)vtx[0].nTime, FutureDrift((int64_t)vtx[0].nTime));
+
     // Check coinbase timestamp
-    if (hashPrevBlock != (fTestNet ? hashGenesisBlockTestNet : hashGenesisBlock))
-        if (GetBlockTime() > FutureDrift((int64_t)vtx[0].nTime))
-            return DoS(50, error("CheckBlock() : coinbase timestamp is too early"));
+    // SolarCoin PoW blocks have large gaps in blocktimes (e.g. Block 129 has a timestamp 335.1 hours after 128!)
+    if (blocktime > FutureDrift((int64_t)vtx[0].nTime))
+        return DoS(50, error("CheckBlock() : coinbase timestamp is too early"));
 
     if (fProofOfStake)
     {
@@ -2582,8 +2589,8 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
                 return DoS(100, error("CheckBlock() : more than one coinstake"));
 
         // Check coinstake timestamp
-        if (!CheckCoinStakeTimestamp(GetBlockTime(), (int64_t)vtx[1].nTime))
-            return DoS(50, error("CheckBlock() : coinstake timestamp violation nTimeBlock=%"PRId64" nTimeTx=%u", GetBlockTime(), vtx[1].nTime));
+        if (!CheckCoinStakeTimestamp(blocktime, (int64_t)vtx[1].nTime))
+            return DoS(50, error("CheckBlock() : coinstake timestamp violation nTimeBlock=%"PRId64" nTimeTx=%u", blocktime, vtx[1].nTime));
 
         // SolarCoin: check proof-of-stake block signature
         if (fCheckSig && !CheckBlockSignature(true))
@@ -2597,8 +2604,10 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
             return DoS(tx.nDoS, error("CheckBlock() : CheckTransaction failed"));
 
         // ppcoin: check transaction timestamp
-        if (GetBlockTime() < (int64_t)tx.nTime)
-            return DoS(50, error("CheckBlock() : block timestamp earlier than transaction timestamp"));
+        // SolarCoin PoW blocks could be out of time sequence by several seconds. Don't check
+        if (IsProofOfStake())
+            if (blocktime < (int64_t)tx.nTime)
+                return DoS(50, error("CheckBlock() : block timestamp earlier than transaction timestamp"));
     }
 
     // Check for duplicate txids. This is caught by ConnectInputs(),
@@ -3066,7 +3075,6 @@ bool CBlock::SignBlock(CWallet& wallet, int64_t nFees, int64_t nHeight)
     if (IsProofOfStake())
         return true;
 
-    // DEBUG static int64_t nLastCoinStakeSearchTime = GetAdjustedTime() - nLastCoinStakeSearchInterval; // startup timestamp
     static int64_t nLastCoinStakeSearchTime = GetAdjustedTime(); // startup timestamp
 
     CKey key;
@@ -3690,7 +3698,7 @@ void static ProcessGetData(CNode* pfrom)
                 {
                     // Send block from disk
                     CBlock block;
-                    block.ReadFromDisk((*mi).second);
+                    block.ReadFromDisk((*mi).second, true, (pfrom->nVersion <= PROTOCOL_VERSION_POW));
                     if (inv.type == MSG_BLOCK)
                         pfrom->PushMessage("block", block);
                     else // MSG_FILTERED_BLOCK)
@@ -3743,8 +3751,13 @@ void static ProcessGetData(CNode* pfrom)
                 if (!pushed && inv.type == MSG_TX) {
                     LOCK(mempool.cs);
                     if (mempool.exists(inv.hash)) {
+                        int flags;
+                        if (pfrom->nVersion <= PROTOCOL_VERSION_POW)
+                            flags = SER_NETWORK & SER_LEGACYPROTOCOL;
+                        else
+                            flags = SER_NETWORK;
                         CTransaction tx = mempool.lookup(inv.hash);
-                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                        CDataStream ss(flags, PROTOCOL_VERSION);
                         ss.reserve(1000);
                         ss << tx;
                         pfrom->PushMessage("tx", ss);
@@ -4167,6 +4180,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CTxDB txdb("r");
         CTransaction tx;
         vRecv >> tx;
+        if (vRecv.nVersion < PROTOCOL_VERSION)
+            tx.nTime = GetAdjustedTime(); // DEBUG If receiving a loose txn from a 1.5 or less node, set the timestamp
 
         CInv inv(MSG_TX, tx.GetHash());
         pfrom->AddInventoryKnown(inv);
@@ -4232,6 +4247,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     {
         CBlock block;
         vRecv >> block;
+        if (block.nVersion < CBlockHeader::CURRENT_VERSION)
+            if (block.vtx.size() > 0)
+                block.vtx[0].nTime = block.nTime; // DEBUG
         uint256 hashBlock = block.GetHash();
 
         printf("received block %s\n", hashBlock.ToString().substr(0,20).c_str());
@@ -4511,6 +4529,11 @@ bool ProcessMessages(CNode* pfrom)
 
         // Checksum
         CDataStream& vRecv = msg.vRecv;
+        if (pfrom->nVersion <= PROTOCOL_VERSION_POW)
+        {
+            // Force ignore of txn nTime for old protocols
+            vRecv.SetType(SER_LEGACYPROTOCOL);
+        }
         uint256 hash = Hash(vRecv.begin(), vRecv.begin() + nMessageSize);
         unsigned int nChecksum = 0;
         memcpy(&nChecksum, &hash, sizeof(nChecksum));
