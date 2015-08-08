@@ -24,9 +24,9 @@ static const int MAX_PASSPHRASE_SIZE = 1024;
 #define COLOR_BAREADDRESS QColor(140, 140, 140)
 
 /* Custom colors / fonts */
-#define STR_COLOR QString("#6b4e13")
-#define STR_COLOR_LT QString("#e9d785")
-#define STR_COLOR_HOVER QString("#3a2d09")
+#define STR_COLOR QString("#804b00")
+#define STR_COLOR_LT QString("#ff9614")
+#define STR_COLOR_HOVER QString("#ffd114")
 #define STR_COLOR_TTBG QString("#6b4e13")
 #define STR_FONT_COLOR QString("#444748")
 
