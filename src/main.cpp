@@ -1384,7 +1384,7 @@ unsigned int static GetNextWorkRequired_V1(const CBlockIndex* pindexLast, const 
 
 unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, const CBlockHeader *pblock, uint64_t TargetBlocksSpacingSeconds, uint64_t PastBlocksMin, uint64_t PastBlocksMax) {
 
-    if (pindexLast->nHeight+1 == 160 && !fTestNet)
+    if (pindexLast->nHeight+1 == 160)
         return bnStartDiff.GetCompact();
 
     const CBlockIndex *BlockLastSolved  = pindexLast;
@@ -2656,7 +2656,7 @@ bool CBlock::AcceptBlock()
     if (IsProofOfStake())
     {
         if (nBits != GetNextTargetRequired(pindexPrev, true))
-            return DoS(100, error("AcceptBlock() : incorrect %s", IsProofOfWork() ? "proof-of-work" : "proof-of-stake"));
+            return DoS(100, error("AcceptBlock() : incorrect proof of stake"));
     }
     else
     {
