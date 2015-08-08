@@ -959,7 +959,7 @@ CBlockIndex* FindBlockByHeight(int nHeight)
     return pblockindex;
 }
 
-bool CBlock::ReadFromDisk(const CBlockIndex* pindex, bool fReadTransactions, bool fLegacyProtocol)
+bool CBlock::ReadFromDisk(const CBlockIndex* pindex, bool fReadTransactions)
 {
     if (!fReadTransactions)
     {
@@ -967,7 +967,7 @@ bool CBlock::ReadFromDisk(const CBlockIndex* pindex, bool fReadTransactions, boo
         return true;
     }
 
-    if (!ReadFromDisk(pindex->nFile, pindex->nBlockPos, fReadTransactions, fLegacyProtocol))
+    if (!ReadFromDisk(pindex->nFile, pindex->nBlockPos, fReadTransactions))
         return false;
     if (GetHash() != pindex->GetBlockHash())
         return error("CBlock::ReadFromDisk() : GetHash() doesn't match index");
@@ -3696,9 +3696,11 @@ void static ProcessGetData(CNode* pfrom)
                 }
                 if (send)
                 {
+                    if (pfrom->nVersion <= PROTOCOL_VERSION_POW)
+                        pfrom->ssSend.nType |= SER_LEGACYPROTOCOL;
                     // Send block from disk
                     CBlock block;
-                    block.ReadFromDisk((*mi).second, true, (pfrom->nVersion <= PROTOCOL_VERSION_POW));
+                    block.ReadFromDisk((*mi).second, true);
                     if (inv.type == MSG_BLOCK)
                         pfrom->PushMessage("block", block);
                     else // MSG_FILTERED_BLOCK)
