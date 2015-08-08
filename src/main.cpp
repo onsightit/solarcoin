@@ -3696,8 +3696,6 @@ void static ProcessGetData(CNode* pfrom)
                 }
                 if (send)
                 {
-                    if (pfrom->nVersion <= PROTOCOL_VERSION_POW)
-                        pfrom->ssSend.nType |= SER_LEGACYPROTOCOL;
                     // Send block from disk
                     CBlock block;
                     block.ReadFromDisk((*mi).second, true);

@@ -1820,6 +1820,10 @@ void ThreadMessageHandler2(void* parg)
             LOCK(cs_vNodes);
             vNodesCopy = vNodes;
             BOOST_FOREACH(CNode* pnode, vNodesCopy) {
+                // Flag this node if using a legacy protocol.
+                // This allows us to send/recv blocks with LEGACY_VERSION_2 txns.
+                if (pnode->nVersion <= PROTOCOL_VERSION_POW)
+                    pnode->ssSend.nType |= SER_LEGACYPROTOCOL;
                 pnode->AddRef();
                 if (pnode == pnodeSync)
                     fHaveSyncNode = true;
