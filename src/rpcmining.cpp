@@ -141,6 +141,7 @@ Value getworkex(const Array& params, bool fHelp)
         uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
 
         CTransaction coinbaseTx = pblock->vtx[0];
+        coinbaseTx.nTime = pblock->nTime; // DEBUG
         std::vector<uint256> merkle = pblock->GetMerkleBranch(0);
 
         Object result;
@@ -192,6 +193,8 @@ Value getworkex(const Array& params, bool fHelp)
             pblock->vtx[0].vin[0].scriptSig = mapNewBlock[pdata->hashMerkleRoot].second;
         else
             CDataStream(coinbase, SER_NETWORK, PROTOCOL_VERSION) >> pblock->vtx[0]; // FIXME - HACK!
+
+        pblock->vtx[0].nTime = pblock->nTime; // DEBUG
 
         pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 

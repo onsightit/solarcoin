@@ -52,6 +52,7 @@ enum
     // modifiers
     SER_SKIPSIG         = (1 << 16),
     SER_BLOCKHEADERONLY = (1 << 17),
+    SER_LEGACYPROTOCOL  = (1 << 18),
 };
 
 #define IMPLEMENT_SERIALIZE(statements)    \

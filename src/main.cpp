@@ -1950,13 +1950,6 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
     unsigned int nSigOps = 0;
     BOOST_FOREACH(CTransaction& tx, vtx)
     {
-        // DEBUG
-        if (pindex->pprev->nHeight > 74 && pindex->pprev->nHeight < 84) // problem at 84
-        {
-            printf("*** DEBUG tx.print()\n");
-            tx.print();
-        }
-
         uint256 hashTx = tx.GetHash();
 
         // Do not allow blocks that contain transactions which 'overwrite' older transactions,

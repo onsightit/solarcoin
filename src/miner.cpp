@@ -383,6 +383,7 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake, int64_t* pFees)
         if (!fProofOfStake)
             pblock->UpdateTime(pindexPrev);
         pblock->nNonce         = 0;
+        pblock->vtx[0].nTime = pblock->nTime; // DEBUG
     }
 
     return pblock.release();
