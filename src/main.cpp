@@ -3812,16 +3812,17 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             return false;
         }
 
-        // Flag this node if using a legacy protocol.
-        // This allows us to send/recv blocks with LEGACY_VERSION_2 txns.
-        if (pfrom->nVersion <= PROTOCOL_VERSION_POW)
-            pfrom->ssSend.nType |= SER_LEGACYPROTOCOL;
-
         int64_t nTime;
         CAddress addrMe;
         CAddress addrFrom;
         uint64_t nNonce = 1;
         vRecv >> pfrom->nVersion >> pfrom->nServices >> nTime >> addrMe;
+
+        // Flag this node if using a legacy protocol.
+        // This allows us to send/recv blocks with LEGACY_VERSION_2 txns.
+        if (pfrom->nVersion <= PROTOCOL_VERSION_POW)
+            pfrom->ssSend.nType |= SER_LEGACYPROTOCOL;
+
         if (pfrom->nVersion < MIN_PROTO_VERSION)
         {
             // disconnect from peers older than this proto version
