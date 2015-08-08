@@ -992,11 +992,10 @@ uint256 WantedByOrphan(const CBlock* pblockOrphan)
 }
 
 // miner's coin base reward
-int64_t GetProofOfWorkReward(int64_t nFees)
+int64_t GetProofOfWorkReward(int nHeight, int64_t nFees)
 {
     // Set starting subsidy
     int64_t nSubsidy = 100 * COIN;
-    int nHeight = pindexBest->nHeight;
 
     // Configure generation pool blocks
     if(nHeight < 99) {nSubsidy = 1000000000 * COIN;}
@@ -1041,10 +1040,6 @@ int64_t GetProofOfWorkReward(int64_t nFees)
     // Subsidy is cut in half every 525600 blocks, which will occur approximately every 1 years
     nSubsidy >>= (nHeight / 525600); // SolarCoin: 525.6K blocks in ~1 years
 
-    if (fTestNet)
-    {
-        nSubsidy = 1000000 * COIN;
-    }
     return nSubsidy + nFees;
 }
 
@@ -2024,7 +2019,8 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
 
     if (IsProofOfWork())
     {
-        int64_t nReward = GetProofOfWorkReward(nFees);
+        int currentHeight = pindex->pprev->nHeight+1;
+        int64_t nReward = GetProofOfWorkReward(currentHeight, nFees);
         // Check coinbase reward
         if (vtx[0].GetValueOut() > nReward)
             return DoS(50, error("ConnectBlock() : coinbase reward exceeded (actual=%"PRIu64" vs calculated=%"PRIu64")",
