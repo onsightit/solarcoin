@@ -156,12 +156,12 @@ QString veriToolTipStyleSheet = QString("QToolTip { background-color: " + STR_CO
 
 QString veriMiscStyleSheet = QString("QStatusBar { background: " + STR_COLOR + "; color: white; } QStatusBar::item { border: none; } QDialog { background: white; color: " + STR_FONT_COLOR + "; } QTableView::item:hover { background: #EBEBEB; color: " + STR_FONT_COLOR + "; } ");
 
-QString veriMenuStyleSheet = QString("QMenuBar { background-color: " + STR_COLOR_HOVER + "; color: white; } \
+QString veriMenuStyleSheet = QString("QMenuBar { background-color: " + STR_COLOR + "; color: white; } \
                             QMenuBar::item { background-color: transparent; margin: 0px; padding: 4px 16px 4px 16px; } \
-                            QMenuBar::item:selected { background-color: " + STR_COLOR + "; color: white; } \
-                            QMenu { background-color: " + STR_COLOR_HOVER + "; color: white; } \
+                            QMenuBar::item:selected { background-color: " + STR_COLOR_LT + "; color: white; } \
+                            QMenu { background-color: " + STR_COLOR + "; color: white; } \
                             QMenu::item { background-color: transparent; margin: 0px 0px 4px 4px; padding: 4px 8px 4px 24px; } \
-                            QMenu::item:selected { background-color: " + STR_COLOR + "; color: white; }");
+                            QMenu::item:selected { background-color: " + STR_COLOR_LT + "; color: white; }");
 
 // Put them all together
 QString veriStyleSheet = veriCentralWidgetStyleSheet + veriPushButtonStyleSheet + veriToolBarStyleSheet + veriToolTipStyleSheet + veriMiscStyleSheet + veriMenuStyleSheet;
