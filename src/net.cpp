@@ -1841,11 +1841,6 @@ void ThreadMessageHandler2(void* parg)
             if (pnode->fDisconnect)
                 continue;
 
-            // Flag this node if using a legacy protocol.
-            // This allows us to send/recv blocks with LEGACY_VERSION_2 txns.
-            if (pnode->nVersion <= PROTOCOL_VERSION_POW)
-                pnode->ssSend.nType |= SER_LEGACYPROTOCOL;
-
             // Receive messages
             {
                 TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
