@@ -312,7 +312,7 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     if (!GetKernelStakeModifier(hashBlockFrom, nStakeModifier, nStakeModifierHeight, nStakeModifierTime, fPrintProofOfStake))
     {
         if (fDebug) {
-            printf("*** DEBUG CheckStakeTimeKernelHash: failed GetKernelStakeModifier\n");
+            printf("*** CheckStakeTimeKernelHash: failed GetKernelStakeModifier\n");
             CBlockIndex* pindexFrom = mapBlockIndex[hashBlockFrom];
             pindexFrom->print();
         }
@@ -384,8 +384,8 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
     return true;
 }
 
-// This is just a hack to get PoST to stake with pure PoW blocks/transactions behind it.
-// We need to fill out the pindex staking parameters. And we need to map a hashProofOfStake with the block hash.
+// This is needed to get PoST to stake with pure PoW blocks behind it.
+// We need to fill out the pindex staking parameters. And we need to map a hashProofOfStake.
 bool CheckProofOfStakePoW(CBlock* pblock, const CTransaction& tx, uint256& hashProofOfStake)
 {
     if (!tx.IsCoinBase())

@@ -1715,7 +1715,8 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
                         return error("ConnectInputs() : tried to spend %s at depth %d", txPrev.IsCoinBase() ? "coinbase" : "coinstake", pindexBlock->nHeight - pindex->nHeight);
             }
             // ppcoin: check transaction timestamp
-            if (txPrev.nVersion > CTransaction::LEGACY_VERSION_2 && txPrev.nTime > nTime) // DEBUG
+            // DEBUG if (txPrev.nVersion > CTransaction::LEGACY_VERSION_2 && txPrev.nTime > nTime)
+            if (txPrev.nTime > nTime)
                 return DoS(100, error("ConnectInputs() : transaction timestamp earlier than input transaction. txPrev.nTime=%u nTime=%u txPrev.nVersion=%d nVersion=%d", txPrev.nTime, nTime, txPrev.nVersion, nVersion));
 
             // Check for negative or overflow input values
@@ -2421,7 +2422,7 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
     else
     {
         fGeneratedStakeModifier = true;
-        pindexNew->SetStakeModifier(1, fGeneratedStakeModifier);
+        nStakeModifier = 1; // PoW stake modifier
     }
 
     pindexNew->SetStakeModifier(nStakeModifier, fGeneratedStakeModifier);
@@ -2502,8 +2503,6 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
     // First transaction must be coinbase, the rest must not be
     if (vtx.empty() || !vtx[0].IsCoinBase())
     {
-        if (fDebug) // DEBUG
-            this->print();
         return DoS(100, error("CheckBlock() : first tx is not coinbase"));
     }
     for (unsigned int i = 1; i < vtx.size(); i++)
@@ -2511,7 +2510,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
             return DoS(100, error("CheckBlock() : more than one coinbase"));
 
     if (fDebug)
-        printf("*** DEBUG BlockTime=%"PRId64" Coinbase.nTime=%"PRId64" (w/FutureDrift=%"PRId64")\n", blocktime, (int64_t)vtx[0].nTime, FutureDrift((int64_t)vtx[0].nTime));
+        printf("*** BlockTime=%"PRId64" Coinbase.nTime=%"PRId64" (w/FutureDrift=%"PRId64")\n", blocktime, (int64_t)vtx[0].nTime, FutureDrift((int64_t)vtx[0].nTime));
 
     // Check coinbase timestamp
     // SolarCoin PoW blocks have large gaps in blocktimes (e.g. Block 129 has a timestamp 335.1 hours after 128!)
@@ -4102,7 +4101,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CTransaction tx;
         vRecv >> tx;
         if (vRecv.nVersion < PROTOCOL_VERSION)
-            tx.nTime = GetAdjustedTime(); // DEBUG If receiving a loose txn from a 1.5 or less node, set the timestamp
+            tx.nTime = GetAdjustedTime(); // If receiving a loose txn from a 1.5 or less node, set the timestamp
 
         CInv inv(MSG_TX, tx.GetHash());
         pfrom->AddInventoryKnown(inv);
@@ -4170,11 +4169,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         vRecv >> block;
         if (block.nVersion < CBlockHeader::CURRENT_VERSION)
             if (block.vtx.size() > 0)
-                block.vtx[0].nTime = block.nTime; // DEBUG
+                block.vtx[0].nTime = block.nTime; // If receiving a legacy block, set the coinbase timestamp.
         uint256 hashBlock = block.GetHash();
 
         printf("received block %s\n", hashBlock.ToString().substr(0,20).c_str());
-        // block.print();
 
         CInv inv(MSG_BLOCK, hashBlock);
         pfrom->AddInventoryKnown(inv);

@@ -381,9 +381,11 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake, int64_t* pFees)
         pblock->nTime          = max(pindexPrev->GetMedianTimePast()+1, pblock->GetMaxTransactionTime());
         pblock->nTime          = max(pblock->GetBlockTime(), PastDrift(pindexPrev->GetBlockTime()));
         if (!fProofOfStake)
+        {
             pblock->UpdateTime(pindexPrev);
+            pblock->vtx[0].nTime = pblock->nTime; // If creating a legacy block, set the coinbase timestamp.
+        }
         pblock->nNonce         = 0;
-        pblock->vtx[0].nTime = pblock->nTime; // DEBUG
     }
 
     return pblock.release();
