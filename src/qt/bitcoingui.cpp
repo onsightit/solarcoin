@@ -1478,41 +1478,28 @@ void BitcoinGUI::updateStakingIcon()
         labelBlocksIcon->hide();
         labelStakingIcon->show();
         int nStakeTimePower = pwalletMain->StakeTimeEarned(nWeight, pindexBest->pprev);
-        if (PoSTprotocol(currentBlock) || fTestNet)
+
+        if (nStakeTimePower <= 100 && nStakeTimePower > 75)
         {
-            if (nStakeTimePower <= 100 && nStakeTimePower > 75)
-            {
-                labelStakingIcon->setPixmap(QIcon(":/icons/stake100").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-            }
-            if (nStakeTimePower <= 75 && nStakeTimePower > 50)
-            {
-                labelStakingIcon->setPixmap(QIcon(":/icons/stake75").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-            }
-            if (nStakeTimePower <= 50 && nStakeTimePower > 25)
-            {
-                labelStakingIcon->setPixmap(QIcon(":/icons/stake50").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-            }
-            if (nStakeTimePower <= 25 && nStakeTimePower > 5)
-            {
-                labelStakingIcon->setPixmap(QIcon(":/icons/stake25").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-            }
-            if (nStakeTimePower <= 5 && nStakeTimePower >= 0)
-            {
-                labelStakingIcon->setPixmap(QIcon(":/icons/stake0").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-            }
+            labelStakingIcon->setPixmap(QIcon(":/icons/stake100").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
         }
-        else
+        if (nStakeTimePower <= 75 && nStakeTimePower > 50)
         {
-            labelStakingIcon->setPixmap(QIcon(":/icons/staking_on").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
+            labelStakingIcon->setPixmap(QIcon(":/icons/stake75").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
         }
-        if (PoSTprotocol(currentBlock) || fTestNet)
+        if (nStakeTimePower <= 50 && nStakeTimePower > 25)
         {
-            labelStakingIcon->setToolTip(tr("In sync and staking...\nEarnable matured interest: %1%\nBlock number: %2\nExpected time to earn interest: %3").arg(nStakeTimePower).arg(currentBlock).arg(text));
+            labelStakingIcon->setPixmap(QIcon(":/icons/stake50").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
         }
-        else
+        if (nStakeTimePower <= 25 && nStakeTimePower > 5)
         {
-            labelStakingIcon->setToolTip(tr("In sync and staking...\nBlock number: %1\nExpected time to earn interest: %2").arg(currentBlock).arg(text));
+            labelStakingIcon->setPixmap(QIcon(":/icons/stake25").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
         }
+        if (nStakeTimePower <= 5 && nStakeTimePower >= 0)
+        {
+            labelStakingIcon->setPixmap(QIcon(":/icons/stake0").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
+        }
+        labelStakingIcon->setToolTip(tr("In sync and staking...\nEarnable matured interest: %1%\nBlock number: %2\nExpected time to earn interest: %3").arg(nStakeTimePower).arg(currentBlock).arg(text));
     }
     else
     {

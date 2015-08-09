@@ -100,14 +100,12 @@ Value getinfo(const Array& params, bool fHelp)
 
 Value getinterestrate(const Array& params, bool fHelp)
 {
-    if (PoSTprotocol(pindexBest->nHeight))
-    {
-        return (GetCurrentInterestRate(pindexBest->pprev));
-    }
-    else
-    {
-        return (GetCurrentInflationRate(GetAverageStakeWeight(pindexBest->pprev)));
-    }
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getinterestrate\n"
+            "Returns te current staking interest rate.");
+
+    return (GetCurrentInterestRate(pindexBest->pprev));
 }
 
 Value getnewpubkey(const Array& params, bool fHelp)

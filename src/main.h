@@ -47,7 +47,6 @@ static const int64_t DUST_SOFT_LIMIT = 100000; // 0.001 LTC
 /** Dust Hard Limit, ignored as wallet inputs (mininput default) */
 static const int64_t DUST_HARD_LIMIT = 1000;   // 0.00001 SLR mininput
 
-inline bool PoSTprotocol(int nHeight) { return nHeight >= LAST_POW_BLOCK; }
 inline bool MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 // Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp.
 static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
@@ -132,7 +131,6 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake);
 int64_t GetProofOfWorkReward(int nHeight, int64_t nFees);
-int64_t GetProofOfStakeReward(int64_t nCoinAge, int64_t nFees, CBlockIndex* pindexPrev);
 int64_t GetProofOfStakeTimeReward(int64_t nStakeTime, int64_t nFees, CBlockIndex* pindexPrev);
 int64_t GetStakeTimeFactoredWeight(int64_t timeWeight, int64_t bnCoinDayWeight, CBlockIndex *pindexPrev);
 double GetAverageStakeWeight(CBlockIndex* pindexPrev);
@@ -1333,7 +1331,7 @@ public:
     bool AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos);
     bool CheckBlock(bool fCheckPOW=true, bool fCheckMerkleRoot=true, bool fCheckSig=true) const;
     bool AcceptBlock();
-    bool SignBlock(CWallet& keystore, int64_t nFees, int64_t nHeight);
+    bool SignBlock(CWallet& keystore, int64_t nFees);
     bool CheckBlockSignature(bool fProofOfStake) const;
 
 private:

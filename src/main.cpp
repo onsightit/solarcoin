@@ -1108,26 +1108,6 @@ int64_t GetProofOfStakeTimeReward(int64_t nStakeTime, int64_t nFees, CBlockIndex
     return nSubsidy + nFees;
 }
 
-// miner's coin stake reward based on coin age spent (coin-days)
-int64_t GetProofOfStakeReward(int64_t nCoinAge, int64_t nFees, CBlockIndex* pindexPrev)
-{
-    int64_t nSubsidy;
-    double nNetworkWeight_ = GetPoSKernelPS(pindexPrev);
-    if(nNetworkWeight_ < 21)
-    {
-        nSubsidy = 0;
-    }
-    else
-    {
-        int64_t nInterestRate = (17*(log(nNetworkWeight_/20)))*10000;
-        nSubsidy = (nCoinAge * (nInterestRate) * 33 / (365 * 33 + 8));
-    }
-    if (fDebug && GetBoolArg("-printcreation"))
-        printf("GetProofOfStakeReward(): create=%s nCoinAge=%"PRId64"\n", FormatMoney(nSubsidy).c_str(), nCoinAge);
-
-    return nSubsidy + nFees;
-}
-
 // PoST
 #ifdef fTestNet
 static const int64_t nTargetTimespan = 10 * 60;  // 10 mins PoST
@@ -1141,27 +1121,6 @@ static const int64_t nInterval_Version1 = nTargetTimespan_Version1 / nTargetSpac
 static const int64_t nHeight_Version2 = 208440;
 static const int64_t nInterval_Version2 = 15;
 static const int64_t nTargetTimespan_Version2 = nInterval_Version2 * nTargetSpacing; // 10 minutes
-
-/* (See below)
-//
-// maximum nBits value could possible be required nTime after
-//
-unsigned int ComputeMaxBits(CBigNum bnTargetLimit, unsigned int nBase, int64_t nTime)
-{
-    CBigNum bnResult;
-    bnResult.SetCompact(nBase);
-    bnResult *= 2;
-    while (nTime > 0 && bnResult < bnTargetLimit)
-    {
-        // Maximum 200% adjustment per day...
-        bnResult *= 2;
-        nTime -= 24 * 60 * 60;
-    }
-    if (bnResult > bnTargetLimit)
-        bnResult = bnTargetLimit;
-    return bnResult.GetCompact();
-}
-*/
 
 //
 // minimum amount of work that could possibly be required nTime after
@@ -2033,23 +1992,11 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
     if (IsProofOfStake())
     {
         int64_t nCalculatedStakeReward;
-        int currentHeight = pindex->pprev->nHeight+1;
-        if (PoSTprotocol(currentHeight) || fTestNet) //PoST
-        {
-            // SolarCoin: coin stake tx earns reward instead of paying fee
-            uint64_t nStakeTime;
-            if (!vtx[1].GetStakeTime(txdb, nStakeTime, pindex->pprev))
-                return error("() : %s unable to get coin age for coinstake", vtx[1].GetHash().ToString().substr(0,10).c_str());
-            nCalculatedStakeReward = GetProofOfStakeTimeReward(nStakeTime, nFees, pindex->pprev);
-        }
-        else // Old PoS
-        {
-            // ppcoin: coin stake tx earns reward instead of paying fee
-            uint64_t nCoinAge;
-            if (!vtx[1].GetCoinAge(txdb, nCoinAge))
-                return error("() : %s unable to get coin age for coinstake", vtx[1].GetHash().ToString().substr(0,10).c_str());
-            nCalculatedStakeReward = GetProofOfStakeReward(nCoinAge, nFees, pindex->pprev);
-        }
+        // SolarCoin: coin stake tx earns reward instead of paying fee
+        uint64_t nStakeTime;
+        if (!vtx[1].GetStakeTime(txdb, nStakeTime, pindex->pprev))
+            return error("() : %s unable to get coin age for coinstake", vtx[1].GetHash().ToString().substr(0,10).c_str());
+        nCalculatedStakeReward = GetProofOfStakeTimeReward(nStakeTime, nFees, pindex->pprev);
 
         if (nStakeReward > nCalculatedStakeReward)
             return DoS(100, error("ConnectBlock() : coinstake pays too much(actual=%"PRId64" vs calculated=%"PRId64")", nStakeReward, nCalculatedStakeReward));
@@ -3058,7 +3005,7 @@ uint256 CPartialMerkleTree::ExtractMatches(std::vector<uint256> &vMatch) {
 
 
 // solarcoin: attempt to generate suitable proof-of-stake
-bool CBlock::SignBlock(CWallet& wallet, int64_t nFees, int64_t nHeight)
+bool CBlock::SignBlock(CWallet& wallet, int64_t nFees)
 
 {
     // if we are trying to sign
@@ -3080,54 +3027,26 @@ bool CBlock::SignBlock(CWallet& wallet, int64_t nFees, int64_t nHeight)
 
     if (nSearchTime > nLastCoinStakeSearchTime)
     {
-        if (PoSTprotocol(nHeight) || fTestNet)// PoST
+        if (wallet.CreateCoinStakeTime(wallet, nBits, nSearchTime - nLastCoinStakeSearchTime, nFees, txCoinStake, key))
         {
-            if (wallet.CreateCoinTimeStake(wallet, nBits, nSearchTime - nLastCoinStakeSearchTime, nFees, txCoinStake, key))
+            if (txCoinStake.nTime >= max(pindexBest->GetMedianTimePast()+1, PastDrift(pindexBest->GetBlockTime())))
             {
-                if (txCoinStake.nTime >= max(pindexBest->GetMedianTimePast()+1, PastDrift(pindexBest->GetBlockTime())))
-                {
-                    // make sure coinstake would meet timestamp protocol
-                    //    as it would be the same as the block timestamp
-                    vtx[0].nTime = nTime = txCoinStake.nTime;
-                    nTime = max(pindexBest->GetMedianTimePast()+1, GetMaxTransactionTime());
-                    nTime = max(GetBlockTime(), PastDrift(pindexBest->GetBlockTime()));
+                // make sure coinstake would meet timestamp protocol
+                //    as it would be the same as the block timestamp
+                vtx[0].nTime = nTime = txCoinStake.nTime;
+                nTime = max(pindexBest->GetMedianTimePast()+1, GetMaxTransactionTime());
+                nTime = max(GetBlockTime(), PastDrift(pindexBest->GetBlockTime()));
 
-                    // we have to make sure that we have no future timestamps in
-                    //    our transactions set
-                    for (vector<CTransaction>::iterator it = vtx.begin(); it != vtx.end();)
-                        if (it->nTime > nTime) { it = vtx.erase(it); } else { ++it; }
+                // we have to make sure that we have no future timestamps in
+                //    our transactions set
+                for (vector<CTransaction>::iterator it = vtx.begin(); it != vtx.end();)
+                    if (it->nTime > nTime) { it = vtx.erase(it); } else { ++it; }
 
-                    vtx.insert(vtx.begin() + 1, txCoinStake);
-                    hashMerkleRoot = BuildMerkleTree();
+                vtx.insert(vtx.begin() + 1, txCoinStake);
+                hashMerkleRoot = BuildMerkleTree();
 
-                    // append a signature to our block
-                    return key.Sign(GetHash(), vchBlockSig);
-                }
-            }
-        }
-        else // old PoS
-        {
-            if (wallet.CreateCoinStake(wallet, nBits, nSearchTime-nLastCoinStakeSearchTime, nFees, txCoinStake, key))
-            {
-                if (txCoinStake.nTime >= max(pindexBest->GetMedianTimePast()+1, PastDrift(pindexBest->GetBlockTime())))
-                {
-                    // make sure coinstake would meet timestamp protocol
-                    //    as it would be the same as the block timestamp
-                    vtx[0].nTime = nTime = txCoinStake.nTime;
-                    nTime = max(pindexBest->GetMedianTimePast()+1, GetMaxTransactionTime());
-                    nTime = max(GetBlockTime(), PastDrift(pindexBest->GetBlockTime()));
-
-                    // we have to make sure that we have no future timestamps in
-                    //    our transactions set
-                    for (vector<CTransaction>::iterator it = vtx.begin(); it != vtx.end();)
-                        if (it->nTime > nTime) { it = vtx.erase(it); } else { ++it; }
-
-                    vtx.insert(vtx.begin() + 1, txCoinStake);
-                    hashMerkleRoot = BuildMerkleTree();
-
-                    // append a signature to our block
-                    return key.Sign(GetHash(), vchBlockSig);
-                }
+                // append a signature to our block
+                return key.Sign(GetHash(), vchBlockSig);
             }
         }
         nLastCoinStakeSearchInterval = nSearchTime - nLastCoinStakeSearchTime;

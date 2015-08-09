@@ -573,7 +573,7 @@ void StakeMiner(CWallet *pwallet)
             return;
 
         // Trying to sign a block
-        if (pblock->SignBlock(*pwallet, nFees, pindexBest->nHeight))
+        if (pblock->SignBlock(*pwallet, nFees))
         {
             SetThreadPriority(THREAD_PRIORITY_NORMAL);
             CheckStake(pblock.get(), *pwallet);
