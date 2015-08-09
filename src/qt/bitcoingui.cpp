@@ -544,8 +544,8 @@ void BitcoinGUI::createActions()
     connect(forumAction, SIGNAL(triggered()), this, SLOT(forumClicked()));
     connect(webAction, SIGNAL(triggered()), this, SLOT(webClicked()));
 
-    // Disable on testnet
-    if (fTestNet)
+    // Disable on PoW or testnet
+    if (nBestHeight < LAST_POW_BLOCK || fTestNet)
         reloadBlockchainActionEnabled(false);
 }
 
@@ -881,7 +881,7 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
 
     // Show a warning message if out of sync more than 500 blocks but not if more than 5000.
     int countDiff = nTotalBlocks - count;
-    if ((countDiff > 500 && countDiff < 5000) && nBestHeight >= LAST_POW_BLOCK && !fBootstrapTurbo && strStatusBarWarnings.isEmpty() && !clientModel->isTestNet())
+    if ((countDiff > 500 && countDiff < 5000) && !fBootstrapTurbo && strStatusBarWarnings.isEmpty() && !clientModel->isTestNet())
     {
         strStatusBarWarnings = tr("Go to File > Reload Blockchain to speed up or fix syncing issues.");
     }
