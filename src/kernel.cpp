@@ -388,11 +388,8 @@ bool CheckProofOfStakePoW(CBlock* pblock, const CTransaction& tx, uint256& hashP
     if (!tx.IsCoinBase())
         return error("CheckProofOfStakePoW() called on non-coinbase %s\n", tx.GetHash().ToString().c_str());
 
+    // Below is the "equivolent" of CheckStakeTimeKernelHash() for PoW indexes
     unsigned int nTimeBlockFrom = pblock->GetBlockTime();
-    if (nTimeBlockFrom + nStakeMinAge > tx.nTime) // Min age requirement
-        return error("CheckProofOfStakePoW() : min age violation");
-
-    // Below is the "equivolent of CheckStakeTimeKernelHash() for PoW indexes
     uint256 hashBlockFrom = pblock->GetHash();
 
     // Calculate hash
