@@ -85,14 +85,15 @@ static bool SelectBlockFromCandidates(vector<pair<int64_t, uint256> >& vSortedBy
             continue;
         // compute the selection hash by hashing its proof-hash and the
         // previous proof-of-stake modifier
-        uint256 hashProof = pindex->IsProofOfStake()? pindex->hashProofOfStake : pindex->GetBlockHash();
+        // DEBUG uint256 hashProof = pindex->IsProofOfStake()? pindex->hashProofOfStake : pindex->GetBlockHash();
+        uint256 hashProof = pindex->hashProofOfStake;
         CDataStream ss(SER_GETHASH, 0);
         ss << hashProof << nStakeModifierPrev;
         uint256 hashSelection = Hash(ss.begin(), ss.end());
         // the selection hash is divided by 2**32 so that proof-of-stake block
         // is always favored over proof-of-work block. this is to preserve
         // the energy efficiency property
-        if (pindex->IsProofOfStake())
+        // DEBUG if (pindex->IsProofOfStake())
             hashSelection >>= 32;
         if (fSelected && hashSelection < hashBest)
         {
@@ -181,10 +182,6 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
         // write the entropy bit of the selected block
         nStakeModifierNew |= (((uint64_t)pindex->GetStakeEntropyBit()) << nRound);
 
-        // DEBUG Once we have a non-zero stake modifier, don't go back to zero
-        //if (!nStakeModifierNew && nStakeModifier)
-        //    nStakeModifierNew = nStakeModifier;
-
         // add the selected block from candidates to selected list
         mapSelectedBlocks.insert(make_pair(pindex->GetBlockHash(), pindex));
         if (fDebug && GetBoolArg("-printstakemodifier"))
@@ -235,7 +232,7 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
     nStakeModifierTime = pindexFrom->GetBlockTime();
     int64_t nStakeModifierSelectionInterval = GetStakeModifierSelectionInterval();
     const CBlockIndex* pindex = pindexFrom;
-    if (pindex->IsProofOfStake())  // PoW blocks all have the same stake modifier
+    // DEBUG if (pindex->IsProofOfStake())  // PoW blocks all have the same stake modifier
     {
         // loop to find the stake modifier later by a selection interval
         while (nStakeModifierTime < pindexFrom->GetBlockTime() + nStakeModifierSelectionInterval)
@@ -391,14 +388,31 @@ bool CheckProofOfStakePoW(CBlock* pblock, const CTransaction& tx, uint256& hashP
     if (!tx.IsCoinBase())
         return error("CheckProofOfStakePoW() called on non-coinbase %s\n", tx.GetHash().ToString().c_str());
 
+    unsigned int nTimeBlockFrom = pblock->GetBlockTime();
+    if (nTimeBlockFrom + nStakeMinAge > tx.nTime) // Min age requirement
+        return error("CheckProofOfStakePoW() : min age violation");
+
+    // Below is the "equivolent of CheckStakeTimeKernelHash() for PoW indexes
     uint256 hashBlockFrom = pblock->GetHash();
 
     // Calculate hash
     CDataStream ss(SER_GETHASH, 0);
-    uint64_t nStakeModifier = 1; // PoW stake modifier
+    uint64_t nStakeModifier = 0;
+    int nStakeModifierHeight = 0;
+    int64_t nStakeModifierTime = 0;
 
+    if (!GetKernelStakeModifier(hashBlockFrom, nStakeModifier, nStakeModifierHeight, nStakeModifierTime, fDebug))
+    {
+        if (fDebug) {
+            printf("*** CheckStakeTimeKernelHash: failed GetKernelStakeModifier\n");
+            CBlockIndex* pindexFrom = mapBlockIndex[hashBlockFrom];
+            pindexFrom->print();
+        }
+        return false;
+    }
     ss << nStakeModifier;
-    ss << hashBlockFrom;
+
+    ss << hashBlockFrom << nTimeBlockFrom << tx.nTime;
     hashProofOfStake = Hash(ss.begin(), ss.end());
 
     if (fDebug)
