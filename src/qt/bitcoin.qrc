@@ -99,8 +99,6 @@
         <file alias="headerHistorySmall">res/images/headerGenericSmall.png</file>
         <file alias="headerAddress">res/images/headerGeneric.png</file>
         <file alias="headerAddressSmall">res/images/headerGenericSmall.png</file>
-        <file alias="headerGetSolarCoin">res/images/headerGeneric.png</file>
-        <file alias="headerGetSolarCoinSmall">res/images/headerGenericSmall.png</file>
         <file alias="headerForums">res/images/headerGeneric.png</file>
         <file alias="headerForumsSmall">res/images/headerGenericSmall.png</file>
         <file alias="headerChat">res/images/headerGeneric.png</file>
