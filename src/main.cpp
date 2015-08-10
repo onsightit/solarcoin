@@ -998,7 +998,7 @@ int64_t GetProofOfWorkReward(int nHeight, int64_t nFees)
     int64_t nSubsidy = 100 * COIN;
 
     // Configure generation pool blocks
-    if(nHeight < 99) {nSubsidy = 1000000000 * COIN;}
+    if(nHeight < 99) {nSubsidy = (fTestNet ? 100000000 * COIN : 1000000000 * COIN);}
 
     // Block subsidy reduction by SubCreative (Reduced by 3 every 1 day for 33 days. End result of 1)
     if(nHeight >= 310000) {nSubsidy = 99 * COIN;}
