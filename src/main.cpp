@@ -838,7 +838,7 @@ int CMerkleTx::GetBlocksToMaturity() const
     if (!(IsCoinBase() || IsCoinStake()))
         return 0;
     int nMature = 0;
-    if (nVersion == CTransaction::CURRENT_VERSION)
+    if (IsCoinStake())
         nMature = nCoinbaseMaturity + 10;
     else
         nMature = nCoinbaseMaturity_PoW + 1;
@@ -1709,7 +1709,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
             // If prev is coinbase or coinstake, check that it's matured
             if (txPrev.IsCoinBase() || txPrev.IsCoinStake())
             {
-                int nMature = (nVersion == CTransaction::CURRENT_VERSION ? nCoinbaseMaturity : nCoinbaseMaturity_PoW);
+                int nMature = (txPrev.IsCoinStake() ? nCoinbaseMaturity : nCoinbaseMaturity_PoW);
                 for (const CBlockIndex* pindex = pindexBlock; pindex && pindexBlock->nHeight - pindex->nHeight < nMature; pindex = pindex->pprev)
                     if (pindex->nBlockPos == txindex.pos.nBlockPos && pindex->nFile == txindex.pos.nFile)
                         return error("ConnectInputs() : tried to spend %s at depth %d", txPrev.IsCoinBase() ? "coinbase" : "coinstake", pindexBlock->nHeight - pindex->nHeight);
@@ -3193,6 +3193,7 @@ bool LoadBlockIndex(bool fAllowNew)
         bnProofOfWorkLimit = bnProofOfWorkLimitTestNet; // 16 bits PoW target limit for testnet
         nStakeMinAge = 60 * 60; // test net min age is 60 minutes
         nCoinbaseMaturity = 10; // test maturity is 10 blocks
+        nCoinbaseMaturity_PoW = 1; // test maturity is 1 blocks
     }
     else
     {
@@ -3665,13 +3666,11 @@ void static ProcessGetData(CNode* pfrom)
                 if (!pushed && inv.type == MSG_TX) {
                     LOCK(mempool.cs);
                     if (mempool.exists(inv.hash)) {
-                        int flags;
+                        int nType = SER_NETWORK;
                         if (pfrom->nVersion <= PROTOCOL_VERSION_POW)
-                            flags = SER_NETWORK & SER_LEGACYPROTOCOL;
-                        else
-                            flags = SER_NETWORK;
+                            nType |= SER_LEGACYPROTOCOL;
                         CTransaction tx = mempool.lookup(inv.hash);
-                        CDataStream ss(flags, PROTOCOL_VERSION);
+                        CDataStream ss(nType, PROTOCOL_VERSION);
                         ss.reserve(1000);
                         ss << tx;
                         pfrom->PushMessage("tx", ss);

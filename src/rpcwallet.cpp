@@ -569,7 +569,9 @@ Value getbalance(const Array& params, bool fHelp)
             "If [account] is specified, returns the balance in the account.");
 
     if (params.size() == 0)
+    {
         return  ValueFromAmount(pwalletMain->GetBalance());
+    }
 
     int nMinDepth = 1;
     if (params.size() > 1)
