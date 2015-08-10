@@ -89,8 +89,6 @@
         <file alias="askPassphraseBackground">res/images/askpassphrasepage-background.png</file>
         <file alias="aboutBackground">res/images/aboutBackground.png</file>
         <file alias="headerAbout">res/images/headerAbout.png</file>
-        <file alias="headerGeneric">res/images/headerGeneric.png</file>
-        <file alias="headerGenericSmall">res/images/headerGenericSmall.png</file>
         <file alias="headerOverview">res/images/headerGeneric.png</file>
         <file alias="headerOverviewSmall">res/images/headerGenericSmall.png</file>
         <file alias="headerSend">res/images/headerGeneric.png</file>
