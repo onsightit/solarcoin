@@ -483,8 +483,6 @@ public:
         nVersion = this->nVersion;
         if (!(nType & (SER_GETHASH|SER_LEGACYPROTOCOL))) {
             READWRITE(nTime);
-        } else if (nType & SER_DISK) {
-            READWRITE(nTime);
         }
         READWRITE(vin);
         READWRITE(vout);
