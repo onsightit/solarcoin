@@ -401,7 +401,7 @@ bool CheckProofOfStakePoW(CBlock* pblock, const CTransaction& tx, uint256& hashP
     if (!GetKernelStakeModifier(hashBlockFrom, nStakeModifier, nStakeModifierHeight, nStakeModifierTime, fDebug))
     {
         if (fDebug) {
-            printf("*** CheckStakeTimeKernelHash: failed GetKernelStakeModifier\n");
+            printf("*** CheckProofOfStakePoW: failed GetKernelStakeModifier\n");
             CBlockIndex* pindexFrom = mapBlockIndex[hashBlockFrom];
             pindexFrom->print();
         }
