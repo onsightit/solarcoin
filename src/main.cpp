@@ -2539,7 +2539,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 
         // ppcoin: check transaction timestamp
         // SolarCoin PoW blocks could be out of time sequence by several seconds. Don't check
-        if (IsProofOfStake())
+        if (fProofOfStake)
             if (blocktime < (int64_t)tx.nTime)
                 return DoS(50, error("CheckBlock() : block timestamp earlier than transaction timestamp"));
     }
@@ -2718,7 +2718,8 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     // ppcoin: check proof-of-stake
     // Limited duplicity on stake: prevents block flood attack
     // Duplicate stake allowed only when there is orphan child block
-    if (pblock->IsProofOfStake() && setStakeSeen.count(pblock->GetProofOfStake()) && !mapOrphanBlocksByPrev.count(hash) && !Checkpoints::WantedByPendingSyncCheckpoint(hash))
+    // DEBUG if (pblock->IsProofOfStake() && setStakeSeen.count(pblock->GetProofOfStake()) && !mapOrphanBlocksByPrev.count(hash) && !Checkpoints::WantedByPendingSyncCheckpoint(hash))
+    if (setStakeSeen.count(pblock->GetProofOfStake()) && !mapOrphanBlocksByPrev.count(hash) && !Checkpoints::WantedByPendingSyncCheckpoint(hash))
         return error("ProcessBlock() : duplicate proof-of-stake (%s, %d) for block %s", pblock->GetProofOfStake().first.ToString().c_str(), pblock->GetProofOfStake().second, hash.ToString().c_str());
 
     // Preliminary checks
@@ -2783,7 +2784,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     {
         printf("ProcessBlock: ORPHAN BLOCK, prev=%s pfrom=%s\n", pblock->hashPrevBlock.ToString().substr(0,20).c_str(), (pfrom ? pfrom->addr.ToString().c_str() : ""));
         // ppcoin: check proof-of-stake
-        if (pblock->IsProofOfStake())
+        // DEBUG if (pblock->IsProofOfStake())
         {
             // Limited duplicity on stake: prevents block flood attack
             // Duplicate stake allowed only when there is orphan child block
@@ -3434,6 +3435,8 @@ bool LoadExternalBlockFile(FILE* fileIn)
                 {
                     CBlock block;
                     blkdat >> block;
+                    if (block.IsProofOfWork())
+                        block.vtx[0].nTime = block.nTime; // If receiving a legacy block, set the coinbase timestamp.
                     if (ProcessBlock(NULL,&block))
                     {
                         nLoaded++;
@@ -4158,9 +4161,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     {
         CBlock block;
         vRecv >> block;
-        if (block.nVersion < CBlockHeader::CURRENT_VERSION)
-            if (block.vtx.size() > 0)
-                block.vtx[0].nTime = block.nTime; // If receiving a legacy block, set the coinbase timestamp.
+        if (block.IsProofOfWork())
+            block.vtx[0].nTime = block.nTime; // If receiving a legacy block, set the coinbase timestamp.
         uint256 hashBlock = block.GetHash();
 
         printf("received block %s\n", hashBlock.ToString().substr(0,20).c_str());

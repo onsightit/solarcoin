@@ -1166,7 +1166,8 @@ public:
 
     std::pair<COutPoint, unsigned int> GetProofOfStake() const
     {
-        return IsProofOfStake()? std::make_pair(vtx[1].vin[0].prevout, vtx[1].nTime) : std::make_pair(COutPoint(), (unsigned int)0);
+        // DEBUG return IsProofOfStake()? std::make_pair(vtx[1].vin[0].prevout, vtx[1].nTime) : std::make_pair(COutPoint(), (unsigned int)0);
+        return IsProofOfStake() ? std::make_pair(vtx[1].vin[0].prevout, vtx[1].nTime) : std::make_pair(COutPoint(vtx[0].GetHash(),0), vtx[0].nTime);
     }
 
     // ppcoin: get max transaction timestamp
@@ -1434,8 +1435,10 @@ public:
         }
         else
         {
-            prevoutStake.SetNull();
-            nStakeTime = block.nTime;
+            // DEBUG
+            SetProofOfStake();
+            prevoutStake = COutPoint(block.vtx[0].GetHash(),0);
+            nStakeTime = block.vtx[0].nTime;
         }
 
         nVersion       = block.nVersion;
@@ -1613,7 +1616,8 @@ public:
         READWRITE(nMoneySupply);
         READWRITE(nFlags);
         READWRITE(nStakeModifier);
-        if (IsProofOfStake())
+        // DEBUG if (IsProofOfStake())
+        if (true)
         {
             READWRITE(prevoutStake);
             READWRITE(nStakeTime);

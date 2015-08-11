@@ -124,6 +124,7 @@ Value getworkex(const Array& params, bool fHelp)
         // Update nTime
         pblock->nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
         pblock->nNonce = 0;
+        pblock->vtx[0].nTime = pblock->nTime; // If creating a legacy block, set the coinbase timestamp.
 
         // Update nExtraNonce
         static unsigned int nExtraNonce = 0;
@@ -141,7 +142,6 @@ Value getworkex(const Array& params, bool fHelp)
         uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
 
         CTransaction coinbaseTx = pblock->vtx[0];
-        coinbaseTx.nTime = pblock->nTime; // If creating a legacy block, set the coinbase timestamp.
         std::vector<uint256> merkle = pblock->GetMerkleBranch(0);
 
         Object result;
@@ -188,13 +188,12 @@ Value getworkex(const Array& params, bool fHelp)
 
         pblock->nTime = pdata->nTime;
         pblock->nNonce = pdata->nNonce;
+        pblock->vtx[0].nTime = pblock->nTime; // If creating a legacy block, set the coinbase timestamp.
 
         if(coinbase.size() == 0)
             pblock->vtx[0].vin[0].scriptSig = mapNewBlock[pdata->hashMerkleRoot].second;
         else
             CDataStream(coinbase, SER_NETWORK, PROTOCOL_VERSION) >> pblock->vtx[0]; // FIXME - HACK!
-
-        pblock->vtx[0].nTime = pblock->nTime; // If creating a legacy block, set the coinbase timestamp.
 
         pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 
@@ -269,6 +268,7 @@ Value getwork(const Array& params, bool fHelp)
         // Update nTime
         pblock->UpdateTime(pindexPrev);
         pblock->nNonce = 0;
+        pblock->vtx[0].nTime = pblock->nTime; // If creating a legacy block, set the coinbase timestamp.
 
         // Update nExtraNonce
         static unsigned int nExtraNonce = 0;
@@ -311,6 +311,7 @@ Value getwork(const Array& params, bool fHelp)
 
         pblock->nTime = pdata->nTime;
         pblock->nNonce = pdata->nNonce;
+        pblock->vtx[0].nTime = pblock->nTime; // If creating a legacy block, set the coinbase timestamp.
         pblock->vtx[0].vin[0].scriptSig = mapNewBlock[pdata->hashMerkleRoot].second;
         pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 
@@ -403,6 +404,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     // Update nTime
     pblock->UpdateTime(pindexPrev);
     pblock->nNonce = 0;
+    pblock->vtx[0].nTime = pblock->nTime; // If creating a legacy block, set the coinbase timestamp.
 
     Array transactions;
     map<uint256, int64_t> setTxIndex;
@@ -497,6 +499,9 @@ Value submitblock(const Array& params, bool fHelp)
     catch (std::exception &e) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
     }
+
+    if (block.IsProofOfWork())
+        block.vtx[0].nTime = block.nTime; // If creating a legacy block, set the coinbase timestamp.
 
     bool fAccepted = ProcessBlock(NULL, &block);
     if (!fAccepted)
