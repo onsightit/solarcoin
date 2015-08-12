@@ -1435,8 +1435,6 @@ public:
         }
         else
         {
-            // DEBUG
-            SetProofOfStake();
             prevoutStake = COutPoint(block.vtx[0].GetHash(),0);
             nStakeTime = block.vtx[0].nTime;
         }
