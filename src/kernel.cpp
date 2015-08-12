@@ -401,8 +401,6 @@ bool CheckProofOfStakePoW(CBlock* pblock, const CTransaction& tx, uint256& hashP
     uint256 hashBlockFrom = block.GetHash();
 
     const CBlockIndex* pindexFrom = mapBlockIndex[hashBlockFrom];
-    nStakeModifierHeight = pindexFrom->nHeight;
-    nStakeModifierTime = pindexFrom->GetBlockTime();
 
     // Calculate hash
     CDataStream ss(SER_GETHASH, 0);
