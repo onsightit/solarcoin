@@ -388,9 +388,25 @@ bool CheckProofOfStakePoW(CBlock* pblock, const CTransaction& tx, uint256& hashP
     if (!tx.IsCoinBase())
         return error("CheckProofOfStakePoW() called on non-coinbase %s\n", tx.GetHash().ToString().c_str());
 
+    if (!mapBlockIndex.count(pblock->hashPrevBlock))
+        return error("CheckProofOfStakePoW() previous block not mapped");
+
+    // Read block header and txns
+    CBlock block;
+    if (!block.ReadFromDisk(mapBlockIndex[pblock->hashPrevBlock], true))
+        return error("CheckProofOfStakePoW() read block failed");
+
+/* DEBUG    // Try finding the previous transaction
+    CTransaction txPrev = block.vtx[block.vtx.size()-1];
+
+    // Verify signature
+    if (!VerifySignature(txPrev, tx, 0, 0))
+        return tx.DoS(100, error("CheckProofOfStakePoW() : VerifySignature failed on coinstake %s", tx.GetHash().ToString().c_str()));
+*/
+
     // Below is the "equivolent" of CheckStakeTimeKernelHash() for PoW indexes
-    unsigned int nTimeBlockFrom = pblock->GetBlockTime();
-    uint256 hashBlockFrom = pblock->GetHash();
+    unsigned int nTimeBlockFrom = block.GetBlockTime();
+    uint256 hashBlockFrom = block.GetHash();
 
     // Calculate hash
     CDataStream ss(SER_GETHASH, 0);
