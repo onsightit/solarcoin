@@ -232,7 +232,7 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
     nStakeModifierTime = pindexFrom->GetBlockTime();
     int64_t nStakeModifierSelectionInterval = GetStakeModifierSelectionInterval();
     const CBlockIndex* pindex = pindexFrom;
-    // DEBUG if (pindex->IsProofOfStake())  // PoW blocks all have the same stake modifier
+    if (pindex->IsProofOfStake())  // PoW blocks use a different stake modifier
     {
         // loop to find the stake modifier later by a selection interval
         while (nStakeModifierTime < pindexFrom->GetBlockTime() + nStakeModifierSelectionInterval)
