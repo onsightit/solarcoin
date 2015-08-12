@@ -391,41 +391,28 @@ bool CheckProofOfStakePoW(CBlock* pblock, const CTransaction& tx, uint256& hashP
     if (!mapBlockIndex.count(pblock->hashPrevBlock))
         return error("CheckProofOfStakePoW() previous block not mapped");
 
-    // Read block header and txns
+    // Read previous block header
     CBlock block;
-    if (!block.ReadFromDisk(mapBlockIndex[pblock->hashPrevBlock], true))
+    if (!block.ReadFromDisk(mapBlockIndex[pblock->hashPrevBlock], false))
         return error("CheckProofOfStakePoW() read block failed");
 
-/* DEBUG    // Try finding the previous transaction
-    CTransaction txPrev = block.vtx[block.vtx.size()-1];
-
-    // Verify signature
-    if (!VerifySignature(txPrev, tx, 0, 0))
-        return tx.DoS(100, error("CheckProofOfStakePoW() : VerifySignature failed on coinstake %s", tx.GetHash().ToString().c_str()));
-*/
-
-    // Below is the "equivolent" of CheckStakeTimeKernelHash() for PoW indexes
+    // Below is the "equivolent" of CheckStakeTimeKernelHash() and GetKernelStakeModifier for PoW indexes
     unsigned int nTimeBlockFrom = block.GetBlockTime();
     uint256 hashBlockFrom = block.GetHash();
 
+    const CBlockIndex* pindexFrom = mapBlockIndex[hashBlockFrom];
+    nStakeModifierHeight = pindexFrom->nHeight;
+    nStakeModifierTime = pindexFrom->GetBlockTime();
+
     // Calculate hash
     CDataStream ss(SER_GETHASH, 0);
-    uint64_t nStakeModifier = 0;
-    int nStakeModifierHeight = 0;
-    int64_t nStakeModifierTime = 0;
+    uint64_t nStakeModifier = pindexFrom->nStakeModifier;
+    int64_t nStakeModifierTime = pindexFrom->GetBlockTime();
 
-    if (!GetKernelStakeModifier(hashBlockFrom, nStakeModifier, nStakeModifierHeight, nStakeModifierTime, fDebug))
-    {
-        if (fDebug) {
-            printf("*** CheckProofOfStakePoW: failed GetKernelStakeModifier\n");
-            CBlockIndex* pindexFrom = mapBlockIndex[hashBlockFrom];
-            pindexFrom->print();
-        }
-        return false;
-    }
     ss << nStakeModifier;
 
-    ss << hashBlockFrom << nTimeBlockFrom << tx.nTime;
+    //ss << hashBlockFrom << nTimeBlockFrom << tx.nTime;
+    ss << nTimeBlockFrom << 81 << nStakeModifierTime << 0 << tx.nTime;
     hashProofOfStake = Hash(ss.begin(), ss.end());
 
     if (fDebug)
