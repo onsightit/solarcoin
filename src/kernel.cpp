@@ -308,14 +308,8 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     int64_t nStakeModifierTime = 0;
 
     if (!GetKernelStakeModifier(hashBlockFrom, nStakeModifier, nStakeModifierHeight, nStakeModifierTime, fPrintProofOfStake))
-    {
-        if (fDebug) {
-            printf("*** CheckStakeTimeKernelHash: failed GetKernelStakeModifier\n");
-            CBlockIndex* pindexFrom = mapBlockIndex[hashBlockFrom];
-            pindexFrom->print();
-        }
         return false;
-    }
+
     ss << nStakeModifier;
 
     ss << nTimeBlockFrom << nTxPrevOffset << txPrev.nTime << prevout.n << nTimeTx;
