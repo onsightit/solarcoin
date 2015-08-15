@@ -383,7 +383,7 @@ bool CheckProofOfStakePoW(CBlock* pblock, const CTransaction& tx, uint256& hashP
         return error("CheckProofOfStakePoW() called on non-coinbase %s\n", tx.GetHash().ToString().c_str());
 
     if (!mapBlockIndex.count(pblock->hashPrevBlock))
-        return error("CheckProofOfStakePoW() previous block not mapped");
+        return error("CheckProofOfStakePoW() previous block not mapped %s", pblock->hashPrevBlock.GetHex().c_str());
 
     // Read previous block header
     CBlock block;
