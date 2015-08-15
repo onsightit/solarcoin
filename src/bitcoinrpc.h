@@ -193,6 +193,8 @@ extern json_spirit::Value walletlock(const json_spirit::Array& params, bool fHel
 extern json_spirit::Value encryptwallet(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value validateaddress(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getinfo(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value getnetworkweight(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value getinflationrate(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getinterestrate(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value reservebalance(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value checkwallet(const json_spirit::Array& params, bool fHelp);

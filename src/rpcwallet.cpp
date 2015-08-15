@@ -87,6 +87,13 @@ Value getinfo(const Array& params, bool fHelp)
     
     obj.push_back(Pair("difficulty",    diff));
 
+    if (pindexBest->nHeight >= LAST_POW_BLOCK)
+    {
+    obj.push_back(Pair("networkweight", GetAverageStakeWeight(pindexBest->pprev)));
+    obj.push_back(Pair("inflationrate", GetCurrentInflationRate(GetAverageStakeWeight(pindexBest->pprev))/100));
+    obj.push_back(Pair("interestrate",  GetCurrentInterestRate(pindexBest->pprev)));
+    }
+
     obj.push_back(Pair("testnet",       fTestNet));
     obj.push_back(Pair("keypoololdest", (boost::int64_t)pwalletMain->GetOldestKeyPoolTime()));
     obj.push_back(Pair("keypoolsize",   (int)pwalletMain->GetKeyPoolSize()));
@@ -98,14 +105,43 @@ Value getinfo(const Array& params, bool fHelp)
     return obj;
 }
 
+Value getnetworkweight(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getnetworkweight\n"
+            "Returns the current average stake weight.");
+
+    if (pindexBest->nHeight < LAST_POW_BLOCK)
+        return 0;
+    else
+        return (GetAverageStakeWeight(pindexBest->pprev));
+}
+
+Value getinflationrate(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getinflationrate\n"
+            "Returns the current inflation rate.");
+
+    if (pindexBest->nHeight < LAST_POW_BLOCK)
+        return 0;
+    else
+        return (GetCurrentInflationRate(GetAverageStakeWeight(pindexBest->pprev))/100);
+}
+
 Value getinterestrate(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
             "getinterestrate\n"
-            "Returns te current staking interest rate.");
+            "Returns the current staking interest rate.");
 
-    return (GetCurrentInterestRate(pindexBest->pprev));
+    if (pindexBest->nHeight < LAST_POW_BLOCK)
+        return 0;
+    else
+        return (GetCurrentInterestRate(pindexBest->pprev));
 }
 
 Value getnewpubkey(const Array& params, bool fHelp)
