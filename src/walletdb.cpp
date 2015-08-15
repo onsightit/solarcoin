@@ -204,7 +204,7 @@ public:
 
 bool
 ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
-             CWalletScanState &wss, string& strType, string& strErr)
+             CWalletScanState &wss, string& strType, string& strErr, bool fLegacyWallet=false)
 {
     try {
         // Unserialize
@@ -219,10 +219,20 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         }
         else if (strType == "tx")
         {
+            // Temporarily change the serialized type to pull in Legacy txns without tx.nTime
+            if (fLegacyWallet)
+                ssValue.SetType(SER_GETHASH);
             uint256 hash;
             ssKey >> hash;
             CWalletTx& wtx = pwallet->mapWallet[hash];
             ssValue >> wtx;
+            if (fLegacyWallet)
+            {
+                if (!(wtx.IsCoinBase() || wtx.IsCoinStake()))
+                    wtx.nTime = wtx.nTimeReceived;
+                // Set it back
+                ssValue.SetType(SER_DISK);
+            }
             if (wtx.CheckTransaction() && (wtx.GetHash() == hash))
                 wtx.BindWallet(pwallet);
             else
@@ -437,6 +447,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
     pwallet->vchDefaultKey = CPubKey();
     CWalletScanState wss;
     bool fNoncriticalErrors = false;
+    bool fLegacyWallet = false;
     DBErrors result = DB_LOAD_OK;
 
     try {
@@ -448,6 +459,11 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
                 return DB_TOO_NEW;
             pwallet->LoadMinVersion(nMinVersion);
         }
+
+        // Legacy 1.5 wallets have txns w/o timestamps
+        // This allows us to upgrade the legacy wtx.nTime
+        if (pwallet->GetVersion() < FEATURE_LATEST)
+            fLegacyWallet = true;
 
         // Get cursor
         Dbc* pcursor = GetCursor();
@@ -473,7 +489,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
 
             // Try to be tolerant of single corrupt records:
             string strType, strErr;
-            if (!ReadKeyValue(pwallet, ssKey, ssValue, wss, strType, strErr))
+            if (!ReadKeyValue(pwallet, ssKey, ssValue, wss, strType, strErr, fLegacyWallet))
             {
                 // losing keys is considered a catastrophic error, anything else
                 // we assume the user can live with:

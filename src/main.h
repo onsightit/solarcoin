@@ -26,8 +26,8 @@ class CInv;
 class CRequestTracker;
 class CNode;
 
-static const int LAST_POW_BLOCK = 80; // testnet
-//static const int LAST_POW_BLOCK = 800000;
+//static const int LAST_POW_BLOCK = 80; // testnet
+static const int LAST_POW_BLOCK = 800000;
 
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/4;
@@ -1168,7 +1168,6 @@ public:
 
     std::pair<COutPoint, unsigned int> GetProofOfStake() const
     {
-        // DEBUG return IsProofOfStake()? std::make_pair(vtx[1].vin[0].prevout, vtx[1].nTime) : std::make_pair(COutPoint(), (unsigned int)0);
         return IsProofOfStake() ? std::make_pair(vtx[1].vin[0].prevout, vtx[1].nTime) : std::make_pair(COutPoint(vtx[0].GetHash(),0), vtx[0].nTime);
     }
 
@@ -1616,8 +1615,7 @@ public:
         READWRITE(nMoneySupply);
         READWRITE(nFlags);
         READWRITE(nStakeModifier);
-        // DEBUG if (IsProofOfStake())
-        if (true)
+        if (true) // if (IsProofOfStake())
         {
             READWRITE(prevoutStake);
             READWRITE(nStakeTime);

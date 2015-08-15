@@ -404,8 +404,7 @@ bool CTxDB::LoadBlockIndex()
         }
 
         // SolarCoin: build setStakeSeen
-        // DEBUG if (pindexNew->IsProofOfStake())
-            setStakeSeen.insert(make_pair(pindexNew->prevoutStake, pindexNew->nStakeTime));
+        setStakeSeen.insert(make_pair(pindexNew->prevoutStake, pindexNew->nStakeTime));
 
         iterator->Next();
     }

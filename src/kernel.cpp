@@ -85,7 +85,6 @@ static bool SelectBlockFromCandidates(vector<pair<int64_t, uint256> >& vSortedBy
             continue;
         // compute the selection hash by hashing its proof-hash and the
         // previous proof-of-stake modifier
-        // DEBUG uint256 hashProof = pindex->IsProofOfStake()? pindex->hashProofOfStake : pindex->GetBlockHash();
         uint256 hashProof = pindex->hashProofOfStake;
         CDataStream ss(SER_GETHASH, 0);
         ss << hashProof << nStakeModifierPrev;
