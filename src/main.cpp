@@ -2740,7 +2740,9 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         if (!mapProofOfStake.count(hash)) // add to mapProofOfStake
             mapProofOfStake.insert(make_pair(hash, hashProofOfStake));
     }
-    else // For PoW, we need to map a hashProofOfStake with the block hash
+    // For PoW, we need to map a hashProofOfStake using the previous block
+    // If we don't have the previous block yet, shunt it off to the orphanage
+    else if (mapBlockIndex.count(pblock->hashPrevBlock))
     {
         uint256 hashProofOfStake = 0;
         if (!CheckProofOfStakePoW(pblock, pblock->vtx[0], hashProofOfStake))
