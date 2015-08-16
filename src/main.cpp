@@ -2742,6 +2742,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     // If we don't have the previous block yet, shunt it off to the orphanage
     else if (mapBlockIndex.count(pblock->hashPrevBlock))
     {
+        // ppcoin: verify hash target of coinbase tx
         if (!CheckProofOfStakePoW(pblock, pblock->vtx[0], hashProofOfStake))
         {
             printf("WARNING: ProcessBlock(): check proof-of-stake-pow failed for block %s\n", hash.ToString().c_str());
@@ -2826,9 +2827,20 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
              ++mi)
         {
             CBlock* pblockOrphan = (*mi).second;
+
+            // ppcoin: verify hash target of coinbase tx
             if (!pblockOrphan->IsProofOfStake())
-                if (!CheckProofOfStakePoW(pblockOrphan, pblockOrphan->vtx[0], hashProofOfStake))
-                    printf("WARNING: ProcessBlock(): check proof-of-stake-pow failed for orphan block %s\n", pblockOrphan->GetHash().ToString().c_str());
+            {
+                uint256 hashOrphan = pblockOrphan->GetHash();
+                uint256 hashProofOfStakeOrphan = 0;
+                if (CheckProofOfStakePoW(pblockOrphan, pblockOrphan->vtx[0], hashProofOfStakeOrphan))
+                {
+                    if (mapProofOfStake.count(hashOrphan)) // remove old one from mapProofOfStake
+                        mapProofOfStake.erase(hashOrphan);
+                    mapProofOfStake.insert(make_pair(hashOrphan, hashProofOfStakeOrphan));
+                }
+            }
+
             if (pblockOrphan->AcceptBlock())
                 vWorkQueue.push_back(pblockOrphan->GetHash());
             mapOrphanBlocks.erase(pblockOrphan->GetHash());
