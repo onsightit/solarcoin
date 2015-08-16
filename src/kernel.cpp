@@ -382,7 +382,6 @@ bool CheckProofOfStakePoW(CBlock* pblock, const CTransaction& tx, uint256& hashP
     if (!tx.IsCoinBase())
         return error("CheckProofOfStakePoW() called on non-coinbase %s\n", tx.GetHash().ToString().c_str());
 
-    /* DEBUG Poor man's version
     if (!mapBlockIndex.count(pblock->hashPrevBlock))
         return error("CheckProofOfStakePoW() previous block not mapped %s", pblock->hashPrevBlock.GetHex().c_str());
 
@@ -400,13 +399,6 @@ bool CheckProofOfStakePoW(CBlock* pblock, const CTransaction& tx, uint256& hashP
     unsigned int nTimeBlockFrom = block.GetBlockTime();
     uint64_t nStakeModifier = pindexFrom->nStakeModifier;
     int64_t nStakeModifierTime = pindexFrom->GetBlockTime();
-    */
-
-    // Calculate hash
-    CDataStream ss(SER_GETHASH, 0);
-    unsigned int nTimeBlockFrom = pblock->nTime;
-    uint64_t nStakeModifier = 1;
-    int64_t nStakeModifierTime = pblock->nTime;
 
     ss << nStakeModifier;
 
