@@ -2630,8 +2630,8 @@ bool CBlock::AcceptBlock()
     // Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
     if (nVersion < CBlockHeader::LEGACY_VERSION_2)
     {
-        if ((!fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 950, 1000)) ||
-            (fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 75, 100)))
+        if ((!fTestNet && CBlockIndex::IsSuperMajority(CBlockHeader::LEGACY_VERSION_2, pindexPrev, 950, 1000)) ||
+            (fTestNet && CBlockIndex::IsSuperMajority(CBlockHeader::LEGACY_VERSION_2, pindexPrev, 75, 100)))
         {
             return DoS(100, error("AcceptBlock() : rejected nVersion=1 block"));
         }
@@ -2642,8 +2642,8 @@ bool CBlock::AcceptBlock()
         if (nVersion == CBlockHeader::LEGACY_VERSION_2)
         {
             // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
-            if ((!fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 750, 1000)) ||
-                (fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 51, 100)))
+            if ((!fTestNet && CBlockIndex::IsSuperMajority(CBlockHeader::LEGACY_VERSION_2, pindexPrev, 750, 1000)) ||
+                (fTestNet && CBlockIndex::IsSuperMajority(CBlockHeader::LEGACY_VERSION_2, pindexPrev, 51, 100)))
             {
                 CScript expect = CScript() << nHeight;
                 if (vtx[0].vin[0].scriptSig.size() < expect.size() ||
@@ -2728,29 +2728,28 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     if (!pblock->CheckBlock())
         return error("ProcessBlock() : CheckBlock FAILED");
 
-    // ppcoin: verify hash target and signature of coinstake tx
+    uint256 hashProofOfStake = 0, targetProofOfStake = 0;
     if (pblock->IsProofOfStake())
     {
-        uint256 hashProofOfStake = 0, targetProofOfStake = 0;
+        // ppcoin: verify hash target and signature of coinstake tx
         if (!CheckProofOfStake(pblock->vtx[1], pblock->nBits, hashProofOfStake, targetProofOfStake))
         {
             printf("WARNING: ProcessBlock(): check proof-of-stake failed for block %s\n", hash.ToString().c_str());
             return false; // do not error here as we expect this during initial block download
         }
-        if (!mapProofOfStake.count(hash)) // add to mapProofOfStake
-            mapProofOfStake.insert(make_pair(hash, hashProofOfStake));
     }
-    else // For PoW, we need to map a hashProofOfStake as well
+    // Don't process Orphan PoW blocks yet.
+    else if (mapBlockIndex.count(pblock->hashPrevBlock)) // DEBUG
     {
-        uint256 hashProofOfStake = 0;
+        // ppcoin: verify hash target of coinbase tx (requires hashPrevBlock)
         if (!CheckProofOfStakePoW(pblock, pblock->vtx[0], hashProofOfStake))
         {
             printf("WARNING: ProcessBlock(): check proof-of-stake-pow failed for block %s\n", hash.ToString().c_str());
             return false; // do not error here as we expect this during initial block download
         }
-        if (!mapProofOfStake.count(hash)) // add to mapProofOfStake
-            mapProofOfStake.insert(make_pair(hash, hashProofOfStake));
     }
+    if (!mapProofOfStake.count(hash)) // add to mapProofOfStake
+        mapProofOfStake.insert(make_pair(hash, hashProofOfStake)); // PoW Orphans will get their hashProofOfStake later
 
     CBlockIndex* pcheckpoint = Checkpoints::GetLastSyncCheckpoint();
     if (pcheckpoint && pblock->hashPrevBlock != hashBestChain && !Checkpoints::WantedByPendingSyncCheckpoint(hash))
@@ -2786,7 +2785,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     {
         printf("ProcessBlock: ORPHAN BLOCK, prev=%s pfrom=%s\n", pblock->hashPrevBlock.ToString().substr(0,20).c_str(), (pfrom ? pfrom->addr.ToString().c_str() : ""));
         // ppcoin: check proof-of-stake
-        if (true) // if (pblock->IsProofOfStake())
+        // DEBUG if (pblock->IsProofOfStake())
         {
             // Limited duplicity on stake: prevents block flood attack
             // Duplicate stake allowed only when there is orphan child block
@@ -2795,8 +2794,8 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
             else
                 setStakeSeenOrphan.insert(pblock->GetProofOfStake());
         }
-
         CBlock* pblock2 = new CBlock(*pblock);
+
         mapOrphanBlocks.insert(make_pair(hash, pblock2));
         mapOrphanBlocksByPrev.insert(make_pair(pblock2->hashPrevBlock, pblock2));
 
@@ -2827,6 +2826,19 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
              ++mi)
         {
             CBlock* pblockOrphan = (*mi).second;
+
+            // Re-process hashProofOfStake for Orphan PoW block
+            if (!pblockOrphan->IsProofOfStake())
+            {
+                uint256 hashOrphan = pblockOrphan->GetHash();
+                uint256 hashProofOfStakeOrphan = 0;
+                if (!CheckProofOfStakePoW(pblockOrphan, pblockOrphan->vtx[0], hashProofOfStakeOrphan))
+                    printf("WARNING: ProcessBlock(): check proof-of-stake-pow failed for orphan block %s\n", hashOrphan.ToString().c_str());
+                if (mapProofOfStake.count(hashOrphan)) // remove old one from mapProofOfStake
+                    mapProofOfStake.erase(hashOrphan);
+                mapProofOfStake.insert(make_pair(hashOrphan, hashProofOfStakeOrphan));
+            }
+
             if (pblockOrphan->AcceptBlock())
                 vWorkQueue.push_back(pblockOrphan->GetHash());
             mapOrphanBlocks.erase(pblockOrphan->GetHash());
