@@ -2729,27 +2729,28 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         return error("ProcessBlock() : CheckBlock FAILED");
 
     // ppcoin: verify hash target and signature of coinstake tx
-    uint256 hashProofOfStake = 0, targetProofOfStake = 0;
     if (pblock->IsProofOfStake())
     {
+        uint256 hashProofOfStake = 0, targetProofOfStake = 0;
         if (!CheckProofOfStake(pblock->vtx[1], pblock->nBits, hashProofOfStake, targetProofOfStake))
         {
             printf("WARNING: ProcessBlock(): check proof-of-stake failed for block %s\n", hash.ToString().c_str());
             return false; // do not error here as we expect this during initial block download
         }
+        if (!mapProofOfStake.count(hash)) // add to mapProofOfStake
+            mapProofOfStake.insert(make_pair(hash, hashProofOfStake));
     }
-    // For PoW, we need to map a hashProofOfStake using the previous block
-    // If we don't have the previous block yet, shunt it off to the orphanage
-    else if (mapBlockIndex.count(pblock->hashPrevBlock))
+    else // For PoW, we need to map a hashProofOfStake as well
     {
+        uint256 hashProofOfStake = 0;
         if (!CheckProofOfStakePoW(pblock, pblock->vtx[0], hashProofOfStake))
         {
             printf("WARNING: ProcessBlock(): check proof-of-stake-pow failed for block %s\n", hash.ToString().c_str());
             return false; // do not error here as we expect this during initial block download
         }
+        if (!mapProofOfStake.count(hash)) // add to mapProofOfStake
+            mapProofOfStake.insert(make_pair(hash, hashProofOfStake));
     }
-    if (!mapProofOfStake.count(hash)) // add to mapProofOfStake
-        mapProofOfStake.insert(make_pair(hash, hashProofOfStake));
 
     CBlockIndex* pcheckpoint = Checkpoints::GetLastSyncCheckpoint();
     if (pcheckpoint && pblock->hashPrevBlock != hashBestChain && !Checkpoints::WantedByPendingSyncCheckpoint(hash))
@@ -2826,9 +2827,6 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
              ++mi)
         {
             CBlock* pblockOrphan = (*mi).second;
-            if (!pblockOrphan->IsProofOfStake())
-                if (!CheckProofOfStakePoW(pblockOrphan, pblockOrphan->vtx[0], hashProofOfStake))
-                    printf("WARNING: ProcessBlock(): check proof-of-stake-pow failed for orphan block %s\n", pblockOrphan->GetHash().ToString().c_str());
             if (pblockOrphan->AcceptBlock())
                 vWorkQueue.push_back(pblockOrphan->GetHash());
             mapOrphanBlocks.erase(pblockOrphan->GetHash());
