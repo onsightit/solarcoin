@@ -1371,6 +1371,7 @@ public:
         BLOCK_PROOF_OF_STAKE = (1 << 0), // is proof-of-stake block
         BLOCK_STAKE_ENTROPY  = (1 << 1), // entropy bit for stake modifier
         BLOCK_STAKE_MODIFIER = (1 << 2), // regenerated stake modifier
+        BLOCK_PROOF_OF_WORK  = (1 << 4), // is proof-of-work block
     };
 
     uint64_t nStakeModifier; // hash modifier for proof-of-stake
@@ -1436,6 +1437,7 @@ public:
         }
         else
         {
+            SetProofOfWork();
             prevoutStake = COutPoint(block.vtx[0].GetHash(),0);
             nStakeTime = block.vtx[0].nTime;
         }
@@ -1520,12 +1522,17 @@ public:
 
     bool IsProofOfWork() const
     {
-        return !(nFlags & BLOCK_PROOF_OF_STAKE);
+        return (nFlags & BLOCK_PROOF_OF_WORK);
     }
 
     bool IsProofOfStake() const
     {
         return (nFlags & BLOCK_PROOF_OF_STAKE);
+    }
+
+    void SetProofOfWork()
+    {
+        nFlags |= BLOCK_PROOF_OF_WORK;
     }
 
     void SetProofOfStake()
@@ -1542,7 +1549,7 @@ public:
     {
         if (nEntropyBit > 1)
             return false;
-        nFlags |= (nEntropyBit? BLOCK_STAKE_ENTROPY : 0);
+        nFlags |= (nEntropyBit ? BLOCK_STAKE_ENTROPY : 0);
         return true;
     }
 

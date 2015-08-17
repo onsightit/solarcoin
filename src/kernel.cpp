@@ -390,15 +390,18 @@ bool CheckProofOfStakePoW(CBlock* pblock, const CTransaction& tx, uint256& hashP
     if (!block.ReadFromDisk(mapBlockIndex[pblock->hashPrevBlock], false))
         return error("CheckProofOfStakePoW() read block failed");
 
-    // Below is the "equivolent" of CheckStakeTimeKernelHash() and GetKernelStakeModifier for PoW indexes
+    // Below is the "equivolent" of CheckStakeTimeKernelHash() for PoW indexes
+    unsigned int nTimeBlockFrom = block.GetBlockTime();
     uint256 hashBlockFrom = block.GetHash();
-    const CBlockIndex* pindexFrom = mapBlockIndex[hashBlockFrom];
 
     // Calculate hash
     CDataStream ss(SER_GETHASH, 0);
-    unsigned int nTimeBlockFrom = block.GetBlockTime();
-    uint64_t nStakeModifier = pindexFrom->nStakeModifier;
-    int64_t nStakeModifierTime = pindexFrom->GetBlockTime();
+    uint64_t nStakeModifier = 0;
+    int nStakeModifierHeight = 0;
+    int64_t nStakeModifierTime = 0;
+
+    if (!GetKernelStakeModifier(hashBlockFrom, nStakeModifier, nStakeModifierHeight, nStakeModifierTime, fDebug))
+        return false;
 
     ss << nStakeModifier;
 
