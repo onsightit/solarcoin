@@ -159,7 +159,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     int64_t nSelectionInterval = GetStakeModifierSelectionInterval();
     int64_t nSelectionIntervalStart = (pindexPrev->GetBlockTime() / nModifierInterval) * nModifierInterval - nSelectionInterval;
     const CBlockIndex* pindex = pindexPrev;
-    // DEBUG Only use PoS indexes after PoW + 10 minutes
+    // DEBUG Only use PoS indexes after PoW + 10 minute interval
     while (pindex && pindex->IsProofOfStake() && pindex->GetBlockTime() >= nSelectionIntervalStart)
     {
         vSortedByTimestamp.push_back(make_pair(pindex->GetBlockTime(), pindex->GetBlockHash()));
@@ -234,12 +234,12 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
     int64_t nStakeModifierSelectionInterval = GetStakeModifierSelectionInterval();
     const CBlockIndex* pindex = pindexFrom;
 
-    if (pindex->IsProofOfStake())  // PoW blocks use a different stake modifier formula
+    // loop to find the stake modifier later by a selection interval
+    while (nStakeModifierTime < pindexFrom->GetBlockTime() + nStakeModifierSelectionInterval)
     {
-        // loop to find the stake modifier later by a selection interval
-        while (nStakeModifierTime < pindexFrom->GetBlockTime() + nStakeModifierSelectionInterval)
+        if (!pindex->pnext)
         {
-            if (!pindex->pnext)
+            if (pindex->IsProofOfStake()) // DEBUG
             {   // reached best block; may happen if node is behind on block chain
                 if (fPrintProofOfStake || (pindex->GetBlockTime() + nStakeMinAge - nStakeModifierSelectionInterval > GetAdjustedTime()))
                     return error("GetKernelStakeModifier() : reached best block %s at height %d from block %s",
@@ -247,12 +247,14 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
                 else
                     return false;
             }
-            pindex = pindex->pnext;
-            if (pindex->GeneratedStakeModifier())
-            {
-                nStakeModifierHeight = pindex->nHeight;
-                nStakeModifierTime = pindex->GetBlockTime();
-            }
+            else
+                break;
+        }
+        pindex = pindex->pnext;
+        if (pindex->GeneratedStakeModifier())
+        {
+            nStakeModifierHeight = pindex->nHeight;
+            nStakeModifierTime = pindex->GetBlockTime();
         }
     }
     nStakeModifier = pindex->nStakeModifier;
