@@ -150,7 +150,9 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
         {
             printf("ComputeNextStakeModifier: no new interval keep current modifier: pindexPrev nHeight=%d nTime=%u\n", pindexPrev->nHeight, (unsigned int)pindexPrev->GetBlockTime());
         }
-        return true;
+        // Catch the switch from PoW to PoST indexes
+        if (!(pindexCurrent->IsProofOfStake() && pindexPrev->IsProofOfWork()))
+            return true;
     }
 
     // Sort candidate blocks by timestamp
