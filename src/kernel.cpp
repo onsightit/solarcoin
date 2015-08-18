@@ -150,7 +150,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
         {
             printf("ComputeNextStakeModifier: no new interval keep current modifier: pindexPrev nHeight=%d nTime=%u\n", pindexPrev->nHeight, (unsigned int)pindexPrev->GetBlockTime());
         }
-        // Catch the switch from PoW to PoST indexes
+        // Catch the switch from PoW to PoST, but allow the las PoW block index to pass
         if (!(pindexCurrent->IsProofOfStake() && pindexPrev->IsProofOfWork()))
             return true;
     }
@@ -161,8 +161,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     int64_t nSelectionInterval = GetStakeModifierSelectionInterval();
     int64_t nSelectionIntervalStart = (pindexPrev->GetBlockTime() / nModifierInterval) * nModifierInterval - nSelectionInterval;
     const CBlockIndex* pindex = pindexPrev;
-    // DEBUG Only use PoS indexes after PoW + 10 minute interval
-    while (pindex && pindex->IsProofOfStake() && pindex->GetBlockTime() >= nSelectionIntervalStart)
+    while (pindex && pindex->nHeight >= LAST_POW_BLOCK && pindex->GetBlockTime() >= nSelectionIntervalStart)
     {
         vSortedByTimestamp.push_back(make_pair(pindex->GetBlockTime(), pindex->GetBlockHash()));
         pindex = pindex->pprev;
