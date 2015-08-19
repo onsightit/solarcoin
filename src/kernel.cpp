@@ -150,9 +150,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
         {
             printf("ComputeNextStakeModifier: no new interval keep current modifier: pindexPrev nHeight=%d nTime=%u\n", pindexPrev->nHeight, (unsigned int)pindexPrev->GetBlockTime());
         }
-        // Catch the switch from PoW to PoST, but allow the las PoW block index to pass
-        if (!(pindexCurrent->IsProofOfStake() && pindexPrev->IsProofOfWork()))
-            return true;
+        return true;
     }
 
     // Sort candidate blocks by timestamp
@@ -161,7 +159,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     int64_t nSelectionInterval = GetStakeModifierSelectionInterval();
     int64_t nSelectionIntervalStart = (pindexPrev->GetBlockTime() / nModifierInterval) * nModifierInterval - nSelectionInterval;
     const CBlockIndex* pindex = pindexPrev;
-    while (pindex && pindex->nHeight >= LAST_POW_BLOCK && pindex->GetBlockTime() >= nSelectionIntervalStart)
+    while (pindex && pindex->GetBlockTime() >= nSelectionIntervalStart)
     {
         vSortedByTimestamp.push_back(make_pair(pindex->GetBlockTime(), pindex->GetBlockHash()));
         pindex = pindex->pprev;
@@ -240,16 +238,12 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
     {
         if (!pindex->pnext)
         {
-            if (pindex->IsProofOfStake()) // DEBUG
-            {   // reached best block; may happen if node is behind on block chain
-                if (fPrintProofOfStake || (pindex->GetBlockTime() + nStakeMinAge - nStakeModifierSelectionInterval > GetAdjustedTime()))
-                    return error("GetKernelStakeModifier() : reached best block %s at height %d from block %s",
-                        pindex->GetBlockHash().ToString().c_str(), pindex->nHeight, hashBlockFrom.ToString().c_str());
-                else
-                    return false;
-            }
+            // reached best block; may happen if node is behind on block chain
+            if (fPrintProofOfStake || (pindex->GetBlockTime() + nStakeMinAge - nStakeModifierSelectionInterval > GetAdjustedTime()))
+                return error("GetKernelStakeModifier() : reached best block %s at height %d from block %s",
+                    pindex->GetBlockHash().ToString().c_str(), pindex->nHeight, hashBlockFrom.ToString().c_str());
             else
-                break;
+                return false;
         }
         pindex = pindex->pnext;
         if (pindex->GeneratedStakeModifier())
