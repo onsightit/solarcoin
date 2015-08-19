@@ -135,10 +135,14 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
         fGeneratedStakeModifier = true;
         return true;  // genesis block's modifier is 0
     }
-    if (pindexCurrent->IsProofOfWork())
+    if (pindexCurrent->IsProofOfWork()) // DEBUG
     {
         nStakeModifier = 1; // PoW blocks have the same modifier
-        fGeneratedStakeModifier = true;
+        // Set fGeneratedStakeModifier flag false on last PoW block so ComputeNextStakeModifier works in PoST.
+        if (pindexCurrent->nHeight == LAST_POW_BLOCK)
+            fGeneratedStakeModifier = false;
+        else
+            fGeneratedStakeModifier = true;
         return true;
     }
 
@@ -246,12 +250,20 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
     {
         if (!pindex->pnext)
         {
+            if (pindex->IsProofOfStake()) // DEBUG
+            {
             // reached best block; may happen if node is behind on block chain
             if (fPrintProofOfStake || (pindex->GetBlockTime() + nStakeMinAge - nStakeModifierSelectionInterval > GetAdjustedTime()))
                 return error("GetKernelStakeModifier() : reached best block %s at height %d from block %s",
                     pindex->GetBlockHash().ToString().c_str(), pindex->nHeight, hashBlockFrom.ToString().c_str());
             else
                 return false;
+            }
+            else
+            {
+                // This should be the last PoW block index.
+                break;
+            }
         }
         pindex = pindex->pnext;
         if (pindex->GeneratedStakeModifier())
@@ -318,8 +330,17 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
 
     ss << nStakeModifier;
 
-    ss << nTimeBlockFrom << nTxPrevOffset << txPrev.nTime << prevout.n << nTimeTx;
-    hashProofOfStake = Hash(ss.begin(), ss.end());
+    if (nStakeModifierHeight > LAST_POW_BLOCK)
+    {
+        ss << nTimeBlockFrom << nTxPrevOffset << txPrev.nTime << prevout.n << nTimeTx;
+        hashProofOfStake = Hash(ss.begin(), ss.end());
+    }
+    else
+    {
+        // PoW uses a compatible hash that's not verified
+        ss << nStakeModifierTime << 81 << nStakeModifierTime << 0 << nStakeModifierTime;
+        hashProofOfStake = Hash(ss.begin(), ss.end());
+    }
     if (fPrintProofOfStake)
     {
         printf("CheckStakeTimeKernelHash() : using modifier 0x%016"PRIx64" at height=%d timestamp=%s for block from height=%d timestamp=%s\n stakeTime=%d, coinDay=%d\n",
@@ -335,8 +356,9 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     }
 
     // Now check if proof-of-stake hash meets target protocol
-    if (CBigNum(hashProofOfStake) > bnStakeTimeWeight * bnTargetPerCoinDay)
-        return false;
+    if (nStakeModifierHeight > LAST_POW_BLOCK)
+        if (CBigNum(hashProofOfStake) > bnStakeTimeWeight * bnTargetPerCoinDay)
+            return false;
     if (fDebug && !fPrintProofOfStake)
     {
         printf("CheckStakeTimeKernelHash() : using modifier 0x%016"PRIx64" at height=%d timestamp=%s for block from height=%d timestamp=%s\n",
@@ -399,8 +421,8 @@ bool CheckProofOfStakePoW(CBlock* pblock, const CTransaction& tx, uint256& hashP
 
     ss << nStakeModifier;
 
-    // ss << nTimeBlockFrom << nTxPrevOffset << txPrev.nTime << prevout.n << nTimeTx; // PoST
-    ss << nTimeBlockFrom << 81 << nStakeModifierTime << 0 << tx.nTime; // Keep the same format as PoST
+    // PoW uses a compatible hash that's not verified
+    ss << nStakeModifierTime << 81 << nStakeModifierTime << 0 << nStakeModifierTime;
     hashProofOfStake = Hash(ss.begin(), ss.end());
 
     if (fDebug)

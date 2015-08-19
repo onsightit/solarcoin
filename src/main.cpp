@@ -2488,7 +2488,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
     }
 
     // Check proof of work matches claimed amount
-    if (fCheckPOW && IsProofOfWork() && !CheckProofOfWork(GetPoWHash(), nBits))
+    if (fCheckPOW && !fProofOfStake && !CheckProofOfWork(GetPoWHash(), nBits))
         return DoS(50, error("CheckBlock() : proof of work failed"));
 
     // Check timestamp
@@ -2738,8 +2738,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
             return false; // do not error here as we expect this during initial block download
         }
     }
-    // Don't process Orphan PoW blocks yet.
-    else if (mapBlockIndex.count(pblock->hashPrevBlock)) // DEBUG
+    else
     {
         // ppcoin: verify hash target of coinbase tx (requires hashPrevBlock)
         if (!CheckProofOfStakePoW(pblock, pblock->vtx[0], hashProofOfStake))
@@ -2826,19 +2825,6 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
              ++mi)
         {
             CBlock* pblockOrphan = (*mi).second;
-
-            // Re-process hashProofOfStake for Orphan PoW block
-            if (!pblockOrphan->IsProofOfStake())
-            {
-                uint256 hashOrphan = pblockOrphan->GetHash();
-                uint256 hashProofOfStakeOrphan = 0;
-                if (!CheckProofOfStakePoW(pblockOrphan, pblockOrphan->vtx[0], hashProofOfStakeOrphan))
-                    printf("WARNING: ProcessBlock(): check proof-of-stake-pow failed for orphan block %s\n", hashOrphan.ToString().c_str());
-                if (mapProofOfStake.count(hashOrphan)) // remove old one from mapProofOfStake
-                    mapProofOfStake.erase(hashOrphan);
-                mapProofOfStake.insert(make_pair(hashOrphan, hashProofOfStakeOrphan));
-            }
-
             if (pblockOrphan->AcceptBlock())
                 vWorkQueue.push_back(pblockOrphan->GetHash());
             mapOrphanBlocks.erase(pblockOrphan->GetHash());
