@@ -469,9 +469,9 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     if (hashBlock > hashTarget)
         return error("CheckWork() : proof-of-work not meeting target");
 
-    // verify hash target and signature of coinstake tx
+    // verify hash target and signature of coinbase tx
     if (!CheckProofOfStakePoW(pblock, pblock->vtx[0], proofHash))
-        return error("CheckStake() : proof-of-stake checking failed");
+        return error("CheckWork() : proof-of-work checking failed");
 
     //// debug print
     printf("CheckWork() : new proof-of-work block found  \n  hash: %s  proofhash: %s  target: %s\n", hashBlock.GetHex().c_str(), proofHash.GetHex().c_str(), hashTarget.GetHex().c_str());
