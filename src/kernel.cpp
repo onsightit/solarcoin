@@ -60,7 +60,7 @@ static int64_t GetStakeModifierSelectionIntervalSection(int nSection)
 static int64_t GetStakeModifierSelectionInterval()
 {
     int64_t nSelectionInterval = 0;
-    for (int nSection=0; nSection<64; nSection++)
+    for (int nSection=0; nSection < 64; nSection++)
         nSelectionInterval += GetStakeModifierSelectionIntervalSection(nSection);
     return nSelectionInterval;
 }
@@ -138,11 +138,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     if (pindexCurrent->IsProofOfWork()) // DEBUG
     {
         nStakeModifier = 1; // PoW blocks have the same modifier
-        // Set fGeneratedStakeModifier flag false on last PoW block so ComputeNextStakeModifier works in PoST.
-        if (pindexCurrent->nHeight == LAST_POW_BLOCK)
-            fGeneratedStakeModifier = false;
-        else
-            fGeneratedStakeModifier = true;
+        fGeneratedStakeModifier = true;
         return true;
     }
 
@@ -243,33 +239,28 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
     nStakeModifierHeight = pindexFrom->nHeight;
     nStakeModifierTime = pindexFrom->GetBlockTime();
     int64_t nStakeModifierSelectionInterval = GetStakeModifierSelectionInterval();
+    int64_t nStakeModifierTargetTime = nStakeModifierTime + nStakeModifierSelectionInterval;
     const CBlockIndex* pindex = pindexFrom;
 
     // loop to find the stake modifier later by a selection interval
-    while (nStakeModifierTime < pindexFrom->GetBlockTime() + nStakeModifierSelectionInterval)
+    while (nStakeModifierTime < nStakeModifierTargetTime)
     {
         if (!pindex->pnext)
         {
-            if (pindex->IsProofOfStake()) // DEBUG
-            {
             // reached best block; may happen if node is behind on block chain
             if (fPrintProofOfStake || (pindex->GetBlockTime() + nStakeMinAge - nStakeModifierSelectionInterval > GetAdjustedTime()))
                 return error("GetKernelStakeModifier() : reached best block %s at height %d from block %s",
                     pindex->GetBlockHash().ToString().c_str(), pindex->nHeight, hashBlockFrom.ToString().c_str());
             else
                 return false;
-            }
-            else
-            {
-                // This should be the last PoW block index.
-                break;
-            }
         }
         pindex = pindex->pnext;
         if (pindex->GeneratedStakeModifier())
         {
             nStakeModifierHeight = pindex->nHeight;
             nStakeModifierTime = pindex->GetBlockTime();
+            if (pindex->IsProofOfWork()) // DEBUG
+                break;
         }
     }
     nStakeModifier = pindex->nStakeModifier;
