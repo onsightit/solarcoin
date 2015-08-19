@@ -129,11 +129,19 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     const CBlockIndex* pindexPrev = pindexCurrent->pprev;
     nStakeModifier = 0;
     fGeneratedStakeModifier = false;
+
     if (!pindexPrev)
     {
         fGeneratedStakeModifier = true;
         return true;  // genesis block's modifier is 0
     }
+    if (pindexCurrent->IsProofOfWork())
+    {
+        nStakeModifier = 1; // PoW blocks have the same modifier
+        fGeneratedStakeModifier = true;
+        return true;
+    }
+
     // First find current stake modifier and its generation block time
     // if it's not old enough, return the same stake modifier
     int64_t nModifierTime = 0;
@@ -381,26 +389,13 @@ bool CheckProofOfStakePoW(CBlock* pblock, const CTransaction& tx, uint256& hashP
     if (!tx.IsCoinBase())
         return error("CheckProofOfStakePoW() called on non-coinbase %s\n", tx.GetHash().ToString().c_str());
 
-    if (!mapBlockIndex.count(pblock->hashPrevBlock))
-        return error("CheckProofOfStakePoW() previous block not mapped %s", pblock->hashPrevBlock.GetHex().c_str());
-
-    // Read previous block header
-    CBlock block;
-    if (!block.ReadFromDisk(mapBlockIndex[pblock->hashPrevBlock], false))
-        return error("CheckProofOfStakePoW() read block failed");
-
     // Below is the "equivolent" of CheckStakeTimeKernelHash() for PoW indexes
-    unsigned int nTimeBlockFrom = block.GetBlockTime();
-    uint256 hashBlockFrom = block.GetHash();
+    unsigned int nTimeBlockFrom = pblock->GetBlockTime();
 
     // Calculate hash
     CDataStream ss(SER_GETHASH, 0);
-    uint64_t nStakeModifier = 0;
-    int nStakeModifierHeight = 0;
-    int64_t nStakeModifierTime = 0;
-
-    if (!GetKernelStakeModifier(hashBlockFrom, nStakeModifier, nStakeModifierHeight, nStakeModifierTime, fDebug))
-        return false;
+    uint64_t nStakeModifier = 1; // PoW modifier (non-genesis)
+    int64_t nStakeModifierTime = nTimeBlockFrom;
 
     ss << nStakeModifier;
 
