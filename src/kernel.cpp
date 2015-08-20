@@ -138,7 +138,11 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     if (pindexCurrent->IsProofOfWork()) // DEBUG
     {
         nStakeModifier = 1; // PoW blocks have the same modifier
-        fGeneratedStakeModifier = true;
+        // Set fGeneratedStakeModifier flag true on last PoW block so ComputeNextStakeModifier works in PoST.
+        if (pindexCurrent->nHeight == LAST_POW_BLOCK)
+            fGeneratedStakeModifier = true;
+        else
+            fGeneratedStakeModifier = false;
         return true;
     }
 
@@ -243,7 +247,7 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
     const CBlockIndex* pindex = pindexFrom;
 
     // loop to find the stake modifier later by a selection interval
-    while (nStakeModifierTime < nStakeModifierTargetTime)
+    while (pindex->IsProofOfStake() && nStakeModifierTime < nStakeModifierTargetTime)
     {
         if (!pindex->pnext)
         {
@@ -259,8 +263,6 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
         {
             nStakeModifierHeight = pindex->nHeight;
             nStakeModifierTime = pindex->GetBlockTime();
-            if (pindex->IsProofOfWork()) // DEBUG
-                break;
         }
     }
     nStakeModifier = pindex->nStakeModifier;
