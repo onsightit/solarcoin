@@ -137,12 +137,8 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     }
     if (pindexCurrent->IsProofOfWork()) // DEBUG
     {
-        nStakeModifier = 1; // PoW blocks have the same modifier
-        // Set fGeneratedStakeModifier flag true on last PoW block so ComputeNextStakeModifier works in PoST.
-        if (pindexCurrent->nHeight == LAST_POW_BLOCK)
-            fGeneratedStakeModifier = true;
-        else
-            fGeneratedStakeModifier = false;
+        nStakeModifier = 1; // PoW block modifier
+        fGeneratedStakeModifier = false;
         return true;
     }
 
@@ -155,14 +151,19 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     {
         printf("ComputeNextStakeModifier: prev modifier=0x%016"PRIx64" time=%s\n", nStakeModifier, DateTimeStrFormat(nModifierTime).c_str());
     }
-    // nModifierInterval is 10 minutes.
-    if ((nModifierTime / nModifierInterval >= pindexPrev->GetBlockTime() / nModifierInterval) && pindexPrev->IsProofOfStake()) // DEBUG
+
+    // DEBUG Force a new interval when pindexCurrent is PoST and pindexPrev is not PoST (LAST_POW_BLOCK)
+    if (pindexPrev->IsProofOfStake())
     {
-        if (fDebug)
+        // nModifierInterval is 10 minutes.
+        if (nModifierTime / nModifierInterval >= pindexPrev->GetBlockTime() / nModifierInterval)
         {
-            printf("ComputeNextStakeModifier: no new interval keep current modifier: pindexPrev nHeight=%d nTime=%u\n", pindexPrev->nHeight, (unsigned int)pindexPrev->GetBlockTime());
+            if (fDebug)
+            {
+                printf("ComputeNextStakeModifier: no new interval keep current modifier: pindexPrev nHeight=%d nTime=%u\n", pindexPrev->nHeight, (unsigned int)pindexPrev->GetBlockTime());
+            }
+            return true;
         }
-        return true;
     }
 
     // Sort candidate blocks by timestamp
@@ -190,7 +191,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     {
         // add an interval section to the current selection round
         nSelectionIntervalStop += GetStakeModifierSelectionIntervalSection(nRound);
-        // select a block from the candidates of current round
+        // select a block from the candidates of current round (pindex is modified)
         if (!SelectBlockFromCandidates(vSortedByTimestamp, mapSelectedBlocks, nSelectionIntervalStop, nStakeModifier, &pindex))
             return error("ComputeNextStakeModifier: unable to select block at round %d", nRound);
         // write the entropy bit of the selected block
@@ -249,7 +250,7 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
     const CBlockIndex* pindex = pindexFrom;
 
     // loop to find the stake modifier later by a selection interval
-    while (pindex->IsProofOfStake() && nStakeModifierTime < nStakeModifierTargetTime)
+    while (nStakeModifierTime < nStakeModifierTargetTime)
     {
         if (!pindex->pnext)
         {
@@ -411,7 +412,7 @@ bool CheckProofOfStakePoW(CBlock* pblock, const CTransaction& tx, uint256& hashP
 
     // Calculate hash
     CDataStream ss(SER_GETHASH, 0);
-    uint64_t nStakeModifier = 1; // PoW modifier (non-genesis)
+    uint64_t nStakeModifier = 1; // PoW modifier
     int64_t nStakeModifierTime = nTimeBlockFrom;
 
     ss << nStakeModifier;
