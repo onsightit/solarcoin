@@ -1068,14 +1068,14 @@ double GetAverageStakeWeight(CBlockIndex* pindexPrev)
         return weightAve;
     int i;
     CBlockIndex* currentBlockIndex = pindexPrev;
-    for (i = 0; currentBlockIndex && i < 60; i++)
+    for (i = 0; currentBlockIndex->IsProofOfStake() && i < 60; i++) // DEBUG
     {
         double tempWeight = GetPoSKernelPS(currentBlockIndex);
         weightSum += tempWeight;
         currentBlockIndex = currentBlockIndex->pprev;
     }
-    weightAve = weightSum/i;
-    return weightAve+21;
+    weightAve = (i ? weightSum / i + 21 : 0); // DEBUG
+    return weightAve; // DEBUG
 }
 
 // get current inflation rate using average stake weight ~1.5-2.5% (measure of liquidity) PoST
@@ -1988,9 +1988,8 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
             return DoS(50, error("ConnectBlock() : coinbase reward exceeded (actual=%"PRIu64" vs calculated=%"PRIu64")",
                    vtx[0].GetValueOut(),
                    nReward));
-        // Need to fill in nStakeTime and nStakeReward for PoW to PoST transition
-        pindex->nStakeTime = nTime;
-        nStakeReward = 0 * COIN;
+        // Need to fill in nStakeTime for PoW to PoST transition
+        pindex->nStakeTime = vtx[0].nTime;
     }
     if (IsProofOfStake())
     {

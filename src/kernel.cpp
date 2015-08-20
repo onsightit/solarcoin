@@ -156,7 +156,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
         printf("ComputeNextStakeModifier: prev modifier=0x%016"PRIx64" time=%s\n", nStakeModifier, DateTimeStrFormat(nModifierTime).c_str());
     }
     // nModifierInterval is 10 minutes.
-    if (nModifierTime / nModifierInterval >= pindexPrev->GetBlockTime() / nModifierInterval)
+    if ((nModifierTime / nModifierInterval >= pindexPrev->GetBlockTime() / nModifierInterval) && pindexPrev->IsProofOfStake()) // DEBUG
     {
         if (fDebug)
         {
@@ -175,6 +175,8 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     {
         vSortedByTimestamp.push_back(make_pair(pindex->GetBlockTime(), pindex->GetBlockHash()));
         pindex = pindex->pprev;
+        if (pindex->IsProofOfWork()) // DEBUG We just want the LAST_POW_BLOCK
+            break;
     }
     int nHeightFirstCandidate = pindex ? (pindex->nHeight + 1) : 0;
     reverse(vSortedByTimestamp.begin(), vSortedByTimestamp.end());
