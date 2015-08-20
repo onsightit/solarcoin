@@ -1068,14 +1068,14 @@ double GetAverageStakeWeight(CBlockIndex* pindexPrev)
         return weightAve;
     int i;
     CBlockIndex* currentBlockIndex = pindexPrev;
-    for (i = 0; currentBlockIndex->IsProofOfStake() && i < 60; i++) // DEBUG
+    for (i = 0; currentBlockIndex && i < 60; i++)
     {
         double tempWeight = GetPoSKernelPS(currentBlockIndex);
         weightSum += tempWeight;
         currentBlockIndex = currentBlockIndex->pprev;
     }
-    weightAve = (i ? weightSum / i + 21 : 0); // DEBUG
-    return weightAve; // DEBUG
+    weightAve = weightSum/i;
+    return weightAve+21;
 }
 
 // get current inflation rate using average stake weight ~1.5-2.5% (measure of liquidity) PoST

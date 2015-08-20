@@ -80,12 +80,9 @@ double GetPoSKernelPS(CBlockIndex* pindexPrev)
 
     while (pindexPrev && nStakesHandled < nPoSInterval)
     {
-        if (pindexPrev->IsProofOfStake()) // DEBUG
-        {
-            dStakeKernelsTriedAvg += GetDifficulty(pindexPrev) * 4294967296.0;
-            nStakesTime += pindexPrevStake ? (pindexPrevStake->nTime - pindexPrev->nTime) : 0;
-            pindexPrevStake = pindexPrev;
-        }
+        dStakeKernelsTriedAvg += GetDifficulty(pindexPrev) * 4294967296.0;
+        nStakesTime += pindexPrevStake ? (pindexPrevStake->nTime - pindexPrev->nTime) : 0;
+        pindexPrevStake = pindexPrev;
         nStakesHandled++;
         pindexPrev = pindexPrev->pprev;
     }
