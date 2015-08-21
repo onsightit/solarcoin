@@ -82,7 +82,7 @@ double GetPoWKernelPS(CBlockIndex* pindexPrev)
     {
         if (pindexPrev->IsProofOfWork())
         {
-            dStakeKernelsTriedAvg += GetDifficulty(pindexPrev) * 4294967296.0;
+            dStakeKernelsTriedAvg += GetDifficulty(pindexPrev) * 4294.967296 / 30;
             nStakesTime += pindexPrevStake ? (pindexPrevStake->nTime - pindexPrev->nTime) : 0;
             pindexPrevStake = pindexPrev;
             nStakesHandled++;
