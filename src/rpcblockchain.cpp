@@ -43,11 +43,10 @@ double GetDifficulty(const CBlockIndex* blockindex)
     return dDiff;
 }
 
-double GetPoWMHashPS()
+double GetPoWMHashPS(CBlockIndex* pindexPrev)
 {
-    // DEBUG
-    //if (nBestHeight >= LAST_POW_BLOCK)
-    //    return 0;
+    if (pindexPrev->nHeight > LAST_POW_BLOCK)
+        return 0;
 
     int nPoWInterval = 72;
     int64_t nTargetSpacingWorkMin = 30, nTargetSpacingWork = 30;
@@ -55,7 +54,7 @@ double GetPoWMHashPS()
     CBlockIndex* pindex = pindexGenesisBlock;
     CBlockIndex* pindexPrevWork = pindexGenesisBlock;
 
-    while (pindex)
+    while (pindex && pindex->nHeight < pindexPrev->nHeight+1)
     {
         if (pindex->IsProofOfWork())
         {
