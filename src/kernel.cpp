@@ -172,7 +172,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     // Sort candidate blocks by timestamp
     vector<pair<int64_t, uint256> > vSortedByTimestamp;
     vSortedByTimestamp.reserve(64 * nModifierInterval / nTargetSpacing);
-    int64_t nSelectionInterval = GetStakeModifierSelectionInterval();
+    int64_t nSelectionInterval = (fTestNet ? nModifierInterval : GetStakeModifierSelectionInterval()); // DEBUG
     int64_t nSelectionIntervalStart = (pindexPrev->GetBlockTime() / nModifierInterval) * nModifierInterval - nSelectionInterval;
     const CBlockIndex* pindex = pindexPrev;
     while (pindex && pindex->GetBlockTime() >= nSelectionIntervalStart)
@@ -193,7 +193,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     for (int nRound=0; nRound<min(64, (int)vSortedByTimestamp.size()); nRound++)
     {
         // add an interval section to the current selection round
-        nSelectionIntervalStop += GetStakeModifierSelectionIntervalSection(nRound);
+        nSelectionIntervalStop += (fTestNet ? nModifierInterval : GetStakeModifierSelectionIntervalSection(nRound)); // DEBUG;
         // select a block from the candidates of current round (pindex is modified)
         if (!SelectBlockFromCandidates(vSortedByTimestamp, mapSelectedBlocks, nSelectionIntervalStop, nStakeModifier, &pindex))
             return error("ComputeNextStakeModifier: unable to select block at round %d", nRound);
