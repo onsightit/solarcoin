@@ -1988,8 +1988,6 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
             return DoS(50, error("ConnectBlock() : coinbase reward exceeded (actual=%"PRIu64" vs calculated=%"PRIu64")",
                    vtx[0].GetValueOut(),
                    nReward));
-        // Need to fill in nStakeTime for PoW to PoST transition
-        pindex->nStakeTime = vtx[0].nTime;
     }
     if (IsProofOfStake())
     {
