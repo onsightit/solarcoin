@@ -138,7 +138,10 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     if (pindexCurrent->IsProofOfWork()) // DEBUG
     {
         nStakeModifier = 1; // PoW block modifier
-        fGeneratedStakeModifier = false;
+        if (pindexCurrent->nHeight == LAST_POW_BLOCK)
+            fGeneratedStakeModifier = true;
+        else
+            fGeneratedStakeModifier = false;
         return true;
     }
 
@@ -355,6 +358,7 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     if (nStakeModifierHeight > LAST_POW_BLOCK)
         if (CBigNum(hashProofOfStake) > bnStakeTimeWeight * bnTargetPerCoinDay)
             return false;
+
     if (fDebug && !fPrintProofOfStake)
     {
         printf("CheckStakeTimeKernelHash() : using modifier 0x%016"PRIx64" at height=%d timestamp=%s for block from height=%d timestamp=%s\n",
