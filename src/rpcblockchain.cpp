@@ -73,30 +73,20 @@ double GetPoWMHashPS()
 double GetPoSKernelPS(CBlockIndex* pindexPrev)
 {
     int nPoSInterval = 72;
-    int nPoWInterval = 72;
     double dStakeKernelsTriedAvg = 0;
     int nStakesHandled = 0, nStakesTime = 0;
-    int64_t nTargetSpacingWorkMin = 30, nTargetSpacingWork = 30;
 
     CBlockIndex* pindexPrevStake = NULL;
 
-    while (pindexPrev && pindexPrev->pprev && nStakesHandled < nPoSInterval)
+    while (pindexPrev && nStakesHandled < nPoSInterval)
     {
         if (pindexPrev->IsProofOfStake())
         {
             dStakeKernelsTriedAvg += GetDifficulty(pindexPrev) * 4294967296.0;
+            nStakesTime += pindexPrevStake ? (pindexPrevStake->nTime - pindexPrev->nTime) : 0;
+            pindexPrevStake = pindexPrev;
+            nStakesHandled++;
         }
-        else
-        {
-            // From GetPoWMHashPS - Needed to get Network weight when moving from PoW to PoST
-            int64_t nActualSpacingWork = pindexPrev->GetBlockTime() - pindexPrev->pprev->GetBlockTime();
-            nTargetSpacingWork = ((nPoWInterval - 1) * nTargetSpacingWork + nActualSpacingWork + nActualSpacingWork) / (nPoWInterval + 1);
-            nTargetSpacingWork = max(nTargetSpacingWork, nTargetSpacingWorkMin);
-            dStakeKernelsTriedAvg += GetDifficulty(pindexPrev) * 4294.967296 / nTargetSpacingWork;
-        }
-        nStakesTime += pindexPrevStake ? (pindexPrevStake->nTime - pindexPrev->nTime) : 0;
-        pindexPrevStake = pindexPrev;
-        nStakesHandled++;
         pindexPrev = pindexPrev->pprev;
     }
 

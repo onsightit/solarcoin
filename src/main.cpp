@@ -1070,7 +1070,7 @@ double GetAverageStakeWeight(CBlockIndex* pindexPrev)
     CBlockIndex* currentBlockIndex = pindexPrev;
     for (i = 0; currentBlockIndex && i < 60; i++)
     {
-        double tempWeight = GetPoSKernelPS(currentBlockIndex);
+        double tempWeight = (currentBlockIndex->IsProofOfStake() ? GetPoSKernelPS(currentBlockIndex) : GetPoWMHashPS()); // DEBUG
         weightSum += tempWeight;
         currentBlockIndex = currentBlockIndex->pprev;
     }
