@@ -1448,7 +1448,8 @@ void BitcoinGUI::updateStakingIcon()
     pwalletMain->GetStakeWeight(*pwalletMain, nWeight);
     progressBar->setVisible(false);
     overviewPage->showOutOfSyncWarning(false);
-    double nNetworkWeight = GetPoSKernelPS();
+    // DEBUG double nNetworkWeight = GetPoSKernelPS();
+    double nNetworkWeight = GetAverageStakeWeight(pindexBest);
 
     if (walletModel->getEncryptionStatus() == WalletModel::Unlocked && nLastCoinStakeSearchInterval && nWeight)
     {
