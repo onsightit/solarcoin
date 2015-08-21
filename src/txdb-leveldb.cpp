@@ -395,7 +395,7 @@ bool CTxDB::LoadBlockIndex()
         pindexNew->nNonce         = diskindex.nNonce;
 
         // DEBUG TEMP CODE
-        pindexNew->SetStakeModifier(1,false);
+        pindexNew->SetStakeModifier(1,true);
 
         // Watch for genesis block
         if (pindexGenesisBlock == NULL && blockHash == (!fTestNet ? hashGenesisBlock : hashGenesisBlockTestNet))
