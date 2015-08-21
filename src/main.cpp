@@ -2368,6 +2368,9 @@ bool CTransaction::GetStakeTime(CTxDB& txdb, uint64_t& nStakeTime, CBlockIndex* 
         int64_t CoinDay = nValueIn * timeWeight / COIN / (24 * 60 * 60);
         int64_t factoredTimeWeight = GetStakeTimeFactoredWeight(timeWeight, CoinDay, pindexPrev);
         bnStakeTime += CBigNum(nValueIn) * factoredTimeWeight / COIN / (24 * 60 * 60);
+        if (fDebug && GetBoolArg("-printcoinage"))
+            printf("  nValueIn=%"PRId64" timeWeight=%"PRId64" CoinDay=%"PRId64" factoredTimeWeight=%"PRId64"\n",
+               nValueIn, timeWeight, CoinDay, factoredTimeWeight);
     }
     if (fDebug && GetBoolArg("-printcoinage"))
         printf("stake time bnStakeTime=%s\n", bnStakeTime.ToString().c_str());
