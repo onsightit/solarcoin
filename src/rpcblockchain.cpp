@@ -86,8 +86,8 @@ double GetPoSKernelPS(CBlockIndex* pindexPrev)
             nStakesTime += pindexPrevStake ? (pindexPrevStake->nTime - pindexPrev->nTime) : 0;
             pindexPrevStake = pindexPrev;
             nStakesHandled++;
-            pindexPrev = pindexPrev->pprev;
         }
+        pindexPrev = pindexPrev->pprev;
     }
 
    return nStakesTime ? dStakeKernelsTriedAvg / nStakesTime : 0;
