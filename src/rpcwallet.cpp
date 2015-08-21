@@ -87,7 +87,7 @@ Value getinfo(const Array& params, bool fHelp)
     
     obj.push_back(Pair("difficulty",    diff));
 
-    if (pindexBest->nHeight >= LAST_POW_BLOCK)
+    if (pindexBest->nHeight > LAST_POW_BLOCK)
     {
     obj.push_back(Pair("networkweight", GetAverageStakeWeight(pindexBest->pprev)));
     obj.push_back(Pair("inflationrate", GetCurrentInflationRate(GetAverageStakeWeight(pindexBest->pprev))/100));
