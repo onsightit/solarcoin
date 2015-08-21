@@ -72,19 +72,24 @@ double GetPoWMHashPS(CBlockIndex* pindexPrev)
 
 double GetPoWKernelPS(CBlockIndex* pindexPrev)
 {
-    int nPoSInterval = 72;
+    int nPoWInterval = 72;
+    int64_t nTargetSpacingWorkMin = 30, nTargetSpacingWork = 30;
     double dStakeKernelsTriedAvg = 0;
     int nStakesHandled = 0, nStakesTime = 0;
 
-    CBlockIndex* pindexPrevStake = NULL;
+    CBlockIndex* pindexPrevWork = NULL;
 
-    while (pindexPrev && nStakesHandled < nPoSInterval)
+    while (pindexPrev && pindexPrev->pprev && nStakesHandled < nPoWInterval)
     {
         if (pindexPrev->IsProofOfWork())
         {
-            dStakeKernelsTriedAvg += GetDifficulty(pindexPrev) * 4294.967296 / 30;
-            nStakesTime += pindexPrevStake ? (pindexPrevStake->nTime - pindexPrev->nTime) : 0;
-            pindexPrevStake = pindexPrev;
+            int64_t nActualSpacingWork = pindexPrev->GetBlockTime() - pindexPrev->pprev->GetBlockTime();
+            nTargetSpacingWork = ((nPoWInterval - 1) * nTargetSpacingWork + nActualSpacingWork + nActualSpacingWork) / (nPoWInterval + 1);
+            nTargetSpacingWork = max(nTargetSpacingWork, nTargetSpacingWorkMin);
+
+            dStakeKernelsTriedAvg += GetDifficulty(pindexPrev) * 4294.967296 / nTargetSpacingWork;
+            nStakesTime += pindexPrevWork ? (pindexPrevWork->nTime - pindexPrev->nTime) : 0;
+            pindexPrevWork = pindexPrev;
             nStakesHandled++;
         }
         pindexPrev = pindexPrev->pprev;
