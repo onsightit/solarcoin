@@ -92,7 +92,7 @@ double GetPoSKernelPS(CBlockIndex* pindexPrev)
             int64_t nActualSpacingWork = pindexPrev->GetBlockTime() - pindexPrev->pprev->GetBlockTime();
             nTargetSpacingWork = ((nPoWInterval - 1) * nTargetSpacingWork + nActualSpacingWork + nActualSpacingWork) / (nPoWInterval + 1);
             nTargetSpacingWork = max(nTargetSpacingWork, nTargetSpacingWorkMin);
-            dStakeKernelsTriedAvg += GetDifficulty() * 4294.967296 / nTargetSpacingWork;
+            dStakeKernelsTriedAvg += GetDifficulty(pindexPrev) * 4294.967296 / nTargetSpacingWork;
         }
         nStakesTime += pindexPrevStake ? (pindexPrevStake->nTime - pindexPrev->nTime) : 0;
         pindexPrevStake = pindexPrev;
