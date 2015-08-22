@@ -2543,7 +2543,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 
         // ppcoin: check transaction timestamp
         // SolarCoin PoW blocks could be out of time sequence by several seconds. Don't check
-        if (fProofOfStake)
+        // DEBUG if (fProofOfStake)
             if (blocktime < (int64_t)tx.nTime)
                 return DoS(50, error("CheckBlock() : block timestamp earlier than transaction timestamp"));
     }
@@ -3436,8 +3436,10 @@ bool LoadExternalBlockFile(FILE* fileIn)
                 {
                     CBlock block;
                     blkdat >> block;
-                    if (block.IsProofOfWork())
-                        block.vtx[0].nTime = block.nTime; // If receiving a legacy block, set the coinbase timestamp.
+                    if (block.IsProofOfWork() && block.vtx[0].nTime > block.nTime)
+                        // If loading a legacy block from a legacy node, set the tx timestamps.
+                        BOOST_FOREACH(CTransaction& tx, block.vtx)
+                            tx.nTime = block.nTime;
                     if (ProcessBlock(NULL,&block))
                     {
                         nLoaded++;
@@ -3610,8 +3612,14 @@ void static ProcessGetData(CNode* pfrom)
                     // Send block from disk
                     CBlock block;
                     block.ReadFromDisk((*mi).second, true);
+                    int nType = SER_NETWORK;
+                    if (pfrom->nVersion <= PROTOCOL_VERSION_POW)
+                        nType |= SER_LEGACYPROTOCOL;
+                    CDataStream ss(nType, PROTOCOL_VERSION);
+                    ss.reserve(MAX_BLOCK_SIZE);
+                    ss << block;
                     if (inv.type == MSG_BLOCK)
-                        pfrom->PushMessage("block", block);
+                        pfrom->PushMessage("block", ss);
                     else // MSG_FILTERED_BLOCK)
                     {
                         LOCK(pfrom->cs_filter);
@@ -3627,8 +3635,16 @@ void static ProcessGetData(CNode* pfrom)
                             // however we MUST always provide at least what the remote peer needs
                             typedef std::pair<unsigned int, uint256> PairType;
                             BOOST_FOREACH(PairType& pair, merkleBlock.vMatchedTxn)
+                            {
                                 if (!pfrom->setInventoryKnown.count(CInv(MSG_TX, pair.second)))
-                                    pfrom->PushMessage("tx", block.vtx[pair.first]);
+                                {
+                                    CTransaction tx = block.vtx[pair.first];
+                                    CDataStream ss(nType, PROTOCOL_VERSION);
+                                    ss.reserve(1000);
+                                    ss << tx;
+                                    pfrom->PushMessage("tx", ss);
+                                }
+                            }
                         }
                         // else
                             // no response
@@ -4095,8 +4111,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CTxDB txdb("r");
         CTransaction tx;
         vRecv >> tx;
-        if (vRecv.nVersion < PROTOCOL_VERSION)
-            tx.nTime = GetAdjustedTime(); // If receiving a loose txn from a 1.5 or less node, set the timestamp
+        // If receiving a legacy txn from legacy node, set the tx timestamp.
+        if (pfrom->nVersion <= PROTOCOL_VERSION_POW)
+            tx.nTime = GetAdjustedTime();
 
         CInv inv(MSG_TX, tx.GetHash());
         pfrom->AddInventoryKnown(inv);
@@ -4162,8 +4179,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     {
         CBlock block;
         vRecv >> block;
-        if (block.IsProofOfWork())
-            block.vtx[0].nTime = block.nTime; // If receiving a legacy block, set the coinbase timestamp.
+        // If receiving a legacy block from legacy node, set the tx timestamps for PoST.
+        if (pfrom->nVersion <= PROTOCOL_VERSION_POW)
+            BOOST_FOREACH(CTransaction& tx, block.vtx)
+                tx.nTime = block.nTime;
         uint256 hashBlock = block.GetHash();
 
         printf("received block %s\n", hashBlock.ToString().substr(0,20).c_str());

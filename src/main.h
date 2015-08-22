@@ -481,7 +481,7 @@ public:
     (
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
-        if (!(nType & (SER_GETHASH|SER_LEGACYPROTOCOL)) && this->nVersion > LEGACY_VERSION_2) {
+        if (!(nType & (SER_GETHASH|SER_LEGACYPROTOCOL))) {
             READWRITE(nTime);
         } else if (nType & SER_DISK) {
             READWRITE(nTime);

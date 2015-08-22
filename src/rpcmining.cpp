@@ -124,7 +124,7 @@ Value getworkex(const Array& params, bool fHelp)
         // Update nTime
         pblock->nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
         pblock->nNonce = 0;
-        pblock->vtx[0].nTime = pblock->nTime; // If creating a legacy block, set the coinbase timestamp.
+        pblock->vtx[0].nTime = pblock->nTime; // If creating a legacy block, also update the coinbase timestamp.
 
         // Update nExtraNonce
         static unsigned int nExtraNonce = 0;
@@ -268,7 +268,7 @@ Value getwork(const Array& params, bool fHelp)
         // Update nTime
         pblock->UpdateTime(pindexPrev);
         pblock->nNonce = 0;
-        pblock->vtx[0].nTime = pblock->nTime; // If creating a legacy block, set the coinbase timestamp.
+        pblock->vtx[0].nTime = pblock->nTime; // If creating a legacy block, also update the coinbase timestamp.
 
         // Update nExtraNonce
         static unsigned int nExtraNonce = 0;
@@ -404,7 +404,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     // Update nTime
     pblock->UpdateTime(pindexPrev);
     pblock->nNonce = 0;
-    pblock->vtx[0].nTime = pblock->nTime; // If creating a legacy block, set the coinbase timestamp.
+    pblock->vtx[0].nTime = pblock->nTime; // If creating a legacy block, also update the coinbase timestamp.
 
     Array transactions;
     map<uint256, int64_t> setTxIndex;
@@ -500,8 +500,10 @@ Value submitblock(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
     }
 
-    if (block.IsProofOfWork())
-        block.vtx[0].nTime = block.nTime; // If creating a legacy block, set the coinbase timestamp.
+    if (block.IsProofOfWork() && block.vtx[0].nTime > block.nTime)
+        // If creating a legacy block, set the tx timestamps.
+        BOOST_FOREACH(CTransaction& tx, block.vtx)
+            tx.nTime = block.nTime;
 
     bool fAccepted = ProcessBlock(NULL, &block);
     if (!fAccepted)

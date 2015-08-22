@@ -383,6 +383,9 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake, int64_t* pFees)
         if (!fProofOfStake)
         {
             pblock->UpdateTime(pindexPrev);
+            // DEBUG EXPERIMENTAL If creating a legacy block, set the tx timestamps for compatibility between 1.5 and 2.0 nodes.
+            BOOST_FOREACH(CTransaction& tx, pblock->vtx)
+                tx.nTime = pblock->nTime;
             pblock->vtx[0].nTime = pblock->nTime; // If creating a legacy block, set the coinbase timestamp.
         }
         pblock->nNonce         = 0;
