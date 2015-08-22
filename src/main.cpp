@@ -3671,7 +3671,20 @@ void static ProcessGetData(CNode* pfrom)
                     LOCK(cs_mapRelay);
                     map<CInv, CDataStream>::iterator mi = mapRelay.find(inv);
                     if (mi != mapRelay.end()) {
-                        pfrom->PushMessage(inv.GetCommand(), (*mi).second);
+                        if (inv.type == MSG_TX)
+                        {
+                            int nType = SER_NETWORK;
+                            if (pfrom->nVersion <= PROTOCOL_VERSION_POW)
+                                nType |= SER_LEGACYPROTOCOL;
+                            CDataStream ss(nType, PROTOCOL_VERSION);
+                            ss.reserve(1000);
+                            ss << (*mi).second;
+                            pfrom->PushMessage("tx", ss);
+                        }
+                        else
+                        {
+                            pfrom->PushMessage(inv.GetCommand(), (*mi).second);
+                        }
                         pushed = true;
                     }
                 }
