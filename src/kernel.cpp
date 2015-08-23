@@ -73,6 +73,7 @@ static bool SelectBlockFromCandidates(vector<pair<int64_t, uint256> >& vSortedBy
 {
     bool fSelected = false;
     uint256 hashBest = 0;
+    int nSelectionHeight = 0;
     *pindexSelected = (const CBlockIndex*) 0;
     BOOST_FOREACH(const PAIRTYPE(int64_t, uint256)& item, vSortedByTimestamp)
     {
@@ -97,17 +98,19 @@ static bool SelectBlockFromCandidates(vector<pair<int64_t, uint256> >& vSortedBy
         if (fSelected && hashSelection < hashBest)
         {
             hashBest = hashSelection;
+            nSelectionHeight = pindex->nHeight;
             *pindexSelected = (const CBlockIndex*) pindex;
         }
         else if (!fSelected)
         {
             fSelected = true;
             hashBest = hashSelection;
+            nSelectionHeight = pindex->nHeight;
             *pindexSelected = (const CBlockIndex*) pindex;
         }
     }
     if (fDebug && GetBoolArg("-printstakemodifier"))
-        printf("SelectBlockFromCandidates: selection hash=%s\n", hashBest.ToString().c_str());
+        printf("SelectBlockFromCandidates: selection hash=%s at height=%d\n", hashBest.ToString().c_str(), nSelectionHeight);
     return fSelected;
 }
 
@@ -178,11 +181,11 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     while (pindex && pindex->GetBlockTime() >= nSelectionIntervalStart)
     {
         vSortedByTimestamp.push_back(make_pair(pindex->GetBlockTime(), pindex->GetBlockHash()));
-        if (pindex->IsProofOfWork()) // DEBUG We just want the LAST_POW_BLOCK
-            break;
         pindex = pindex->pprev;
+        if (pindex->IsProofOfWork()) // We just want the LAST_POW_BLOCK
+            break;
     }
-    int nHeightFirstCandidate = pindex ? (pindex->nHeight + (pindex->IsProofOfWork() ? 0 : 1)) : 0; // DEBUG
+    int nHeightFirstCandidate = pindex ? (pindex->nHeight + 1) : 0;
     reverse(vSortedByTimestamp.begin(), vSortedByTimestamp.end());
     sort(vSortedByTimestamp.begin(), vSortedByTimestamp.end());
 
@@ -194,7 +197,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     {
         // add an interval section to the current selection round
         nSelectionIntervalStop += GetStakeModifierSelectionIntervalSection(nRound);
-        // select a block from the candidates of current round (pindex is modified)
+        // select a block from the candidates of current round (pindex is returned)
         if (!SelectBlockFromCandidates(vSortedByTimestamp, mapSelectedBlocks, nSelectionIntervalStop, nStakeModifier, &pindex))
             return error("ComputeNextStakeModifier: unable to select block at round %d", nRound);
         // write the entropy bit of the selected block
