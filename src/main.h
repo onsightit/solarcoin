@@ -26,7 +26,7 @@ class CInv;
 class CRequestTracker;
 class CNode;
 
-static const int LAST_POW_BLOCK = 800; // testnet
+static const int LAST_POW_BLOCK = 800; // testnet (If you change this, or the rewards, also change interestRate initial coin supply)
 //static const int LAST_POW_BLOCK = 800000;
 
 static const unsigned int MAX_BLOCK_SIZE = 1000000;

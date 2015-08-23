@@ -1092,7 +1092,12 @@ double GetCurrentInterestRate(CBlockIndex* pindexPrev)
 {
     double nAverageWeight = GetAverageStakeWeight(pindexPrev);
     double inflationRate = GetCurrentInflationRate(nAverageWeight)/100;
-    double interestRate = ((inflationRate*26751452)/nAverageWeight)*100;
+    // DEBUG VRC double interestRate = ((inflationRate*26751452)/nAverageWeight)*100;
+    double interestRate = 0;
+    if (fTestNet)
+        interestRate = ((inflationRate*9800070000)/nAverageWeight)*100;
+    else
+        interestRate = ((inflationRate*98100000000)/nAverageWeight)*100;
 
     return interestRate;
 }
