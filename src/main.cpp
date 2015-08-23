@@ -2725,8 +2725,12 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     // ppcoin: check proof-of-stake
     // Limited duplicity on stake: prevents block flood attack
     // Duplicate stake allowed only when there is orphan child block
-    if (setStakeSeen.count(pblock->GetProofOfStake()) && !mapOrphanBlocksByPrev.count(hash) && !Checkpoints::WantedByPendingSyncCheckpoint(hash))
-        return error("ProcessBlock() : duplicate proof-of-stake (%s, %d) for block %s", pblock->GetProofOfStake().first.ToString().c_str(), pblock->GetProofOfStake().second, hash.ToString().c_str());
+    // SolarCoin: PoW indexes need to be seen
+    // if (pblock->IsProofOfStake())
+    {
+        if (setStakeSeen.count(pblock->GetProofOfStake()) && !mapOrphanBlocksByPrev.count(hash) && !Checkpoints::WantedByPendingSyncCheckpoint(hash))
+            return error("ProcessBlock() : duplicate proof-of-stake (%s, %d) for block %s", pblock->GetProofOfStake().first.ToString().c_str(), pblock->GetProofOfStake().second, hash.ToString().c_str());
+    }
 
     // Preliminary checks
     if (!pblock->CheckBlock())
@@ -2788,7 +2792,8 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     {
         printf("ProcessBlock: ORPHAN BLOCK, prev=%s pfrom=%s\n", pblock->hashPrevBlock.ToString().substr(0,20).c_str(), (pfrom ? pfrom->addr.ToString().c_str() : ""));
         // ppcoin: check proof-of-stake
-        // DEBUG if (pblock->IsProofOfStake())
+        // SolarCoin: Orphan PoW indexes need to be seen
+        // if (pblock->IsProofOfStake())
         {
             // Limited duplicity on stake: prevents block flood attack
             // Duplicate stake allowed only when there is orphan child block

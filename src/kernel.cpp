@@ -155,7 +155,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
         printf("ComputeNextStakeModifier: prev modifier=0x%016"PRIx64" time=%s\n", nStakeModifier, DateTimeStrFormat(nModifierTime).c_str());
     }
 
-    // DEBUG Force a new interval when pindexCurrent is PoST and pindexPrev is not PoST (LAST_POW_BLOCK)
+    // DEBUG Force a new interval when pindexCurrent is PoST and pindexPrev is not (LAST_POW_BLOCK)
     if (pindexPrev->IsProofOfStake())
     {
         // nModifierInterval is 10 minutes.
@@ -172,18 +172,17 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     // Sort candidate blocks by timestamp
     vector<pair<int64_t, uint256> > vSortedByTimestamp;
     vSortedByTimestamp.reserve(64 * nModifierInterval / nTargetSpacing);
-    // DEBUG int64_t nSelectionInterval = (fTestNet ? nModifierInterval : GetStakeModifierSelectionInterval());
     int64_t nSelectionInterval = GetStakeModifierSelectionInterval();
     int64_t nSelectionIntervalStart = (pindexPrev->GetBlockTime() / nModifierInterval) * nModifierInterval - nSelectionInterval;
     const CBlockIndex* pindex = pindexPrev;
     while (pindex && pindex->GetBlockTime() >= nSelectionIntervalStart)
     {
         vSortedByTimestamp.push_back(make_pair(pindex->GetBlockTime(), pindex->GetBlockHash()));
-        pindex = pindex->pprev;
         if (pindex->IsProofOfWork()) // DEBUG We just want the LAST_POW_BLOCK
             break;
+        pindex = pindex->pprev;
     }
-    int nHeightFirstCandidate = pindex ? (pindex->nHeight + 1) : 0;
+    int nHeightFirstCandidate = pindex ? (pindex->nHeight + (pindex->IsProofOfWork() ? 0 : 1)) : 0; // DEBUG
     reverse(vSortedByTimestamp.begin(), vSortedByTimestamp.end());
     sort(vSortedByTimestamp.begin(), vSortedByTimestamp.end());
 
@@ -194,7 +193,6 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     for (int nRound=0; nRound<min(64, (int)vSortedByTimestamp.size()); nRound++)
     {
         // add an interval section to the current selection round
-        // DEBUG nSelectionIntervalStop += (fTestNet ? nModifierInterval : GetStakeModifierSelectionIntervalSection(nRound));
         nSelectionIntervalStop += GetStakeModifierSelectionIntervalSection(nRound);
         // select a block from the candidates of current round (pindex is modified)
         if (!SelectBlockFromCandidates(vSortedByTimestamp, mapSelectedBlocks, nSelectionIntervalStop, nStakeModifier, &pindex))
@@ -250,7 +248,6 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
     const CBlockIndex* pindexFrom = mapBlockIndex[hashBlockFrom];
     nStakeModifierHeight = pindexFrom->nHeight;
     nStakeModifierTime = pindexFrom->GetBlockTime();
-    // DEBUG int64_t nStakeModifierSelectionInterval = (fTestNet ? nModifierInterval : GetStakeModifierSelectionInterval());
     int64_t nStakeModifierSelectionInterval = GetStakeModifierSelectionInterval();
     int64_t nStakeModifierTargetTime = nStakeModifierTime + nStakeModifierSelectionInterval;
     const CBlockIndex* pindex = pindexFrom;
