@@ -252,9 +252,6 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
     int64_t nStakeModifierTargetTime = nStakeModifierTime + nStakeModifierSelectionInterval;
     const CBlockIndex* pindex = pindexFrom;
 
-    if (fDebug)
-        printf("GetKernelStakeModifier(): nStakeModifierTime=%"PRId64" nStakeModifierTargetTime=%"PRId64"\n", nStakeModifierTime, nStakeModifierTargetTime);
-
     // loop to find the stake modifier later by a selection interval
     while (nStakeModifierTime < nStakeModifierTargetTime)
     {
@@ -265,7 +262,11 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
                 return error("GetKernelStakeModifier() : reached best block %s at height %d from block %s",
                     pindex->GetBlockHash().ToString().c_str(), pindex->nHeight, hashBlockFrom.ToString().c_str());
             else
+            {
+                if (fDebug)
+                    printf("GetKernelStakeModifier(): Modifier time remaining=%"PRId64"\n", nStakeModifierTargetTime- nStakeModifierTime);
                 return false;
+            }
         }
         pindex = pindex->pnext;
         if (pindex->GeneratedStakeModifier())
