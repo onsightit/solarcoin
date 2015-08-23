@@ -1071,8 +1071,8 @@ double GetAverageStakeWeight(CBlockIndex* pindexPrev)
     CBlockIndex* currentBlockIndex = pindexPrev;
     for (i = 0; currentBlockIndex && i < 60; i++)
     {
-        // DEBUG double tempWeight = (currentBlockIndex->IsProofOfStake() ? GetPoSKernelPS(currentBlockIndex) : GetPoWKernelPS(currentBlockIndex));
-        double tempWeight = GetPoSKernelPS(currentBlockIndex);
+        double tempWeight = (currentBlockIndex->IsProofOfStake() ? GetPoSKernelPS(currentBlockIndex) : GetPoWKernelPS(currentBlockIndex));
+        // DEBUG double tempWeight = GetPoSKernelPS(currentBlockIndex);
         weightSum += tempWeight;
         currentBlockIndex = currentBlockIndex->pprev;
     }
@@ -1443,7 +1443,10 @@ unsigned int static GetNextWorkRequired_V2(const CBlockIndex* pindexLast, const 
     uint64_t  PastBlocksMin   = PastSecondsMin / BlocksTargetSpacing;
     uint64_t  PastBlocksMax   = PastSecondsMax / BlocksTargetSpacing;
 
-    return KimotoGravityWell(pindexLast, pblock, BlocksTargetSpacing, PastBlocksMin, PastBlocksMax);
+    if (fTestNet && GetBoolArg("-zerogravity", false))
+        return bnProofOfWorkLimit.GetCompact();
+    else
+        return KimotoGravityWell(pindexLast, pblock, BlocksTargetSpacing, PastBlocksMin, PastBlocksMax);
 }
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock){
