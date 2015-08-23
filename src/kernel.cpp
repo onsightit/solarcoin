@@ -263,8 +263,8 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
                     pindex->GetBlockHash().ToString().c_str(), pindex->nHeight, hashBlockFrom.ToString().c_str());
             else
             {
-                if (fDebug)
-                    printf("GetKernelStakeModifier(): Modifier time remaining=%"PRId64"\n", nStakeModifierTargetTime- nStakeModifierTime);
+                if (fDebug) // DEBUG TEST
+                    printf("GetKernelStakeModifier(): Modifier time remaining=%"PRId64" at height=%d\n", nStakeModifierTargetTime-nStakeModifierTime, nStakeModifierHeight);
                 return false;
             }
         }
