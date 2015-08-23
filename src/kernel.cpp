@@ -264,7 +264,7 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
             else
             {
                 if (fDebug) // DEBUG TEST
-                    printf("GetKernelStakeModifier(): Modifier time remaining=%"PRId64" at height=%d\n", nStakeModifierTargetTime-nStakeModifierTime, nStakeModifierHeight);
+                    printf("GetKernelStakeModifier(): Modifier time remaining=%"PRId64" at height=%d\n", nStakeModifierTargetTime-nStakeModifierTime, pindex->nHeight);
                 return false;
             }
         }
