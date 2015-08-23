@@ -73,7 +73,6 @@ static bool SelectBlockFromCandidates(vector<pair<int64_t, uint256> >& vSortedBy
 {
     bool fSelected = false;
     uint256 hashBest = 0;
-    int nSelectionHeight = 0;
     *pindexSelected = (const CBlockIndex*) 0;
     BOOST_FOREACH(const PAIRTYPE(int64_t, uint256)& item, vSortedByTimestamp)
     {
@@ -93,24 +92,22 @@ static bool SelectBlockFromCandidates(vector<pair<int64_t, uint256> >& vSortedBy
         // the selection hash is divided by 2**32 so that proof-of-stake block
         // is always favored over proof-of-work block. this is to preserve
         // the energy efficiency property
-        if (pindex->IsProofOfStake())
+        if (pindex->IsProofOfStake() && pindex->pprev->IsProofOfStake()) // DEBUG TEST
             hashSelection >>= 32;
         if (fSelected && hashSelection < hashBest)
         {
             hashBest = hashSelection;
-            nSelectionHeight = pindex->nHeight;
             *pindexSelected = (const CBlockIndex*) pindex;
         }
         else if (!fSelected)
         {
             fSelected = true;
             hashBest = hashSelection;
-            nSelectionHeight = pindex->nHeight;
             *pindexSelected = (const CBlockIndex*) pindex;
         }
     }
     if (fDebug && GetBoolArg("-printstakemodifier"))
-        printf("SelectBlockFromCandidates: selection hash=%s at height=%d\n", hashBest.ToString().c_str(), nSelectionHeight);
+        printf("SelectBlockFromCandidates: selection hash=%s\n", hashBest.ToString().c_str());
     return fSelected;
 }
 
