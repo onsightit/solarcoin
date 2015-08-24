@@ -79,7 +79,7 @@ map<string, vector<string> > mapMultiArgs;
 #ifdef QT_GUI
 const char *walletUrl = "http://solarcoin.org/";
 const char *walletDownloadsUrl = "http://solarcoin.org/downloads/";
-const char *forumsUrl = "http://solarcoin.org/en/redeem/";
+const char *claimsUrl = "http://solarcoin.org/en/redeem/";
 const char *chatUrl = "http://solarcoin.org/en/chat/";
 const char *blockchainUrl = "http://blockexplorer.solarcoin.org/";
 bool fRestart = false;

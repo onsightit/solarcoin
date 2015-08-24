@@ -30,11 +30,11 @@
 #include "guiutil.h"
 #include "rpcconsole.h"
 #include "getsolarcoinpage.h"
-#include "forumspage.h"
+#include "claimspage.h"
 #include "chatpage.h"
 #include "blockchainpage.h"
 #include "ui_getsolarcoinpage.h"
-#include "ui_forumspage.h"
+#include "ui_claimspage.h"
 #include "ui_chatpage.h"
 #include "ui_blockchainpage.h"
 #include "downloader.h"
@@ -179,7 +179,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     QVBoxLayout *vbox = new QVBoxLayout();
     transactionView = new TransactionView(this);
     vbox->addWidget(transactionView);
-    vbox->setContentsMargins(10, 10 + HEADER_HEIGHT, 10, 10);
+    vbox->setContentsMargins(10, 20 + HEADER_HEIGHT, 10, 10);
     transactionsPage->setLayout(vbox);
 
     // Create Address Page
@@ -188,11 +188,11 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     // Create GetSolarCoin Page
     //getSolarCoinPage = new GetSolarCoinPage();
 
-    // Create Forums Page
-    forumsPage = new ForumsPage();
+    // Create Claims Page
+    claimsPage = new ClaimsPage();
 
     // Create Chat Page
-    chatPage = new ChatPage();
+    //chatPage = new ChatPage();
 
     // Create Blockchain Page
     blockchainPage = new BlockchainPage();
@@ -209,8 +209,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     centralWidget->addWidget(receiveCoinsPage);
     centralWidget->addWidget(sendCoinsPage);
     //centralWidget->addWidget(getSolarCoinPage);
-    centralWidget->addWidget(forumsPage);
-    centralWidget->addWidget(chatPage);
+    centralWidget->addWidget(claimsPage);
+    //centralWidget->addWidget(chatPage);
     centralWidget->addWidget(blockchainPage);
     setCentralWidget(centralWidget);
 
@@ -432,24 +432,26 @@ void BitcoinGUI::createActions()
     tabGroup->addAction(historyAction);
 
     /* Reserved for future
-    getSolarCoinAction = new QAction(QIcon(":/icons/getsolarcoin"), tr("Get SolarCoin"), this);
-    getSolarCoinAction->setToolTip(tr("Buy SolarCoin with Fiat or Bitcoin"));
-    getSolarCoinAction->setCheckable(true);
-    getSolarCoinAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
-    tabGroup->addAction(getSolarCoinAction);
+    //getSolarCoinAction = new QAction(QIcon(":/icons/getsolarcoin"), tr("Get SolarCoin"), this);
+    //getSolarCoinAction->setToolTip(tr("Buy SolarCoin with Fiat or Bitcoin"));
+    //getSolarCoinAction->setCheckable(true);
+    //getSolarCoinAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
+    //tabGroup->addAction(getSolarCoinAction);
     */
 
-    forumsAction = new QAction(QIcon(":/icons/forums"), tr("Claims"), this);
-    forumsAction->setToolTip(tr("Join the SolarCoin Community\nApply for Energy Claims"));
-    forumsAction->setCheckable(true);
-    forumsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_7));
-    tabGroup->addAction(forumsAction);
+    claimsAction = new QAction(QIcon(":/icons/claims"), tr("Claims"), this);
+    claimsAction->setToolTip(tr("Join the SolarCoin Community\nApply for Energy Claims"));
+    claimsAction->setCheckable(true);
+    claimsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_7));
+    tabGroup->addAction(claimsAction);
 
-    chatAction = new QAction(QIcon(":/icons/chat"), tr("Chat"), this);
-    chatAction->setToolTip(tr("Join the SolarCoin Chat Room"));
-    chatAction->setCheckable(true);
-    chatAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_8));
-    tabGroup->addAction(chatAction);
+    /* Reserved for future
+    //chatAction = new QAction(QIcon(":/icons/chat"), tr("Chat"), this);
+    //chatAction->setToolTip(tr("Join the SolarCoin Chat Room"));
+    //chatAction->setCheckable(true);
+    //chatAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_8));
+    //tabGroup->addAction(chatAction);
+    */
 
     blockchainAction = new QAction(QIcon(":/icons/blockchain"), tr("BlockChain"), this);
     blockchainAction->setToolTip(tr("Explore the SolarCoin Blockchain"));
@@ -467,10 +469,10 @@ void BitcoinGUI::createActions()
     connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryPage()));
     //connect(getSolarCoinAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     //connect(getSolarCoinAction, SIGNAL(triggered()), this, SLOT(gotoGetSolarCoinPage()));
-    connect(forumsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(forumsAction, SIGNAL(triggered()), this, SLOT(gotoForumsPage()));
-    connect(chatAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(chatAction, SIGNAL(triggered()), this, SLOT(gotoChatPage()));
+    connect(claimsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(claimsAction, SIGNAL(triggered()), this, SLOT(gotoClaimsPage()));
+    //connect(chatAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    //connect(chatAction, SIGNAL(triggered()), this, SLOT(gotoChatPage()));
     connect(blockchainAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(blockchainAction, SIGNAL(triggered()), this, SLOT(gotoBlockchainPage()));
 
@@ -513,8 +515,8 @@ void BitcoinGUI::createActions()
     verifyMessageAction = new QAction(QIcon(":/icons/verify"), tr("&Verify Message"), this);
     checkForUpdateAction = new QAction(QIcon(":/icons/update"), tr("Check For &Update"), this);
     checkForUpdateAction->setToolTip(tr("Check for a new version of the wallet and update."));
-    forumAction = new QAction(QIcon(":/icons/bitcoin"), tr("SolarCoin &Forums"), this);
-    forumAction->setToolTip(tr("Go to the SolarCoin forums."));
+    //forumAction = new QAction(QIcon(":/icons/forums"), tr("SolarCoin &Forum"), this);
+    //forumAction->setToolTip(tr("Go to the SolarCoin Forum."));
     webAction = new QAction(QIcon(":/icons/site"), tr("www.solarcoin.org"), this);
     webAction->setToolTip(tr("Go to SolarCoin website."));
 
@@ -541,7 +543,7 @@ void BitcoinGUI::createActions()
     connect(signMessageAction, SIGNAL(triggered()), this, SLOT(gotoSignMessageTab()));
     connect(verifyMessageAction, SIGNAL(triggered()), this, SLOT(gotoVerifyMessageTab()));
     connect(checkForUpdateAction, SIGNAL(triggered()), this, SLOT(menuCheckForUpdate()));
-    connect(forumAction, SIGNAL(triggered()), this, SLOT(forumClicked()));
+    //connect(forumAction, SIGNAL(triggered()), this, SLOT(forumClicked()));
     connect(webAction, SIGNAL(triggered()), this, SLOT(webClicked()));
 
     // Disable on PoW or testnet
@@ -614,8 +616,8 @@ void BitcoinGUI::createToolBars()
     toolbar->addAction(receiveCoinsAction);
     toolbar->addAction(historyAction);
     //toolbar->addAction(getSolarCoinAction);
-    toolbar->addAction(forumsAction);
-    toolbar->addAction(chatAction);
+    toolbar->addAction(claimsAction);
+    //toolbar->addAction(chatAction);
     toolbar->addAction(blockchainAction);}
 
 void BitcoinGUI::setClientModel(ClientModel *clientModel)
@@ -678,8 +680,8 @@ void BitcoinGUI::setWalletModel(WalletModel *walletModel)
         transactionView->setModel(walletModel);
         addressBookPage->setModel(walletModel->getAddressTableModel());
         //getSolarCoinPage->setModel(walletModel);
-        forumsPage->setModel(walletModel);
-        chatPage->setModel(walletModel);
+        claimsPage->setModel(walletModel);
+        //chatPage->setModel(walletModel);
         blockchainPage->setModel(walletModel);
 
         signVerifyMessageDialog->setModel(walletModel);
@@ -755,10 +757,12 @@ void BitcoinGUI::optionsClicked()
     setBalanceLabel(walletModel->getBalance(), walletModel->getStake(), walletModel->getUnconfirmedBalance(), walletModel->getImmatureBalance());
 }
 
+/* Disabled
 void BitcoinGUI::forumClicked()
 {
-    QDesktopServices::openUrl(QUrl(forumsUrl));
+    QDesktopServices::openUrl(QUrl(claimsUrl));
 }
+*/
 
 void BitcoinGUI::webClicked()
 {
@@ -1152,6 +1156,7 @@ void BitcoinGUI::gotoAddressBookPage()
     dlg.exec();
 }
 
+/* Disabled
 void BitcoinGUI::gotoGetSolarCoinPage()
 {
     getSolarCoinAction->setChecked(true);
@@ -1160,16 +1165,18 @@ void BitcoinGUI::gotoGetSolarCoinPage()
     exportAction->setEnabled(false);
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
 }
+*/
 
-void BitcoinGUI::gotoForumsPage()
+void BitcoinGUI::gotoClaimsPage()
 {
-    forumsAction->setChecked(true);
-    centralWidget->setCurrentWidget(forumsPage);
+    claimsAction->setChecked(true);
+    centralWidget->setCurrentWidget(claimsPage);
 
     exportAction->setEnabled(false);
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
 }
 
+/* Disabled
 void BitcoinGUI::gotoChatPage()
 {
     chatAction->setChecked(true);
@@ -1178,6 +1185,7 @@ void BitcoinGUI::gotoChatPage()
     exportAction->setEnabled(false);
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
 }
+*/
 
 void BitcoinGUI::gotoBlockchainPage()
 {

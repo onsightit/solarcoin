@@ -324,7 +324,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/askpassphrasedialog.h \
     src/qt/askpassphrasepage.h \
     src/qt/getsolarcoinpage.h \
-    src/qt/forumspage.h \
+    src/qt/claimspage.h \
     src/qt/chatpage.h \
     src/qt/blockchainpage.h \
     src/protocol.h \
@@ -417,7 +417,7 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/cookiejar.cpp \
     src/qt/autosaver.cpp \
     src/qt/getsolarcoinpage.cpp \
-    src/qt/forumspage.cpp \
+    src/qt/claimspage.cpp \
     src/qt/chatpage.cpp \
     src/qt/blockchainpage.cpp \
     src/noui.cpp \
@@ -449,7 +449,7 @@ RESOURCES += \
 FORMS += \
     src/qt/forms/coincontroldialog.ui \
     src/qt/forms/sendcoinsdialog.ui \
-    src/qt/forms/forumspage.ui \
+    src/qt/forms/claimspage.ui \
     src/qt/forms/chatpage.ui \
     src/qt/forms/blockchainpage.ui \
     src/qt/forms/addressbookpage.ui \

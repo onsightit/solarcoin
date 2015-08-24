@@ -1,5 +1,5 @@
-#include "forumspage.h"
-#include "ui_forumspage.h"
+#include "claimspage.h"
+#include "ui_claimspage.h"
 
 #include "clientmodel.h"
 #include "walletmodel.h"
@@ -11,9 +11,9 @@
 
 using namespace GUIUtil;
 
-ForumsPage::ForumsPage(QWidget *parent) :
+ClaimsPage::ClaimsPage(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::ForumsPage),
+    ui(new Ui::ClaimsPage),
     walletModel(0)
 {
     ui->setupUi(this);
@@ -22,13 +22,13 @@ ForumsPage::ForumsPage(QWidget *parent) :
     if (fNoHeaders)
         GUIUtil::header(this, QString(""));
     else if (fSmallHeaders)
-        GUIUtil::header(this, QString(":images/headerForumsSmall"));
+        GUIUtil::header(this, QString(":images/headerClaimsSmall"));
     else
-        GUIUtil::header(this, QString(":images/headerForums"));
+        GUIUtil::header(this, QString(":images/headerClaims"));
     this->layout()->setContentsMargins(0, HEADER_HEIGHT, 0, 0);
 
-    CookieJar *forumsJar = new CookieJar;
-    ui->webView->page()->networkAccessManager()->setCookieJar(forumsJar);
+    CookieJar *claimsJar = new CookieJar;
+    ui->webView->page()->networkAccessManager()->setCookieJar(claimsJar);
 
     ui->webView->page()->mainFrame()->setScrollBarPolicy(Qt::Vertical, Qt::ScrollBarAsNeeded);
     ui->webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
@@ -47,15 +47,15 @@ ForumsPage::ForumsPage(QWidget *parent) :
     connect(ui->reload, SIGNAL(clicked()), ui->webView, SLOT(myReload()));
 }
 
-ForumsPage::~ForumsPage()
+ClaimsPage::~ClaimsPage()
 {
     delete ui;
 }
 
-void ForumsPage::setModel(WalletModel *model)
+void ClaimsPage::setModel(WalletModel *model)
 {
     this->walletModel = model;
 
-    QUrl url(forumsUrl);
+    QUrl url(claimsUrl);
     ui->webView->myOpenUrl(url);
 }

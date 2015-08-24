@@ -130,7 +130,7 @@ TransactionView::TransactionView(QWidget *parent) :
     totalWidget->setFont(qFont);
     totalWidget->setAlignment(Qt::AlignBottom | Qt::AlignRight);
     totalWidget->setLayoutDirection(Qt::RightToLeft);
-    totalWidget->setFixedHeight(27);
+    totalWidget->setFixedHeight(25);
     totalWidget->setFixedWidth(300);
     totalWidget->setText(tr("Total: "));
     totalWidget->setToolTip(tr("Total of displayed transactions.\nHidden decimals are not totaled."));

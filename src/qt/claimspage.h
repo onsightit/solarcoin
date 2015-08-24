@@ -1,5 +1,5 @@
-#ifndef FORUMSPAGE_H
-#define FORUMSPAGE_H
+#ifndef CLAIMSPAGE_H
+#define CLAIMSPAGE_H
 
 #include <QWidget>
 #include <QNetworkAccessManager>
@@ -8,7 +8,7 @@
 #include <QTimer>
 
 namespace Ui {
-    class ForumsPage;
+    class ClaimsPage;
 }
 class ClientModel;
 class WalletModel;
@@ -18,13 +18,13 @@ class QModelIndex;
 QT_END_NAMESPACE
 
 /** Trade page widget */
-class ForumsPage : public QWidget
+class ClaimsPage : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit ForumsPage(QWidget *parent = 0);
-    ~ForumsPage();
+    explicit ClaimsPage(QWidget *parent = 0);
+    ~ClaimsPage();
 
     void setModel(ClientModel *clientModel);
     void setModel(WalletModel *walletModel);
@@ -34,7 +34,7 @@ public slots:
 // signals:
 
 private:
-    Ui::ForumsPage *ui;
+    Ui::ClaimsPage *ui;
     ClientModel *clientModel;
     WalletModel *walletModel;
 
@@ -42,4 +42,4 @@ private slots:
 
 };
 
-#endif // FORUMSPAGE_H
+#endif // CLAIMSPAGE_H

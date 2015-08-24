@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ForumsPage</class>
- <widget class="QWidget" name="ForumsPage">
+ <class>ClaimsPage</class>
+ <widget class="QWidget" name="ClaimsPage">
   <property name="geometry">
    <rect>
     <x>0</x>

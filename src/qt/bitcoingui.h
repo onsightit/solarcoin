@@ -20,9 +20,9 @@ class Notificator;
 class RPCConsole;
 class Downloader;
 class WebView;
-class GetSolarCoinPage;
-class ForumsPage;
-class ChatPage;
+//class GetSolarCoinPage;
+class ClaimsPage;
+//class ChatPage;
 class BlockchainPage;
 
 QT_BEGIN_NAMESPACE
@@ -81,9 +81,9 @@ private:
     AddressBookPage *addressBookPage;
     AddressBookPage *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
-    GetSolarCoinPage *getSolarCoinPage;
-    ForumsPage *forumsPage;
-    ChatPage *chatPage;
+    //GetSolarCoinPage *getSolarCoinPage;
+    ClaimsPage *claimsPage;
+    //ChatPage *chatPage;
     BlockchainPage *blockchainPage;
 
     QLabel *labelEncryptionIcon;
@@ -104,9 +104,9 @@ private:
     QAction *quitAction;
     QAction *logoutAction;
     QAction *sendCoinsAction;
-    QAction *getSolarCoinAction;
-    QAction *forumsAction;
-    QAction *chatAction;
+    //QAction *getSolarCoinAction;
+    QAction *claimsAction;
+    //QAction *chatAction;
     QAction *blockchainAction;
     QAction *addressBookAction;
     QAction *signMessageAction;
@@ -116,7 +116,7 @@ private:
     QAction *aboutQtAction;
     QAction *receiveCoinsAction;
     QAction *optionsAction;
-    QAction *forumAction;
+    //QAction *forumAction;
     QAction *webAction;
     QAction *toggleHideAction;
     QAction *exportAction;
@@ -196,14 +196,14 @@ private slots:
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage();
-    /** Switch to Forums page */
-    void gotoForumsPage();
+    /** Switch to GetSolarCoin page */
+    //void gotoGetSolarCoinPage();
+    /** Switch to Claims page */
+    void gotoClaimsPage();
     /** Switch to Chat page */
-    void gotoChatPage();
+    //void gotoChatPage();
     /** Switch to Blockchain page */
     void gotoBlockchainPage();
-    /** Switch to GetSolarCoin page */
-    void gotoGetSolarCoinPage();
 
     void resizeGUI();
     void logout();
@@ -217,7 +217,7 @@ private slots:
     /** Show configuration dialog */
     void optionsClicked();
     /** Show forums page */
-    void forumClicked();
+    //void forumClicked();
     /** Show web page */
     void webClicked();
     /** Show about dialog */
