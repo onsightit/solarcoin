@@ -92,7 +92,7 @@ static bool SelectBlockFromCandidates(vector<pair<int64_t, uint256> >& vSortedBy
         // the selection hash is divided by 2**32 so that proof-of-stake block
         // is always favored over proof-of-work block. this is to preserve
         // the energy efficiency property
-        if (pindex->IsProofOfStake() && pindex->pprev->IsProofOfStake()) // DEBUG TEST
+        if (pindex->IsProofOfStake() && pindex->pprev->IsProofOfStake())
             hashSelection >>= 32;
         if (fSelected && hashSelection < hashBest)
         {
@@ -135,7 +135,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
         fGeneratedStakeModifier = true;
         return true;  // genesis block's modifier is 0
     }
-    if (pindexCurrent->IsProofOfWork()) // DEBUG
+    if (pindexCurrent->IsProofOfWork())
     {
         nStakeModifier = 1; // PoW block modifier
         if (pindexCurrent->nHeight == LAST_POW_BLOCK)
@@ -155,8 +155,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
         printf("ComputeNextStakeModifier: prev modifier=0x%016"PRIx64" time=%s\n", nStakeModifier, DateTimeStrFormat(nModifierTime).c_str());
     }
 
-    // DEBUG Force a new interval when pindexCurrent is PoST and pindexPrev is not (LAST_POW_BLOCK)
-    if (pindexPrev->IsProofOfStake())
+    if (pindexPrev->IsProofOfStake()) // This will force a new interval when pindexCurrent is PoST and pindexPrev is not (LAST_POW_BLOCK)
     {
         // nModifierInterval is 10 minutes.
         if (nModifierTime / nModifierInterval >= pindexPrev->GetBlockTime() / nModifierInterval)

@@ -1092,12 +1092,7 @@ double GetCurrentInterestRate(CBlockIndex* pindexPrev)
 {
     double nAverageWeight = GetAverageStakeWeight(pindexPrev);
     double inflationRate = GetCurrentInflationRate(nAverageWeight)/100;
-    // DEBUG VRC double interestRate = ((inflationRate*26751452)/nAverageWeight)*100;
-    double interestRate = 0;
-    if (fTestNet)
-        interestRate = ((inflationRate*9800070000)/nAverageWeight)*100;
-    else
-        interestRate = ((inflationRate*98100000000)/nAverageWeight)*100;
+    double interestRate = ((inflationRate*INITIAL_COIN_SUPPLY)/nAverageWeight)*100;
 
     return interestRate;
 }
@@ -1962,14 +1957,6 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
 
             int64_t nTxValueIn = tx.GetValueIn(mapInputs);
             int64_t nTxValueOut = tx.GetValueOut();
-            // Old VeriCoin code
-            //int currentHeight = pindex->pprev->nHeight+1;
-            //if (tx.IsCoinStake() && currentHeight < 299000 && !fTestNet)
-            //{
-            //    double nNetworkDriftBuffer = nTxValueOut*.02;
-            //    nTxValueOut = nTxValueOut-nNetworkDriftBuffer;
-            //    nStakeReward = nTxValueOut - nTxValueIn;
-            //}
             if (tx.IsCoinStake())
             {
                 nStakeReward = nTxValueOut - nTxValueIn;
@@ -2551,9 +2538,8 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 
         // ppcoin: check transaction timestamp
         // SolarCoin PoW blocks could be out of time sequence by several seconds. Don't check
-        // DEBUG if (fProofOfStake)
-            if (blocktime < (int64_t)tx.nTime)
-                return DoS(50, error("CheckBlock() : block timestamp earlier than transaction timestamp"));
+        if (blocktime < (int64_t)tx.nTime)
+            return DoS(50, error("CheckBlock() : block timestamp earlier than transaction timestamp"));
     }
 
     // Check for duplicate txids. This is caught by ConnectInputs(),
