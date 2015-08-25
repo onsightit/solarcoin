@@ -26,10 +26,10 @@ class CInv;
 class CRequestTracker;
 class CNode;
 
-static const int LAST_POW_BLOCK = 800;                    // If you change this, or mining rewards, adjust INITIAL_COIN_SUPPLY
+static const int LAST_POW_BLOCK = 800; // testnet
+static const int64_t INITIAL_COIN_SUPPLY = 9791880100; // testnet
 //static const int LAST_POW_BLOCK = 800000;               // If you change this, or mining rewards, adjust INITIAL_COIN_SUPPLY
-static const int64_t INITIAL_COIN_SUPPLY = 9800070000;    // Used in calculating interest rate
-//static const int64_t INITIAL_COIN_SUPPLY = 98100000000; // Used in calculating interest rate
+//static const int64_t INITIAL_COIN_SUPPLY = 98067078140; // Used in calculating interest rate
 
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/4;
