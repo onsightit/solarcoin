@@ -60,8 +60,7 @@ static int64_t GetStakeModifierSelectionIntervalSection(int nSection)
 static int64_t GetStakeModifierSelectionInterval()
 {
     int64_t nSelectionInterval = 0;
-    int nSections = min((nBestHeight - LAST_POW_BLOCK + 1), 64); // DEBUG
-    for (int nSection=0; nSection < nSections; nSection++)
+    for (int nSection=0; nSection < 64; nSection++)
         nSelectionInterval += GetStakeModifierSelectionIntervalSection(nSection);
     return nSelectionInterval;
 }
@@ -248,7 +247,7 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
     const CBlockIndex* pindexFrom = mapBlockIndex[hashBlockFrom];
     nStakeModifierHeight = pindexFrom->nHeight;
     nStakeModifierTime = pindexFrom->GetBlockTime();
-    int64_t nStakeModifierSelectionInterval = GetStakeModifierSelectionInterval();
+    int64_t nStakeModifierSelectionInterval = (nBestHeight - LAST_POW_BLOCK < 64 ? nModifierInterval : GetStakeModifierSelectionInterval());
     int64_t nStakeModifierTargetTime = nStakeModifierTime + nStakeModifierSelectionInterval;
     const CBlockIndex* pindex = pindexFrom;
 
