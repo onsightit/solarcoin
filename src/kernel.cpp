@@ -247,7 +247,7 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
     const CBlockIndex* pindexFrom = mapBlockIndex[hashBlockFrom];
     nStakeModifierHeight = pindexFrom->nHeight;
     nStakeModifierTime = pindexFrom->GetBlockTime();
-    int64_t nStakeModifierSelectionInterval = (nBestHeight - LAST_POW_BLOCK < 64 ? nModifierInterval : GetStakeModifierSelectionInterval());
+    int64_t nStakeModifierSelectionInterval = GetStakeModifierSelectionInterval();
     int64_t nStakeModifierTargetTime = nStakeModifierTime + nStakeModifierSelectionInterval;
     const CBlockIndex* pindex = pindexFrom;
 
@@ -261,7 +261,10 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
                 return error("GetKernelStakeModifier() : reached best block %s at height %d from block %s",
                     pindex->GetBlockHash().ToString().c_str(), pindex->nHeight, hashBlockFrom.ToString().c_str());
             else
-                return false;
+                if (pindexFrom->nHeight <= LAST_POW_BLOCK) // DEBUG Prevent bogus errors during transition
+                    return true;
+                else
+                    return false;
         }
         pindex = pindex->pnext;
         if (pindex->GeneratedStakeModifier())
