@@ -247,9 +247,15 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
     const CBlockIndex* pindexFrom = mapBlockIndex[hashBlockFrom];
     nStakeModifierHeight = pindexFrom->nHeight;
     nStakeModifierTime = pindexFrom->GetBlockTime();
-    int64_t nStakeModifierSelectionInterval = GetStakeModifierSelectionInterval();
+    // DEBUG int64_t nStakeModifierSelectionInterval = GetStakeModifierSelectionInterval();
+    int nPoWDeltaBocks = nBestHeight - LAST_POW_BLOCK; // Use short intervals during transition
+    int64_t nStakeModifierSelectionInterval = (nPoWDeltaBocks < 64 ? nModifierInterval : GetStakeModifierSelectionInterval());
     int64_t nStakeModifierTargetTime = nStakeModifierTime + nStakeModifierSelectionInterval;
     const CBlockIndex* pindex = pindexFrom;
+
+    if (fDebug)
+        printf("GetKernelStakeModifier() modifier height=%d time=%"PRId64" target=%"PRId64"\n",
+            nStakeModifierHeight, nStakeModifierTime, nStakeModifierTargetTime);
 
     // loop to find the stake modifier later by a selection interval
     while (nStakeModifierTime < nStakeModifierTargetTime)
