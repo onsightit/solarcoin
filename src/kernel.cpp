@@ -261,10 +261,15 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
                 return error("GetKernelStakeModifier() : reached best block %s at height %d from block %s",
                     pindex->GetBlockHash().ToString().c_str(), pindex->nHeight, hashBlockFrom.ToString().c_str());
             else
+            {
                 if (pindexFrom->nHeight <= LAST_POW_BLOCK) // DEBUG Prevent bogus errors during transition
+                {
+                    nStakeModifier = pindexFrom->nStakeModifier;
                     return true;
+                }
                 else
                     return false;
+            }
         }
         pindex = pindex->pnext;
         if (pindex->GeneratedStakeModifier())
