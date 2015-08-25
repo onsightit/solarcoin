@@ -2494,6 +2494,8 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
     // First transaction must be coinbase, the rest must not be
     if (vtx.empty() || !vtx[0].IsCoinBase())
     {
+        if (fDebug)
+            this->print();
         return DoS(100, error("CheckBlock() : first tx is not coinbase"));
     }
     for (unsigned int i = 1; i < vtx.size(); i++)
@@ -2725,7 +2727,11 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 
     // Preliminary checks
     if (!pblock->CheckBlock())
+    {
+        if (fDebug)
+            printf("peer version=%s protocol=%d\n", pfrom->cleanSubVer.c_str(), pfrom->nVersion);
         return error("ProcessBlock() : CheckBlock FAILED");
+    }
 
     uint256 hashProofOfStake = 0, targetProofOfStake = 0;
     if (pblock->IsProofOfStake())
