@@ -56,13 +56,13 @@
       <number>250</number>
      </property>
      <property name="topMargin">
-      <number>250</number>
+      <number>420</number>
      </property>
      <property name="rightMargin">
       <number>250</number>
      </property>
      <property name="bottomMargin">
-      <number>250</number>
+      <number>50</number>
      </property>
      <item row="1" column="1">
       <widget class="QLineEdit" name="passEdit1">
