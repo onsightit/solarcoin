@@ -247,9 +247,9 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
     const CBlockIndex* pindexFrom = mapBlockIndex[hashBlockFrom];
     nStakeModifierHeight = pindexFrom->nHeight;
     nStakeModifierTime = pindexFrom->GetBlockTime();
-    // DEBUG int64_t nStakeModifierSelectionInterval = GetStakeModifierSelectionInterval();
-    int nPoWDeltaBocks = nBestHeight - LAST_POW_BLOCK; // Use short intervals during transition, growing the interval as more blocks are created
-    int64_t nStakeModifierSelectionInterval = (nPoWDeltaBocks < 16 ? nModifierInterval * (nPoWDeltaBocks+1) : GetStakeModifierSelectionInterval());
+    //int nPoWDeltaBocks = nBestHeight - LAST_POW_BLOCK; // DEBUG Use short intervals during transition, growing the interval as more blocks are created
+    //int64_t nStakeModifierSelectionInterval = (nPoWDeltaBocks < 16 ? nModifierInterval * (nPoWDeltaBocks+1) : GetStakeModifierSelectionInterval());
+    int64_t nStakeModifierSelectionInterval = GetStakeModifierSelectionInterval();
     int64_t nStakeModifierTargetTime = nStakeModifierTime + nStakeModifierSelectionInterval;
     const CBlockIndex* pindex = pindexFrom;
 
@@ -267,13 +267,13 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
                 return error("GetKernelStakeModifier() : reached best block %s at height %d from block %s",
                     pindex->GetBlockHash().ToString().c_str(), pindex->nHeight, hashBlockFrom.ToString().c_str());
             else
-            {
-                if (pindexFrom->nHeight <= LAST_POW_BLOCK) // DEBUG Prevent bogus errors during transition
-                {
-                    nStakeModifier = pindexFrom->nStakeModifier;
-                    return true;
-                }
-                else
+            {   // DEBUG
+                //if (pindexFrom->nHeight <= LAST_POW_BLOCK) // DEBUG Prevent bogus errors during transition
+                //{
+                //    nStakeModifier = pindexFrom->nStakeModifier;
+                //    return true;
+                //}
+                //else
                     return false;
             }
         }
