@@ -257,20 +257,16 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
         {
             // reached best block; may happen if node is behind on block chain
             if (fPrintProofOfStake || (pindex->GetBlockTime() + nStakeMinAge - nStakeModifierSelectionInterval > GetAdjustedTime()))
+            {
                 return error("GetKernelStakeModifier() : reached best block %s at height %d from block %s",
                     pindex->GetBlockHash().ToString().c_str(), pindex->nHeight, hashBlockFrom.ToString().c_str());
+            }
             else
-            {   // DEBUG
-                //if (pindexFrom->nHeight <= LAST_POW_BLOCK) // DEBUG Prevent bogus errors during transition
-                //{
-                //    nStakeModifier = pindexFrom->nStakeModifier;
-                //    return true;
-                //}
-                //else
+            {
                 if (fDebug)
-                    printf("GetKernelStakeModifier() Nothing! Ending modifier height=%d time=%"PRId64" modifier=%"PRIu64"\n",
-                        nStakeModifierHeight, nStakeModifierTime, nStakeModifier);
-                    return false;
+                    printf("GetKernelStakeModifier() Nothing! Ending modifier height=%d time=%"PRId64"\n",
+                        nStakeModifierHeight, nStakeModifierTime);
+                return false;
             }
         }
         pindex = pindex->pnext;
@@ -278,6 +274,9 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
         {
             nStakeModifierHeight = pindex->nHeight;
             nStakeModifierTime = pindex->GetBlockTime();
+            if (fDebug && pindex->nHeight > LAST_POW_BLOCK)
+                printf("GetKernelStakeModifier() Generated modifier height=%d time=%"PRId64"\n",
+                    nStakeModifierHeight, nStakeModifierTime);
         }
     }
     nStakeModifier = pindex->nStakeModifier;
