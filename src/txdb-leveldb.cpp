@@ -394,6 +394,19 @@ bool CTxDB::LoadBlockIndex()
         pindexNew->nBits          = diskindex.nBits;
         pindexNew->nNonce         = diskindex.nNonce;
 
+        // DEBUG TEMP CODE
+        if (pindexNew->nHeight >= LAST_POW_BLOCK)
+        {
+            printf("*** DEBUG pindex modifier =%"PRIu64" height=%d\n", pindexNew->nStakeModifier, pindexNew->nHeight);
+        }
+        if (pindexNew->nHeight > 1 && pindexNew->nHeight <=  LAST_POW_BLOCK)
+        {
+            if (pindexNew->nHeight == LAST_POW_BLOCK - 100)
+                pindexNew->SetStakeModifier(1,true);
+            else
+                pindexNew->SetStakeModifier(1,false);
+        }
+
         // Watch for genesis block
         if (pindexGenesisBlock == NULL && blockHash == (!fTestNet ? hashGenesisBlock : hashGenesisBlockTestNet))
             pindexGenesisBlock = pindexNew;

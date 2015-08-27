@@ -138,7 +138,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     if (pindexCurrent->IsProofOfWork())
     {
         nStakeModifier = 1; // PoW block modifier
-        if (pindexCurrent->nHeight == LAST_POW_BLOCK)
+        if (pindexCurrent->nHeight == LAST_POW_BLOCK - 100) // Set first generated modifier before PoST
             fGeneratedStakeModifier = true;
         else
             fGeneratedStakeModifier = false;
@@ -155,17 +155,14 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
         printf("ComputeNextStakeModifier: prev modifier=0x%016"PRIx64" time=%s\n", nStakeModifier, DateTimeStrFormat(nModifierTime).c_str());
     }
 
-    if (pindexPrev->IsProofOfStake()) // This will force a new interval when pindexCurrent is PoST and pindexPrev is not (LAST_POW_BLOCK)
+    // nModifierInterval is 10 minutes.
+    if (nModifierTime / nModifierInterval >= pindexPrev->GetBlockTime() / nModifierInterval)
     {
-        // nModifierInterval is 10 minutes.
-        if (nModifierTime / nModifierInterval >= pindexPrev->GetBlockTime() / nModifierInterval)
+        if (fDebug)
         {
-            if (fDebug)
-            {
-                printf("ComputeNextStakeModifier: no new interval keep current modifier: pindexPrev nHeight=%d nTime=%u\n", pindexPrev->nHeight, (unsigned int)pindexPrev->GetBlockTime());
-            }
-            return true;
+            printf("ComputeNextStakeModifier: no new interval keep current modifier: pindexPrev nHeight=%d nTime=%u\n", pindexPrev->nHeight, (unsigned int)pindexPrev->GetBlockTime());
         }
+        return true;
     }
 
     // Sort candidate blocks by timestamp
@@ -178,8 +175,6 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     {
         vSortedByTimestamp.push_back(make_pair(pindex->GetBlockTime(), pindex->GetBlockHash()));
         pindex = pindex->pprev;
-        if (pindex->IsProofOfWork()) // We just want the LAST_POW_BLOCK
-            break;
     }
     int nHeightFirstCandidate = pindex ? (pindex->nHeight + 1) : 0;
     reverse(vSortedByTimestamp.begin(), vSortedByTimestamp.end());
@@ -247,14 +242,12 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
     const CBlockIndex* pindexFrom = mapBlockIndex[hashBlockFrom];
     nStakeModifierHeight = pindexFrom->nHeight;
     nStakeModifierTime = pindexFrom->GetBlockTime();
-    //int nPoWDeltaBocks = nBestHeight - LAST_POW_BLOCK; // DEBUG Use short intervals during transition, growing the interval as more blocks are created
-    //int64_t nStakeModifierSelectionInterval = (nPoWDeltaBocks < 16 ? nModifierInterval * (nPoWDeltaBocks+1) : GetStakeModifierSelectionInterval());
     int64_t nStakeModifierSelectionInterval = GetStakeModifierSelectionInterval();
     int64_t nStakeModifierTargetTime = nStakeModifierTime + nStakeModifierSelectionInterval;
     const CBlockIndex* pindex = pindexFrom;
 
     if (fDebug)
-        printf("GetKernelStakeModifier() modifier height=%d time=%"PRId64" target=%"PRId64"\n",
+        printf("GetKernelStakeModifier() Starting modifier height=%d time=%"PRId64" target=%"PRId64"\n",
             nStakeModifierHeight, nStakeModifierTime, nStakeModifierTargetTime);
 
     // loop to find the stake modifier later by a selection interval
@@ -274,6 +267,9 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
                 //    return true;
                 //}
                 //else
+                if (fDebug)
+                    printf("GetKernelStakeModifier() Nothing! Ending modifier height=%d time=%"PRId64" modifier=%"PRIu64"\n",
+                        nStakeModifierHeight, nStakeModifierTime, nStakeModifier);
                     return false;
             }
         }
@@ -285,6 +281,9 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
         }
     }
     nStakeModifier = pindex->nStakeModifier;
+    if (fDebug)
+        printf("GetKernelStakeModifier() Ending modifier height=%d time=%"PRId64" modifier=%"PRId64"\n",
+            nStakeModifierHeight, nStakeModifierTime, nStakeModifier);
     return true;
 }
 
