@@ -400,7 +400,7 @@ bool CTxDB::LoadBlockIndex()
             printf("*** DEBUG pindex modifier =%"PRIu64" height=%d\n", pindexNew->nStakeModifier, pindexNew->nHeight);
             pindexNew->nFlags = 0;
             pindexNew->SetProofOfWork();
-            pindexNew->SetStakeEntropyBit(GetStakeEntropyBit(pindexNew->nTime));
+            pindexNew->SetStakeEntropyBit(((blockHash.Get64()) & 1llu));
             mapBlockIndex.erase(mapBlockIndex.find(blockHash));
             map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(blockHash, pindexNew)).first;
             pindexNew->phashBlock = &((*mi).first);
@@ -415,7 +415,7 @@ bool CTxDB::LoadBlockIndex()
             {
                 pindexNew->nFlags = 0;
                 pindexNew->SetProofOfWork();
-                pindexNew->SetStakeEntropyBit(GetStakeEntropyBit(pindexNew->nTime));
+                pindexNew->SetStakeEntropyBit(((blockHash.Get64()) & 1llu));
             }
             mapBlockIndex.erase(mapBlockIndex.find(blockHash));
             map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(blockHash, pindexNew)).first;
