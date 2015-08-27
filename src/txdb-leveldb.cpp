@@ -399,6 +399,8 @@ bool CTxDB::LoadBlockIndex()
         {
             printf("*** DEBUG pindex modifier =%"PRIu64" height=%d\n", pindexNew->nStakeModifier, pindexNew->nHeight);
             pindexNew->SetStakeModifier(1,false);
+            mapBlockIndex.erase(mapBlockIndex.find(blockHash));
+            mapBlockIndex.insert(make_pair(blockHash, pindexNew));
         }
         if (pindexNew->nHeight > 1 && pindexNew->nHeight <=  LAST_POW_BLOCK)
         {
@@ -406,6 +408,8 @@ bool CTxDB::LoadBlockIndex()
                 pindexNew->SetStakeModifier(1,true);
             else
                 pindexNew->SetStakeModifier(1,false);
+            mapBlockIndex.erase(mapBlockIndex.find(blockHash));
+            mapBlockIndex.insert(make_pair(blockHash, pindexNew));
         }
 
         // Watch for genesis block
