@@ -407,7 +407,8 @@ bool CTxDB::LoadBlockIndex()
         }
         if (pindexNew->nHeight > 1 && pindexNew->nHeight <=  LAST_POW_BLOCK)
         {
-            if (pindexNew->nHeight == LAST_POW_BLOCK - 7777)
+            //if (pindexNew->nHeight == LAST_POW_BLOCK - (fTestNet ? 7777 : 777))
+            if (pindexNew->nHeight == 7879)
             {
                 pindexNew->SetStakeModifier(1,true);
             }
@@ -421,6 +422,7 @@ bool CTxDB::LoadBlockIndex()
             map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(blockHash, pindexNew)).first;
             pindexNew->phashBlock = &((*mi).first);
         }
+        // DEBUG END */
 
         // Watch for genesis block
         if (pindexGenesisBlock == NULL && blockHash == (!fTestNet ? hashGenesisBlock : hashGenesisBlockTestNet))
