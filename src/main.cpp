@@ -50,7 +50,7 @@ unsigned int nTargetSpacing = 1 * 60; // 1 minute
 unsigned int nStakeMinAge = 8 * 60 * 60; // 8 hours
 unsigned int nModifierInterval = 10 * 60; // time to elapse before new modifier is computed
 
-int nCoinbaseMaturity = 7980; // DEBUG TESTING = 500;
+int nCoinbaseMaturity = 4000; // DEBUG TESTING = 500;
 int nCoinbaseMaturity_PoW = 10;
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
