@@ -407,8 +407,7 @@ bool CTxDB::LoadBlockIndex()
         }
         if (pindexNew->nHeight > 1 && pindexNew->nHeight <=  LAST_POW_BLOCK)
         {
-            //if (pindexNew->nHeight == LAST_POW_BLOCK - (fTestNet ? 7777 : 777))
-            if (pindexNew->nHeight == 7879)
+            if (pindexNew->nHeight == LAST_POW_BLOCK - nCoinbaseMaturity)
             {
                 pindexNew->SetStakeModifier(1,true);
             }
