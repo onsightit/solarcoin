@@ -138,7 +138,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     if (pindexCurrent->IsProofOfWork())
     {
         nStakeModifier = 1; // PoW block modifier
-        if (pindexCurrent->nHeight == LAST_POW_BLOCK - nCoinbaseMaturity) // Set a generated modifier before PoST
+        if (pindexCurrent->nHeight == LAST_POW_BLOCK - (nCoinbaseMaturity+10)) // Set a generated modifier before PoST
             fGeneratedStakeModifier = true;
         else
             fGeneratedStakeModifier = false;
