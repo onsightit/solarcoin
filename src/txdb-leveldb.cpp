@@ -394,7 +394,7 @@ bool CTxDB::LoadBlockIndex()
         pindexNew->nBits          = diskindex.nBits;
         pindexNew->nNonce         = diskindex.nNonce;
 
-        // DEBUG TEMP CODE
+        /* // DEBUG TEMP CODE
         if (pindexNew->nHeight > LAST_POW_BLOCK)
         {
             printf("*** DEBUG pindex modifier =%"PRIu64" height=%d\n", pindexNew->nStakeModifier, pindexNew->nHeight);
