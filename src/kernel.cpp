@@ -244,7 +244,7 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
     nStakeModifierHeight = pindexFrom->nHeight;
     nStakeModifierTime = pindexFrom->GetBlockTime();
     int64_t nStakeModifierSelectionInterval = GetStakeModifierSelectionInterval();
-    int64_t nStakeModifierTargetTime = nStakeModifierTime + (nBestHeight < LAST_POW_BLOCK + 10 ? nModifierInterval : nStakeModifierSelectionInterval);
+    int64_t nStakeModifierTargetTime = nStakeModifierTime + (nBestHeight < LAST_POW_BLOCK + 64 ? nModifierInterval : nStakeModifierSelectionInterval);
     const CBlockIndex* pindex = pindexFrom;
 
     if (fDebug)
