@@ -395,7 +395,7 @@ bool CTxDB::LoadBlockIndex()
         pindexNew->nNonce         = diskindex.nNonce;
 
 
-        // DEBUG TEMP CODE
+        /* // DEBUG TEMP CODE
         pindexNew->nFlags = 0;
         pindexNew->SetStakeEntropyBit(((blockHash.Get64()) & 1llu));
         if (pindexNew->nHeight > LAST_POW_BLOCK)
