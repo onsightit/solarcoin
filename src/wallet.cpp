@@ -1594,7 +1594,7 @@ bool CWallet::CreateCoinStakeTime(const CKeyStore& keystore, unsigned int nBits,
 
     // Select coins with suitable depth
     // DEBUG if (!SelectCoinsSimple(nBalance - nReserveBalance, txNew.nTime, nCoinbaseMaturity + 10, setCoins, nValueIn))
-    if (!SelectCoinsSimple(nBalance - nReserveBalance, txNew.nTime, nCoinbaseMaturity, setCoins, nValueIn))
+    if (!SelectCoinsSimple(nBalance - nReserveBalance, txNew.nTime, 2, setCoins, nValueIn))
         return false;
 
     if (setCoins.empty())
