@@ -1119,8 +1119,7 @@ void CWallet::AvailableCoinsMinConf(vector<COutput>& vCoins, int nConf) const
                 continue;
 
             for (unsigned int i = 0; i < pcoin->vout.size(); i++)
-                // DEBUG if (!(pcoin->IsSpent(i)) && IsMine(pcoin->vout[i]) && pcoin->vout[i].nValue >= nMinimumInputValue)
-                if (IsMine(pcoin->vout[i]) && pcoin->vout[i].nValue >= nMinimumInputValue)
+                if (!(pcoin->IsSpent(i)) && IsMine(pcoin->vout[i]) && pcoin->vout[i].nValue >= nMinimumInputValue)
                     vCoins.push_back(COutput(pcoin, i, pcoin->GetDepthInMainChain()));
         }
     }
@@ -1592,7 +1591,8 @@ bool CWallet::CreateCoinStakeTime(const CKeyStore& keystore, unsigned int nBits,
     int64_t nValueIn = 0;
 
     // Select coins with suitable depth
-    if (!SelectCoinsSimple(nBalance - nReserveBalance, txNew.nTime, nCoinbaseMaturity + 10, setCoins, nValueIn))
+    // DEBUG if (!SelectCoinsSimple(nBalance - nReserveBalance, txNew.nTime, nCoinbaseMaturity + 10, setCoins, nValueIn))
+    if (!SelectCoinsSimple(nBalance - nReserveBalance, txNew.nTime, 10, setCoins, nValueIn))
         return false;
 
     if (setCoins.empty())
