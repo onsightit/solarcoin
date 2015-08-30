@@ -26,8 +26,10 @@ class CInv;
 class CRequestTracker;
 class CNode;
 
-static const int LAST_POW_BLOCK = 8000; // testnet
-static const int64_t INITIAL_COIN_SUPPLY = 9800790200; // testnet
+static const int LAST_POW_BLOCK = 800; // testnet
+static const int64_t INITIAL_COIN_SUPPLY = 9800070200; // testnet
+//static const int LAST_POW_BLOCK = 8000; // testnet
+//static const int64_t INITIAL_COIN_SUPPLY = 9800790200; // testnet
 //static const int LAST_POW_BLOCK = 800000;               // If you change this, or mining rewards, adjust INITIAL_COIN_SUPPLY
 //static const int64_t INITIAL_COIN_SUPPLY = 98067078140; // Used in calculating interest rate
 
