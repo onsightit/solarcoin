@@ -394,34 +394,27 @@ bool CTxDB::LoadBlockIndex()
         pindexNew->nBits          = diskindex.nBits;
         pindexNew->nNonce         = diskindex.nNonce;
 
-        /* // DEBUG TEMP CODE
+
+        // DEBUG TEMP CODE
+        pindexNew->nFlags = 0;
+        pindexNew->SetStakeEntropyBit(((blockHash.Get64()) & 1llu));
         if (pindexNew->nHeight > LAST_POW_BLOCK)
         {
-            printf("*** DEBUG pindex modifier =%"PRIu64" height=%d\n", pindexNew->nStakeModifier, pindexNew->nHeight);
-            pindexNew->nFlags = 0;
-            pindexNew->SetProofOfWork();
-            pindexNew->SetStakeEntropyBit(((blockHash.Get64()) & 1llu));
-            mapBlockIndex.erase(mapBlockIndex.find(blockHash));
-            map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(blockHash, pindexNew)).first;
-            pindexNew->phashBlock = &((*mi).first);
+            pindexNew->SetProofOfStake();
         }
-        if (pindexNew->nHeight > 1 && pindexNew->nHeight <=  LAST_POW_BLOCK)
+        else
         {
-            if (pindexNew->nHeight == LAST_POW_BLOCK - (nCoinbaseMaturity+10))
+            pindexNew->SetProofOfWork();
+            if (pindexNew->nHeight == LAST_POW_BLOCK - nCoinbaseMaturity)
             {
                 pindexNew->SetStakeModifier(1,true);
             }
-            else
-            {
-                pindexNew->nFlags = 0;
-                pindexNew->SetProofOfWork();
-                pindexNew->SetStakeEntropyBit(((blockHash.Get64()) & 1llu));
-            }
-            mapBlockIndex.erase(mapBlockIndex.find(blockHash));
-            map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(blockHash, pindexNew)).first;
-            pindexNew->phashBlock = &((*mi).first);
         }
+        mapBlockIndex.erase(mapBlockIndex.find(blockHash));
+        map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(blockHash, pindexNew)).first;
+        pindexNew->phashBlock = &((*mi).first);
         // DEBUG END */
+
 
         // Watch for genesis block
         if (pindexGenesisBlock == NULL && blockHash == (!fTestNet ? hashGenesisBlock : hashGenesisBlockTestNet))
