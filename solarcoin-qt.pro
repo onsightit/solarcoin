@@ -6,8 +6,8 @@ INCLUDEPATH += src src/json src/qt
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
 CONFIG += no_include_pwd
 CONFIG += thread
-CONFIG += debug
-#CONFIG += release
+#CONFIG += debug
+CONFIG += release
 !win32{
 CONFIG += static
 }
