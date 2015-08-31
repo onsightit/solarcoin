@@ -26,8 +26,8 @@ class CInv;
 class CRequestTracker;
 class CNode;
 
-static const int LAST_POW_BLOCK = 4000; // testnet
-static const int64_t INITIAL_COIN_SUPPLY = 9800390200; // testnet
+static const int LAST_POW_BLOCK = 6000; // testnet
+static const int64_t INITIAL_COIN_SUPPLY = 9800590200; // testnet
 //static const int LAST_POW_BLOCK = 8000; // testnet
 //static const int64_t INITIAL_COIN_SUPPLY = 9800790200; // testnet
 //static const int LAST_POW_BLOCK = 800000;               // If you change this, or mining rewards, adjust INITIAL_COIN_SUPPLY
