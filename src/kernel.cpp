@@ -155,7 +155,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
         printf("ComputeNextStakeModifier: prev modifier=0x%016"PRIx64" time=%s\n", nStakeModifier, DateTimeStrFormat(nModifierTime).c_str());
     }
 
-    // nModifierInterval is 10 minutes.
+    // nModifierInterval is 10 minutes (5 minutes on testnet).
     if (nModifierTime / nModifierInterval >= pindexPrev->GetBlockTime() / nModifierInterval)
     {
         if (fDebug)
@@ -367,7 +367,7 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     }
 
     // Now check if proof-of-stake hash meets target protocol
-    if (nStakeModifierHeight > LAST_POW_BLOCK)
+    if (nStakeModifierHeight > LAST_POW_BLOCK + nCoinbaseMaturity)
         if (CBigNum(hashProofOfStake) > bnStakeTimeWeight * bnTargetPerCoinDay)
             return false;
 
