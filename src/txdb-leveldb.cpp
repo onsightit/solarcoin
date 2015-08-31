@@ -394,34 +394,24 @@ bool CTxDB::LoadBlockIndex()
         pindexNew->nBits          = diskindex.nBits;
         pindexNew->nNonce         = diskindex.nNonce;
 
-        /* // DEBUG TEMP CODE
-        if (pindexNew->nHeight > LAST_POW_BLOCK)
+
+        // DEBUG TEMP CODE
+        if (pindexNew->nHeight == 2)
         {
-            printf("*** DEBUG pindex modifier =%"PRIu64" height=%d\n", pindexNew->nStakeModifier, pindexNew->nHeight);
-            pindexNew->nFlags = 0;
-            pindexNew->SetProofOfWork();
-            pindexNew->SetStakeEntropyBit(((blockHash.Get64()) & 1llu));
-            mapBlockIndex.erase(mapBlockIndex.find(blockHash));
-            map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(blockHash, pindexNew)).first;
-            pindexNew->phashBlock = &((*mi).first);
+            pindexNew->SetStakeModifier(1,true);
         }
-        if (pindexNew->nHeight > 1 && pindexNew->nHeight <=  LAST_POW_BLOCK)
+        if (pindexNew->nHeight == 750)
         {
-            if (pindexNew->nHeight == LAST_POW_BLOCK - (nCoinbaseMaturity+10))
-            {
-                pindexNew->SetStakeModifier(1,true);
-            }
-            else
-            {
-                pindexNew->nFlags = 0;
-                pindexNew->SetProofOfWork();
-                pindexNew->SetStakeEntropyBit(((blockHash.Get64()) & 1llu));
-            }
+            pindexNew->nFlags = 0;
+            pindexNew->SetStakeEntropyBit(((blockHash.Get64()) & 1llu));
+            pindexNew->SetProofOfWork();
+            pindexNew->SetStakeModifier(1,false);
             mapBlockIndex.erase(mapBlockIndex.find(blockHash));
             map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(blockHash, pindexNew)).first;
             pindexNew->phashBlock = &((*mi).first);
         }
         // DEBUG END */
+
 
         // Watch for genesis block
         if (pindexGenesisBlock == NULL && blockHash == (!fTestNet ? hashGenesisBlock : hashGenesisBlockTestNet))
