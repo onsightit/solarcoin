@@ -138,7 +138,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     if (pindexCurrent->IsProofOfWork())
     {
         nStakeModifier = 1; // PoW block modifier
-        if (pindexCurrent->nHeight == LAST_POW_BLOCK - 5000) // Set a generated modifier before PoST
+        if (pindexCurrent->nHeight == LAST_POW_BLOCK - (fTestNet ? 500 : nCoinbaseMaturity)) // Set a generated modifier before PoST
             fGeneratedStakeModifier = true;
         else
             fGeneratedStakeModifier = false;
@@ -320,7 +320,8 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     bnTargetPerCoinDay.SetCompact(nBits);
     int64_t nValueIn = txPrev.vout[prevout.n].nValue;
     uint256 hashBlockFrom = blockFrom.GetHash();
-    int heightBlockFrom = mapBlockIndex[hashBlockFrom]->nHeight;
+    CBlockIndex* pindexFrom = mapBlockIndex[hashBlockFrom];
+    int heightBlockFrom = pindexFrom->nHeight;
     int64_t timeWeight = GetWeight((int64_t)txPrev.nTime, (int64_t)nTimeTx);
     int64_t bnCoinDayWeight = nValueIn * timeWeight / COIN / (24 * 60 * 60);
 
@@ -349,7 +350,7 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     else
     {
         // PoW uses a compatible hash that's not verified
-        ss << nStakeModifierTime << 81 << nStakeModifierTime << 0 << nStakeModifierTime;
+        ss << nTimeBlockFrom << 81 << nTimeBlockFrom - nTargetSpacing << 0 << nTimeBlockFrom;
         hashProofOfStake = Hash(ss.begin(), ss.end());
     }
     if (fPrintProofOfStake)
@@ -367,9 +368,14 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     }
 
     // Now check if proof-of-stake hash meets target protocol
-    if (nStakeModifierHeight > LAST_POW_BLOCK + nCoinbaseMaturity)
+    if (nStakeModifierHeight > LAST_POW_BLOCK)
         if (CBigNum(hashProofOfStake) > bnStakeTimeWeight * bnTargetPerCoinDay)
+        {
+            if (fDebug)
+                printf("CheckStakeTimeKernelHash() : proof-of-stake failed to meet target protocol. hashProof=%s > bnStakeTimeWeight=%s * bnTargetPerCoinDay=%s\n",
+                    hashProofOfStake.GetHex().c_str(), bnStakeTimeWeight.ToString().c_str(), bnTargetPerCoinDay.ToString().c_str());
             return false;
+        }
 
     if (fDebug && !fPrintProofOfStake)
     {
@@ -429,12 +435,11 @@ bool CheckProofOfStakePoW(CBlock* pblock, const CTransaction& tx, uint256& hashP
     // Calculate hash
     CDataStream ss(SER_GETHASH, 0);
     uint64_t nStakeModifier = 1; // PoW modifier
-    int64_t nStakeModifierTime = nTimeBlockFrom;
 
     ss << nStakeModifier;
 
     // PoW uses a compatible hash that's not verified
-    ss << nStakeModifierTime << 81 << nStakeModifierTime << 0 << nStakeModifierTime;
+    ss << nTimeBlockFrom << 81 << nTimeBlockFrom - nTargetSpacing << 0 << nTimeBlockFrom;
     hashProofOfStake = Hash(ss.begin(), ss.end());
 
     if (fDebug)

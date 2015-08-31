@@ -2753,7 +2753,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         }
     }
     if (!mapProofOfStake.count(hash)) // add to mapProofOfStake
-        mapProofOfStake.insert(make_pair(hash, hashProofOfStake)); // PoW Orphans will get their hashProofOfStake later
+        mapProofOfStake.insert(make_pair(hash, hashProofOfStake));
 
     CBlockIndex* pcheckpoint = Checkpoints::GetLastSyncCheckpoint();
     if (pcheckpoint && pblock->hashPrevBlock != hashBestChain && !Checkpoints::WantedByPendingSyncCheckpoint(hash))

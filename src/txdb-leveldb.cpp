@@ -395,7 +395,7 @@ bool CTxDB::LoadBlockIndex()
         pindexNew->nNonce         = diskindex.nNonce;
 
 
-        // DEBUG TEMP CODE
+        /* // DEBUG TEMP CODE
         if (pindexNew->nHeight > 0 && pindexNew->nHeight <= LAST_POW_BLOCK)
         {
             pindexNew->nFlags = 0;
@@ -406,7 +406,7 @@ bool CTxDB::LoadBlockIndex()
             map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(blockHash, pindexNew)).first;
             pindexNew->phashBlock = &((*mi).first);
         }
-        if (pindexNew->nHeight == LAST_POW_BLOCK - 5000)
+        if (pindexNew->nHeight == LAST_POW_BLOCK - (fTestNet ? 500 : nCoinbaseMaturity))
         {
             pindexNew->SetStakeModifier(1,true);
         }
