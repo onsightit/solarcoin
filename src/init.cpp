@@ -189,6 +189,7 @@ void RestartWallet(const char *parm, bool fOldParms)
         command = QString(GetDataDir().c_str()) + QString("/") + QString(GetArg("-vFileName","solarcoin-setup.run").c_str());
         newArgv.append(QString("--target"));
         newArgv.append(QString(GetProgramDir().c_str()));
+        newArgv.append(QString("--nox11"));
         // Make executable
         boost::filesystem::path installer(GetDataDir() / GetArg("-vFileName","solarcoin-setup.run"));
         boost::filesystem::permissions(installer, status(installer).permissions() | boost::filesystem::owner_exe | boost::filesystem::group_exe);

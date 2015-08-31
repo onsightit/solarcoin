@@ -219,19 +219,23 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         }
         else if (strType == "tx")
         {
-            // Temporarily change the serialized type to pull in Legacy txns without tx.nTime
-            if (fLegacyWallet)
-                ssValue.SetType(SER_GETHASH);
             uint256 hash;
             ssKey >> hash;
             CWalletTx& wtx = pwallet->mapWallet[hash];
-            ssValue >> wtx;
             if (fLegacyWallet)
             {
-                if (!(wtx.IsCoinBase() || wtx.IsCoinStake()))
+                // Temporarily change the serialized type to pull in Legacy txns without tx.nTime
+                ssValue.SetType(SER_GETHASH);
+                ssValue >> wtx;
+                if (!wtx.IsCoinBase())
                     wtx.nTime = wtx.nTimeReceived;
+
                 // Set it back
                 ssValue.SetType(SER_DISK);
+            }
+            else
+            {
+                ssValue >> wtx;
             }
             if (wtx.CheckTransaction() && (wtx.GetHash() == hash))
                 wtx.BindWallet(pwallet);
@@ -429,9 +433,9 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         {
             ssValue >> pwallet->nOrderPosNext;
         }
-    } catch (...)
+    } catch (std::exception &e)
     {
-        return false;
+        return error("ReadKeyValue() : %s\n", e.what());
     }
     return true;
 }
@@ -522,6 +526,11 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
     if (result != DB_LOAD_OK)
         return result;
 
+    if (fLegacyWallet)
+    {
+        pwallet->SetMinVersion(FEATURE_LATEST);
+        printf("Wallet upgraded to version %d\n", pwallet->GetVersion());
+    }
     printf("nFileVersion = %d\n", wss.nFileVersion);
 
     printf("Keys: %u plaintext, %u encrypted, %u w/ metadata, %u total\n",
