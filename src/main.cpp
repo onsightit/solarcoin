@@ -1111,9 +1111,11 @@ int64_t GetProofOfStakeTimeReward(int64_t nStakeTime, int64_t nFees, CBlockIndex
 
 // PoST
 #ifdef fTestNet
-static const int64_t nTargetTimespan = 10 * 60;  // 10 mins PoST
+// DEBUG static const int64_t nTargetTimespan = 10 * 60;  // 10 mins PoST
+int64_t nTargetTimespan = 10 * 60;  // 10 mins PoST
 #else
-static const int64_t nTargetTimespan = 16 * 60;  // 16 mins PoST
+// DEBUG static const int64_t nTargetTimespan = 16 * 60;  // 16 mins PoST
+int64_t nTargetTimespan = 16 * 60;  // 16 mins PoST
 #endif
 // PoW
 static const int64_t nTargetTimespan_Version1 = 24 * 60 * 60; // SolarCoin: 24 Hours
@@ -2666,6 +2668,10 @@ bool CBlock::AcceptBlock()
         return error("AcceptBlock() : WriteToDisk failed");
     if (!AddToBlockIndex(nFile, nBlockPos))
         return error("AcceptBlock() : AddToBlockIndex failed");
+
+    // DEBUG
+    if (fTestNet && nBestHeight == LAST_POW_BLOCK)
+        nTargetTimespan = 10 * 60;  // 10 mins PoST
 
     // Relay inventory, but don't relay old inventory during initial block download
     int nBlockEstimate = Checkpoints::GetTotalBlocksEstimate();
