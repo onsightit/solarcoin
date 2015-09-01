@@ -418,13 +418,15 @@ bool CTxDB::LoadBlockIndex()
         {
             pindexNew->SetStakeModifier(1,true);
         }
-        if (pindexNew->nHeight > LAST_POW_BLOCK)
+        if (pindexNew->nHeight == LAST_POW_BLOCK + 1)
         {
-            CBlock pblock;
-            pblock.ReadFromDisk(pindexNew, true);
-            uint256 hashProof = 0, targetProofOfStake = 0;
-            if (CheckProofOfStake(pblock.vtx[1], pblock.nBits, hashProof, targetProofOfStake))
-                pindexNew->hashProofOfStake = hashProof;
+            pindexNew->nFlags = 0;
+            pindexNew->SetStakeEntropyBit(((blockHash.Get64()) & 1llu));
+            pindexNew->SetProofOfStake();
+
+            mapBlockIndex.erase(mapBlockIndex.find(blockHash));
+            map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(blockHash, pindexNew)).first;
+            pindexNew->phashBlock = &((*mi).first);
         }
         // DEBUG END */
 
