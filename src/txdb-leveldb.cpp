@@ -395,13 +395,21 @@ bool CTxDB::LoadBlockIndex()
         pindexNew->nNonce         = diskindex.nNonce;
 
 
-        /* // DEBUG TEMP CODE
+        // DEBUG TEMP CODE
         if (pindexNew->nHeight > 0 && pindexNew->nHeight <= LAST_POW_BLOCK)
         {
             pindexNew->nFlags = 0;
             pindexNew->SetStakeEntropyBit(((blockHash.Get64()) & 1llu));
             pindexNew->SetProofOfWork();
             pindexNew->SetStakeModifier(1,false);
+
+            // Calculate hash
+            CDataStream ss(SER_GETHASH, 0);
+            uint64_t nStakeModifier = 1; // PoW modifier
+            ss << nStakeModifier;
+            ss << pindexNew->nTime;
+            pindexNew->hashProofOfStake = Hash(ss.begin(), ss.end());
+
             mapBlockIndex.erase(mapBlockIndex.find(blockHash));
             map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(blockHash, pindexNew)).first;
             pindexNew->phashBlock = &((*mi).first);
@@ -409,6 +417,14 @@ bool CTxDB::LoadBlockIndex()
         if (pindexNew->nHeight == LAST_POW_BLOCK - (fTestNet ? 500 : nCoinbaseMaturity))
         {
             pindexNew->SetStakeModifier(1,true);
+        }
+        if (pindexNew->nHeight > LAST_POW_BLOCK)
+        {
+            CBlock* pblock;
+            pblock->ReadFromDisk(pindexNew, true);
+            uint256 hashProof = 0, targetProofOfStake = 0;
+            if (CheckProofOfStake(pblock->vtx[1], pblock->nBits, hashProof, targetProofOfStake))
+                pindexNew->hashProofOfStake = hashProof;
         }
         // DEBUG END */
 

@@ -1448,22 +1448,20 @@ void BitcoinGUI::updateStakingIcon()
         return;
     }
 
-    uint64_t nWeight = 0;
-    pwalletMain->GetStakeWeight(*pwalletMain, nWeight);
     progressBar->setVisible(false);
     overviewPage->showOutOfSyncWarning(false);
+
+    uint64_t nWeight = 0;
+    pwalletMain->GetStakeWeight(*pwalletMain, nWeight);
     double nNetworkWeight = GetPoSKernelPS();
+    u_int64_t nEstimateTime = nTargetSpacing * nNetworkWeight / nWeight;
 
     if (fDebug)
-        printf("*** updateStakingIcon(): nLastCoinStakeSearchInterval=%"PRId64" nTargetSpacing=%u nNetworkWeight=%.5g nWeight=%"PRIu64"\n", nLastCoinStakeSearchInterval, nTargetSpacing, nNetworkWeight, nWeight);
+        printf("updateStakingIcon(): nLastCoinStakeSearchInterval=%"PRId64" nTargetSpacing=%u nNetworkWeight=%.5g nWeight=%"PRIu64" nEstimateTime=%"PRIu64"\n",
+               nLastCoinStakeSearchInterval, nTargetSpacing, nNetworkWeight, nWeight, nEstimateTime);
 
     if (walletModel->getEncryptionStatus() == WalletModel::Unlocked && nLastCoinStakeSearchInterval && nWeight)
     {
-        unsigned nEstimateTime = nTargetSpacing * nNetworkWeight / nWeight;
-
-        if (fDebug)
-            printf("    updateStakingIcon(): nEstimateTime=%u\n", nEstimateTime);
-
         QString text = "now";
         if (nEstimateTime && nEstimateTime < 60)
         {
@@ -1521,6 +1519,7 @@ void BitcoinGUI::updateStakingIcon()
         else
             labelStakingIcon->setToolTip(tr("In sync at block %1\nNot staking, earning Stake-Time.").arg(currentBlock));
     }
+
     // Update balance in balanceLabel
     setBalanceLabel(walletModel->getBalance(), walletModel->getStake(), walletModel->getUnconfirmedBalance(), walletModel->getImmatureBalance());
 }
