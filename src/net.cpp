@@ -2098,8 +2098,11 @@ void StartNode(void* parg)
     if (!GetBoolArg("-staking", true))
         printf("Staking disabled\n");
     else
-        if (!NewThread(ThreadStakeMiner, pwalletMain))
-            printf("Error: NewThread(ThreadStakeMiner) failed\n");
+        if (!pwalletMain->IsCrypted())
+            printf("Wallet not encrytpted. Staking disabled\n");
+        else
+            if (!NewThread(ThreadStakeMiner, pwalletMain))
+                printf("Error: NewThread(ThreadStakeMiner) failed\n");
 }
 
 bool StopNode()
