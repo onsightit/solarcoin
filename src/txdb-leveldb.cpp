@@ -401,7 +401,7 @@ bool CTxDB::LoadBlockIndex()
             pindexNew->nFlags = 0;
             pindexNew->SetStakeEntropyBit(((blockHash.Get64()) & 1llu));
             pindexNew->SetProofOfWork();
-            pindexNew->SetStakeModifier(1,false);
+            pindexNew->SetStakeModifier(0,false);
 
             // Calculate hash
             CDataStream ss(SER_GETHASH, 0);
@@ -416,7 +416,7 @@ bool CTxDB::LoadBlockIndex()
         }
         if (pindexNew->nHeight == LAST_POW_BLOCK - (fTestNet ? 500 : nCoinbaseMaturity))
         {
-            pindexNew->SetStakeModifier(1,true);
+            pindexNew->SetStakeModifier(0,true);
         }
         if (pindexNew->nHeight > LAST_POW_BLOCK)
         {
