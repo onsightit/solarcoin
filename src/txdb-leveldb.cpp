@@ -405,7 +405,7 @@ bool CTxDB::LoadBlockIndex()
 
             // Calculate hash
             CDataStream ss(SER_GETHASH, 0);
-            uint64_t nStakeModifier = 1; // PoW modifier
+            uint64_t nStakeModifier = 0; // PoW modifier
             ss << nStakeModifier;
             ss << pindexNew->nTime;
             pindexNew->hashProofOfStake = Hash(ss.begin(), ss.end());

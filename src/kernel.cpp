@@ -137,7 +137,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     }
     if (pindexCurrent->IsProofOfWork())
     {
-        nStakeModifier = 1; // PoW block modifier
+        nStakeModifier = 0; // PoW block modifier
         if (pindexCurrent->nHeight == LAST_POW_BLOCK - (fTestNet ? 500 : nCoinbaseMaturity)) // Set a generated modifier before PoST
             fGeneratedStakeModifier = true;
         else
@@ -434,7 +434,7 @@ bool CheckProofOfStakePoW(CBlock* pblock, const CTransaction& tx, uint256& hashP
 
     // Calculate hash
     CDataStream ss(SER_GETHASH, 0);
-    uint64_t nStakeModifier = 1; // PoW modifier
+    uint64_t nStakeModifier = 0; // PoW modifier
 
     ss << nStakeModifier;
 
