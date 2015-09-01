@@ -418,7 +418,7 @@ bool CTxDB::LoadBlockIndex()
         {
             pindexNew->SetStakeModifier(1,true);
         }
-        if (pindexNew->nHeight == LAST_POW_BLOCK + 1)
+        if (pindexNew->nHeight == 8001 || pindexNew->nHeight == 8061)
         {
             pindexNew->nFlags = 0;
             pindexNew->SetStakeEntropyBit(((blockHash.Get64()) & 1llu));
