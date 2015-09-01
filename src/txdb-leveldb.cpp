@@ -420,10 +420,10 @@ bool CTxDB::LoadBlockIndex()
         }
         if (pindexNew->nHeight > LAST_POW_BLOCK)
         {
-            CBlock* pblock;
-            pblock->ReadFromDisk(pindexNew, true);
+            CBlock pblock;
+            pblock.ReadFromDisk(pindexNew, true);
             uint256 hashProof = 0, targetProofOfStake = 0;
-            if (CheckProofOfStake(pblock->vtx[1], pblock->nBits, hashProof, targetProofOfStake))
+            if (CheckProofOfStake(pblock.vtx[1], pblock.nBits, hashProof, targetProofOfStake))
                 pindexNew->hashProofOfStake = hashProof;
         }
         // DEBUG END */
