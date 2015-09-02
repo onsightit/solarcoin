@@ -49,6 +49,23 @@ static bool GetLastStakeModifier(const CBlockIndex* pindex, uint64_t& nStakeModi
     return true;
 }
 
+// Get the block rate per minute during the past hour
+static unsigned int GetBlockRatePerMinute()
+{
+    if (pindexBest->nHeight < 500)
+        return 1;
+    int nRate = 0;
+    CBlockIndex* pindex = pindexBest;
+    int64_t nTargetTime = GetAdjustedTime() - 3600;
+    while (pindex->pprev && pindex->nTime > nTargetTime) {
+        nRate += 1;
+        pindex = pindex->pprev;
+    }
+    nRate = round(nRate / 60);
+    // Return a min of 1 or a max of 10
+    return unsigned(min(max(1, nRate), 10));
+}
+
 // Get selection interval section (in seconds)
 static int64_t GetStakeModifierSelectionIntervalSection(int nSection)
 {
@@ -155,7 +172,8 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
         printf("ComputeNextStakeModifier: prev modifier=0x%016"PRIx64" time=%s\n", nStakeModifier, DateTimeStrFormat(nModifierTime).c_str());
     }
 
-    // nModifierInterval is 5 minutes (4 minutes on testnet).
+    // nModifierInterval is based on the block rate of the past hour. 1 per minute would give a target interval of 10.
+    nModifierInterval = 10 / GetBlockRatePerMinute();
     if (nModifierTime / nModifierInterval >= pindexPrev->GetBlockTime() / nModifierInterval)
     {
         if (fDebug)
