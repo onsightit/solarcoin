@@ -350,7 +350,7 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     else
     {
         // PoW uses a hash that's not verified
-        ss << nTimeBlockFrom;
+        ss << 0 << 0 << 0 << 0 << nTimeBlockFrom;
         hashProofOfStake = Hash(ss.begin(), ss.end());
     }
     if (fPrintProofOfStake)
@@ -439,7 +439,7 @@ bool CheckProofOfStakePoW(CBlock* pblock, const CTransaction& tx, uint256& hashP
     ss << nStakeModifier;
 
     // PoW uses a hash that's not verified
-    ss << nTimeBlockFrom;
+    ss << 0 << 0 << 0 << 0 << nTimeBlockFrom;
     hashProofOfStake = Hash(ss.begin(), ss.end());
 
     if (fDebug)

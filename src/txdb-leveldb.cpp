@@ -395,7 +395,7 @@ bool CTxDB::LoadBlockIndex()
         pindexNew->nNonce         = diskindex.nNonce;
 
 
-        /*// DEBUG TEMP CODE
+        // DEBUG TEMP CODE
         if (pindexNew->nHeight > 0 && pindexNew->nHeight <= LAST_POW_BLOCK)
         {
             pindexNew->nFlags = 0;
@@ -407,7 +407,7 @@ bool CTxDB::LoadBlockIndex()
             CDataStream ss(SER_GETHASH, 0);
             uint64_t nStakeModifier = 0; // PoW modifier
             ss << nStakeModifier;
-            ss << pindexNew->nTime;
+            ss << 0 << 0 << 0 << 0 << pindexNew->nTime;
             pindexNew->hashProofOfStake = Hash(ss.begin(), ss.end());
 
             mapBlockIndex.erase(mapBlockIndex.find(blockHash));
