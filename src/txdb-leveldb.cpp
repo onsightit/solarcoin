@@ -418,11 +418,19 @@ bool CTxDB::LoadBlockIndex()
         {
             pindexNew->SetStakeModifier(0,true);
         }
-        if (pindexNew->nHeight > LAST_POW_BLOCK)
+        if (pindexNew->nHeight > LAST_POW_BLOCK && pindexNew->nHeight < LAST_POW_BLOCK + 100)
         {
             pindexNew->nFlags = 0;
             pindexNew->SetStakeEntropyBit(((blockHash.Get64()) & 1llu));
             pindexNew->SetProofOfStake();
+            pindexNew->SetStakeModifier(0,false);
+
+            // Calculate hash
+            CDataStream ss(SER_GETHASH, 0);
+            uint64_t nStakeModifier = 0; // PoW modifier
+            ss << nStakeModifier;
+            ss << 0 << 0 << 0 << 0 << pindexNew->nTime;
+            pindexNew->hashProofOfStake = Hash(ss.begin(), ss.end());
 
             mapBlockIndex.erase(mapBlockIndex.find(blockHash));
             map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(blockHash, pindexNew)).first;
