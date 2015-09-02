@@ -368,7 +368,7 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     }
 
     // Now check if proof-of-stake hash meets target protocol
-    if (nStakeModifierHeight > LAST_POW_BLOCK)
+    if (nStakeModifierHeight > LAST_POW_BLOCK + 1)
         if (CBigNum(hashProofOfStake) > bnStakeTimeWeight * bnTargetPerCoinDay)
         {
             if (fDebug)
