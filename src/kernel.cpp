@@ -168,7 +168,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     if (!GetLastStakeModifier(pindexPrev, nStakeModifier, nModifierTime))
         return error("ComputeNextStakeModifier: unable to get last modifier");
     // nModifierInterval is based on the block rate of the past hour. 1 per minute would give a target interval of 10.
-    nModifierInterval = 10 / GetBlockRatePerMinute();
+    nModifierInterval = 10 / GetBlockRatePerMinute() * 60;
 
     if (fDebug)
         printf("ComputeNextStakeModifier: prev modifier=0x%016"PRIx64" time=%s nModifierInterval=%u\n", nStakeModifier, DateTimeStrFormat(nModifierTime).c_str(), nModifierInterval);
@@ -264,8 +264,8 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
     const CBlockIndex* pindex = pindexFrom;
 
     if (fDebug)
-        printf("GetKernelStakeModifier() Starting modifier height=%d time=%"PRId64" target=%"PRId64"\n",
-            nStakeModifierHeight, nStakeModifierTime, nStakeModifierTargetTime);
+        printf("GetKernelStakeModifier() Starting modifier height=%d time=%"PRId64" target=%"PRId64" nModifierInterval=%u\n",
+            nStakeModifierHeight, nStakeModifierTime, nStakeModifierTargetTime, nModifierInterval);
 
     // loop to find the stake modifier later by a selection interval
     while (nStakeModifierTime < nStakeModifierTargetTime)
