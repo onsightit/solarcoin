@@ -49,19 +49,19 @@ static bool GetLastStakeModifier(const CBlockIndex* pindex, uint64_t& nStakeModi
     return true;
 }
 
-// Get the block rate per minute during the past hour
+// Get the block rate per minute during the past 8 hours
 static unsigned int GetBlockRatePerMinute()
 {
     if (pindexBest->nHeight < 500)
         return 1;
     int nRate = 0;
     CBlockIndex* pindex = pindexBest;
-    int64_t nTargetTime = GetAdjustedTime() - 3600;
+    int64_t nTargetTime = GetAdjustedTime() - nStakeMinAge;
     while (pindex->pprev && pindex->nTime > nTargetTime) {
         nRate += 1;
         pindex = pindex->pprev;
     }
-    nRate = round(nRate / 60);
+    nRate = round(nRate / (nStakeMinAge / 60));
     // Return a min of 1 or a max of 10
     return unsigned(min(max(1, nRate), 10));
 }
