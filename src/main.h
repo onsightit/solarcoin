@@ -27,7 +27,7 @@ class CRequestTracker;
 class CNode;
 
 static const int LAST_POW_BLOCK = 4000; // testnet
-static const int64_t INITIAL_COIN_SUPPLY = 571992259; // 9800590200; // testnet
+static const int64_t INITIAL_COIN_SUPPLY = 530000000; // 9800590200; // testnet
 
 //static const int LAST_POW_BLOCK = 8000; // testnet
 //static const int64_t INITIAL_COIN_SUPPLY = 571992259; // 9800790200; // testnet
