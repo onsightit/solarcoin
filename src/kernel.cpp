@@ -291,9 +291,6 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
         {
             nStakeModifierHeight = pindex->nHeight;
             nStakeModifierTime = pindex->GetBlockTime();
-            if (fDebug && pindex->nHeight > LAST_POW_BLOCK)
-                printf("GetKernelStakeModifier() Generated modifier height=%d time=%"PRId64"\n",
-                    nStakeModifierHeight, nStakeModifierTime);
         }
     }
     nStakeModifier = pindex->nStakeModifier;
@@ -367,7 +364,7 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     else
     {
         // PoW uses a hash that's not verified
-        ss << 0 << 0 << 0 << 0 << nTimeBlockFrom;
+        ss << nTimeBlockFrom << 81 << nTimeBlockFrom - nTargetSpacing << 0 << nTimeBlockFrom;
         hashProofOfStake = Hash(ss.begin(), ss.end());
     }
     if (fPrintProofOfStake)
@@ -385,7 +382,7 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     }
 
     // Now check if proof-of-stake hash meets target protocol
-    if (nStakeModifierHeight > LAST_POW_BLOCK + 1) // DEBUG
+    if (heightBlockFrom > LAST_POW_BLOCK)
         if (CBigNum(hashProofOfStake) > bnStakeTimeWeight * bnTargetPerCoinDay)
         {
             if (fDebug)
@@ -456,7 +453,7 @@ bool CheckProofOfStakePoW(CBlock* pblock, const CTransaction& tx, uint256& hashP
     ss << nStakeModifier;
 
     // PoW uses a hash that's not verified
-    ss << 0 << 0 << 0 << 0 << nTimeBlockFrom;
+    ss << nTimeBlockFrom << 81 << nTimeBlockFrom - nTargetSpacing << 0 << nTimeBlockFrom;
     hashProofOfStake = Hash(ss.begin(), ss.end());
 
     if (fDebug)
