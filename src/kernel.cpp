@@ -65,7 +65,7 @@ static unsigned int GetBlockRatePerMinute()
 
     // Catch down-time
     if (!nRate)
-        return 10;
+        return 0;
 
     // Return a min of 1 or a max of 10
     return unsigned(min(max(1, nRate), 10));
@@ -263,7 +263,7 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
     nStakeModifierHeight = pindexFrom->nHeight;
     nStakeModifierTime = pindexFrom->GetBlockTime();
     int64_t nStakeModifierSelectionInterval = GetStakeModifierSelectionInterval();
-    int64_t nStakeModifierTargetTime = nStakeModifierTime + nStakeModifierSelectionInterval;
+    int64_t nStakeModifierTargetTime = nStakeModifierTime + nStakeModifierSelectionInterval + 1;
     const CBlockIndex* pindex = pindexFrom;
 
     if (fDebug)
@@ -350,8 +350,13 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
 
     // Modifier Interval is based on the block rate of the past 8 hours.
     // 1 per minute would give a target interval of 10 minutes. Faster rates shorten the interval.
+    // Significant downtime returns 0.
     // The interval is ajusted here because it is needed during CheckProofOfStake and CreateCoinStakeTime.
-    nModifierInterval = 10 / GetBlockRatePerMinute() * 60;
+    unsigned nRate = GetBlockRatePerMinute();
+    if (nRate)
+        nModifierInterval = (10 / nRate) * 60; // 1 to 10 minutes
+    else
+        nModifierInterval = 1; // 1 second
 
     // Calculate hash
     CDataStream ss(SER_GETHASH, 0);

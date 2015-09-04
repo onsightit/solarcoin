@@ -48,7 +48,7 @@ static CBigNum bnStartDiff(~uint256(0) >> 26);
 
 unsigned int nTargetSpacing = 1 * 60; // 1 minute
 unsigned int nStakeMinAge = 8 * 60 * 60; // 8 hours
-unsigned int nModifierInterval = 10; // time to elapse before new modifier is computed (start low, max = 10 minutes)
+unsigned int nModifierInterval = 1; // time interval (i*60) to elapse before new modifier is computed. min is 1 minute. max is 10 minutes.
 
 int nCoinbaseMaturity = 500;
 int nCoinbaseMaturity_PoW = 10;
