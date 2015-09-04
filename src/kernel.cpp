@@ -357,7 +357,7 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     if (nRate)
         nModifierInterval = (10 / nRate) * 60; // 1 to 10 minutes
     else
-        nModifierInterval = 1; // 1 second
+        nModifierInterval = 60; // 1 minute
 
     // Calculate hash
     CDataStream ss(SER_GETHASH, 0);
