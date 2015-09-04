@@ -49,23 +49,26 @@ static bool GetLastStakeModifier(const CBlockIndex* pindex, uint64_t& nStakeModi
     return true;
 }
 
-// Get the block rate per minute during the past 8 hours
+// Get the block rate per minute during the past hour
 static unsigned int GetBlockRatePerMinute()
 {
-    if (pindexBest->nHeight < 500)
-        return 1;
+    if (pindexBest->nHeight < 600)
+        return 10;
+
     int nRate = 0;
     CBlockIndex* pindex = pindexBest;
-    int64_t nTargetTime = GetAdjustedTime() - nStakeMinAge;
+    int64_t nTargetTime = GetAdjustedTime() - 3600;
+
     while (pindex->pprev && pindex->nTime > nTargetTime) {
         nRate += 1;
         pindex = pindex->pprev;
     }
-    nRate = round(nRate / (nStakeMinAge / 60)); // txns per minute per time period
 
-    // Catch down-time
-    if (!nRate)
+    // Catch network down or slow rate
+    if (double(nRate / 60) < 0.5) // less than 30/hour
         return 0;
+
+    nRate = round(nRate / 60); // blocks per minute
 
     // Return a min of 1 or a max of 10
     return unsigned(min(max(1, nRate), 10));
@@ -159,11 +162,9 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     }
     if (pindexCurrent->IsProofOfWork())
     {
-        nStakeModifier = 0; // PoW block modifier
+        nStakeModifier = 1; // PoW modifier
         if (pindexCurrent->nHeight == LAST_POW_BLOCK - (fTestNet ? 500 : nCoinbaseMaturity)) // Set a generated modifier before PoST
             fGeneratedStakeModifier = true;
-        else
-            fGeneratedStakeModifier = false;
         return true;
     }
 
@@ -263,7 +264,7 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
     nStakeModifierHeight = pindexFrom->nHeight;
     nStakeModifierTime = pindexFrom->GetBlockTime();
     int64_t nStakeModifierSelectionInterval = GetStakeModifierSelectionInterval();
-    int64_t nStakeModifierTargetTime = nStakeModifierTime + nStakeModifierSelectionInterval + 1;
+    int64_t nStakeModifierTargetTime = nStakeModifierTime + nStakeModifierSelectionInterval;
     const CBlockIndex* pindex = pindexFrom;
 
     if (fDebug)
@@ -348,10 +349,10 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     int64_t stakeTimeWeight = bnStakeTimeWeight.getuint64();
     targetProofOfStake = (bnStakeTimeWeight * bnTargetPerCoinDay).getuint256();
 
-    // Modifier Interval is based on the block rate of the past 8 hours.
+    // Modifier interval is based on the block rate of the past hour.
     // 1 per minute would give a target interval of 10 minutes. Faster rates shorten the interval.
-    // Significant downtime returns 0.
-    // The interval is ajusted here because it is needed during CheckProofOfStake and CreateCoinStakeTime.
+    // Significant slowness returns 0. This forces a 1 second selection interval in GetKernelStakeModifier.
+    // The interval is ajusted here because it is needed in CheckProofOfStake and CreateCoinStakeTime.
     unsigned nRate = GetBlockRatePerMinute();
     if (nRate)
         nModifierInterval = (10 / nRate) * 60; // 1 to 10 minutes
@@ -395,7 +396,7 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     }
 
     // Now check if proof-of-stake hash meets target protocol
-    if (heightBlockFrom > LAST_POW_BLOCK)
+    if (heightBlockFrom > LAST_POW_BLOCK + 1) // DEBUG Skip the first PoST check
         if (CBigNum(hashProofOfStake) > bnStakeTimeWeight * bnTargetPerCoinDay)
         {
             if (fDebug)
@@ -461,7 +462,7 @@ bool CheckProofOfStakePoW(CBlock* pblock, const CTransaction& tx, uint256& hashP
 
     // Calculate hash
     CDataStream ss(SER_GETHASH, 0);
-    uint64_t nStakeModifier = 0; // PoW modifier
+    uint64_t nStakeModifier = 1; // PoW modifier
 
     ss << nStakeModifier;
 

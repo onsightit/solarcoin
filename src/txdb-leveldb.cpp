@@ -401,13 +401,13 @@ bool CTxDB::LoadBlockIndex()
             pindexNew->nFlags = 0;
             pindexNew->SetStakeEntropyBit(((blockHash.Get64()) & 1llu));
             pindexNew->SetProofOfWork();
-            pindexNew->SetStakeModifier(0,false);
+            pindexNew->SetStakeModifier(1,false);
 
             // Calculate hash
             CDataStream ss(SER_GETHASH, 0);
-            uint64_t nStakeModifier = 0; // PoW modifier
+            uint64_t nStakeModifier = 1; // PoW modifier
             ss << nStakeModifier;
-            ss << 0 << 0 << 0 << 0 << pindexNew->nTime;
+            ss << pindexNew->nTime << 81 << pindexNew->nTime - nTargetSpacing << 0 << pindexNew->nTime;
             pindexNew->hashProofOfStake = Hash(ss.begin(), ss.end());
 
             mapBlockIndex.erase(mapBlockIndex.find(blockHash));
@@ -416,7 +416,7 @@ bool CTxDB::LoadBlockIndex()
         }
         if (pindexNew->nHeight == LAST_POW_BLOCK - (fTestNet ? 500 : nCoinbaseMaturity))
         {
-            pindexNew->SetStakeModifier(0,true);
+            pindexNew->SetStakeModifier(1,true);
         }
         // DEBUG END */
 
