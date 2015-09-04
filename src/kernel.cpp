@@ -61,7 +61,12 @@ static unsigned int GetBlockRatePerMinute()
         nRate += 1;
         pindex = pindex->pprev;
     }
-    nRate = round(nRate / (nStakeMinAge / 60));
+    nRate = round(nRate / (nStakeMinAge / 60)); // txns per minute per time period
+
+    // Catch down-time
+    if (!nRate)
+        return 10;
+
     // Return a min of 1 or a max of 10
     return unsigned(min(max(1, nRate), 10));
 }
