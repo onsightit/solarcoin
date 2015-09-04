@@ -167,8 +167,6 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     int64_t nModifierTime = 0;
     if (!GetLastStakeModifier(pindexPrev, nStakeModifier, nModifierTime))
         return error("ComputeNextStakeModifier: unable to get last modifier");
-    // nModifierInterval is based on the block rate of the past hour. 1 per minute would give a target interval of 10.
-    nModifierInterval = 10 / GetBlockRatePerMinute() * 60;
 
     if (fDebug)
         printf("ComputeNextStakeModifier: prev modifier=0x%016"PRIx64" time=%s nModifierInterval=%u\n", nStakeModifier, DateTimeStrFormat(nModifierTime).c_str(), nModifierInterval);
@@ -344,6 +342,11 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     CBigNum bnStakeTimeWeight = CBigNum(nValueIn) * factoredTimeWeight / COIN / (24 * 60 * 60);
     int64_t stakeTimeWeight = bnStakeTimeWeight.getuint64();
     targetProofOfStake = (bnStakeTimeWeight * bnTargetPerCoinDay).getuint256();
+
+    // Modifier Interval is based on the block rate of the past 8 hours.
+    // 1 per minute would give a target interval of 10 minutes. Faster rates shorten the interval.
+    // The interval is ajusted here because it is needed during CheckProofOfStake and CreateCoinStakeTime.
+    nModifierInterval = 10 / GetBlockRatePerMinute() * 60;
 
     // Calculate hash
     CDataStream ss(SER_GETHASH, 0);
