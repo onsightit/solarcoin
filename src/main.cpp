@@ -48,7 +48,7 @@ static CBigNum bnStartDiff(~uint256(0) >> 26);
 
 unsigned int nTargetSpacing = 1 * 60; // 1 minute
 unsigned int nStakeMinAge = 8 * 60 * 60; // 8 hours
-unsigned int nModifierInterval = 1; // time interval (i*60) to elapse before new modifier is computed. min is 1 minute. max is 10 minutes.
+unsigned int nModifierInterval = 10 * 60; // 10 minute time interval modifier
 
 int nCoinbaseMaturity = 500;
 int nCoinbaseMaturity_PoW = 10;
@@ -1090,9 +1090,10 @@ double GetCurrentInflationRate(double nAverageWeight)
 // get current interest rate by targeting for network stake dependent inflation rate PoST
 double GetCurrentInterestRate(CBlockIndex* pindexPrev)
 {
+    double nSupplyGrowth = (pindexPrev->nHeight - LAST_POW_BLOCK) * COIN_SUPPLY_GROWTH_RATE;
     double nAverageWeight = GetAverageStakeWeight(pindexPrev);
-    double inflationRate = GetCurrentInflationRate(nAverageWeight)/100;
-    double interestRate = ((inflationRate*INITIAL_COIN_SUPPLY)/nAverageWeight)*100;
+    double inflationRate = GetCurrentInflationRate(nAverageWeight) / 100;
+    double interestRate = ((inflationRate * (INITIAL_COIN_SUPPLY + nSupplyGrowth)) / nAverageWeight) * 100;
 
     return interestRate;
 }
@@ -2401,8 +2402,7 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
         return error("AddToBlockIndex() : SetStakeEntropyBit() failed");
 
     // ppcoin: record proof-of-stake hash value
-    // SolarCoin: Record proof of stake in PoW indexes
-    if (pindexNew->nHeight > 0)
+    if (pindexNew->IsProofOfStake())
     {
         if (!mapProofOfStake.count(hash))
             return error("AddToBlockIndex() : hashProofOfStake not found in map");
@@ -2423,8 +2423,8 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
 
     // Add to mapBlockIndex
     map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(hash, pindexNew)).first;
-    // SolarCoin: Record proof of stake in PoW indexes
-    setStakeSeen.insert(make_pair(pindexNew->prevoutStake, pindexNew->nStakeTime));
+    if (pindexNew->IsProofOfStake())
+        setStakeSeen.insert(make_pair(pindexNew->prevoutStake, pindexNew->nStakeTime));
     pindexNew->phashBlock = &((*mi).first);
 
     // Write to disk block index
@@ -2506,7 +2506,6 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
         printf("*** BlockTime=%"PRId64" Coinbase.nTime=%"PRId64" (w/FutureDrift=%"PRId64")\n", blocktime, (int64_t)vtx[0].nTime, FutureDrift((int64_t)vtx[0].nTime));
 
     // Check coinbase timestamp
-    // SolarCoin PoW blocks have large gaps in blocktimes (e.g. Block 129 has a timestamp 335.1 hours after 128!)
     if (blocktime > FutureDrift((int64_t)vtx[0].nTime))
         return DoS(50, error("CheckBlock() : coinbase timestamp is too early"));
 
@@ -2539,7 +2538,6 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
             return DoS(tx.nDoS, error("CheckBlock() : CheckTransaction failed"));
 
         // ppcoin: check transaction timestamp
-        // SolarCoin PoW blocks could be out of time sequence by several seconds. Don't check
         if (blocktime < (int64_t)tx.nTime)
             return DoS(50, error("CheckBlock() : block timestamp earlier than transaction timestamp"));
     }
@@ -2718,8 +2716,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     // ppcoin: check proof-of-stake
     // Limited duplicity on stake: prevents block flood attack
     // Duplicate stake allowed only when there is orphan child block
-    // SolarCoin: PoW indexes need to be seen
-    // if (pblock->IsProofOfStake())
+    if (pblock->IsProofOfStake())
     {
         if (setStakeSeen.count(pblock->GetProofOfStake()) && !mapOrphanBlocksByPrev.count(hash) && !Checkpoints::WantedByPendingSyncCheckpoint(hash))
             return error("ProcessBlock() : duplicate proof-of-stake (%s, %d) for block %s", pblock->GetProofOfStake().first.ToString().c_str(), pblock->GetProofOfStake().second, hash.ToString().c_str());
@@ -2733,17 +2730,19 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         return error("ProcessBlock() : CheckBlock FAILED");
     }
 
-    uint256 hashProofOfStake = 0, targetProofOfStake = 0;
+    // ppcoin: verify hash target and signature of coinstake tx
     if (pblock->IsProofOfStake())
     {
-        // ppcoin: verify hash target and signature of coinstake tx
+        uint256 hashProofOfStake = 0, targetProofOfStake = 0;
         if (!CheckProofOfStake(pblock->vtx[1], pblock->nBits, hashProofOfStake, targetProofOfStake))
         {
             printf("WARNING: ProcessBlock(): check proof-of-stake failed for block %s\n", hash.ToString().c_str());
             return false; // do not error here as we expect this during initial block download
         }
+        if (!mapProofOfStake.count(hash)) // add to mapProofOfStake
+            mapProofOfStake.insert(make_pair(hash, hashProofOfStake));
     }
-    else
+    /* DEBUG else
     {
         // ppcoin: verify hash target of coinbase tx (requires hashPrevBlock)
         if (!CheckProofOfStakePoW(pblock, pblock->vtx[0], hashProofOfStake))
@@ -2754,6 +2753,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     }
     if (!mapProofOfStake.count(hash)) // add to mapProofOfStake
         mapProofOfStake.insert(make_pair(hash, hashProofOfStake));
+    */
 
     CBlockIndex* pcheckpoint = Checkpoints::GetLastSyncCheckpoint();
     if (pcheckpoint && pblock->hashPrevBlock != hashBestChain && !Checkpoints::WantedByPendingSyncCheckpoint(hash))
@@ -2789,8 +2789,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     {
         printf("ProcessBlock: ORPHAN BLOCK, prev=%s pfrom=%s\n", pblock->hashPrevBlock.ToString().substr(0,20).c_str(), (pfrom ? pfrom->addr.ToString().c_str() : ""));
         // ppcoin: check proof-of-stake
-        // SolarCoin: Orphan PoW indexes need to be seen
-        // if (pblock->IsProofOfStake())
+        if (pblock->IsProofOfStake())
         {
             // Limited duplicity on stake: prevents block flood attack
             // Duplicate stake allowed only when there is orphan child block

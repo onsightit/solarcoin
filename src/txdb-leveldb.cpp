@@ -394,33 +394,6 @@ bool CTxDB::LoadBlockIndex()
         pindexNew->nBits          = diskindex.nBits;
         pindexNew->nNonce         = diskindex.nNonce;
 
-
-        /*// DEBUG TEMP CODE
-        if (pindexNew->nHeight > 0 && pindexNew->nHeight <= LAST_POW_BLOCK)
-        {
-            pindexNew->nFlags = 0;
-            pindexNew->SetStakeEntropyBit(((blockHash.Get64()) & 1llu));
-            pindexNew->SetProofOfWork();
-            pindexNew->SetStakeModifier(1,false);
-
-            // Calculate hash
-            CDataStream ss(SER_GETHASH, 0);
-            uint64_t nStakeModifier = 1; // PoW modifier
-            ss << nStakeModifier;
-            ss << pindexNew->nTime << 81 << pindexNew->nTime - nTargetSpacing << 0 << pindexNew->nTime;
-            pindexNew->hashProofOfStake = Hash(ss.begin(), ss.end());
-
-            mapBlockIndex.erase(mapBlockIndex.find(blockHash));
-            map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(blockHash, pindexNew)).first;
-            pindexNew->phashBlock = &((*mi).first);
-        }
-        if (pindexNew->nHeight == LAST_POW_BLOCK - (fTestNet ? 500 : nCoinbaseMaturity))
-        {
-            pindexNew->SetStakeModifier(1,true);
-        }
-        // DEBUG END */
-
-
         // Watch for genesis block
         if (pindexGenesisBlock == NULL && blockHash == (!fTestNet ? hashGenesisBlock : hashGenesisBlockTestNet))
             pindexGenesisBlock = pindexNew;
@@ -431,7 +404,8 @@ bool CTxDB::LoadBlockIndex()
         }
 
         // SolarCoin: build setStakeSeen
-        setStakeSeen.insert(make_pair(pindexNew->prevoutStake, pindexNew->nStakeTime));
+        if (pindexNew->IsProofOfStake())
+            setStakeSeen.insert(make_pair(pindexNew->prevoutStake, pindexNew->nStakeTime));
 
         iterator->Next();
     }

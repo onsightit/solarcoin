@@ -32,6 +32,8 @@ static const int64_t INITIAL_COIN_SUPPLY = 34145512; // testnet
 //static const int LAST_POW_BLOCK = 800000;               // If you change this, or mining rewards, adjust INITIAL_COIN_SUPPLY
 //static const int64_t INITIAL_COIN_SUPPLY = 34145512; // Used in calculating interest rate (97.495085881B are out of circulation)
 
+static const double COIN_SUPPLY_GROWTH_RATE = 1.35; // Circulation growth rate per block based on SLR grants of 710,000 / year
+
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/4;
 static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
@@ -1171,7 +1173,8 @@ public:
 
     std::pair<COutPoint, unsigned int> GetProofOfStake() const
     {
-        return IsProofOfStake() ? std::make_pair(vtx[1].vin[0].prevout, vtx[1].nTime) : std::make_pair(COutPoint(vtx[0].GetHash(),0), vtx[0].nTime);
+        // DEBUG return IsProofOfStake() ? std::make_pair(vtx[1].vin[0].prevout, vtx[1].nTime) : std::make_pair(COutPoint(vtx[0].GetHash(),0), vtx[0].nTime);
+        return IsProofOfStake() ? std::make_pair(vtx[1].vin[0].prevout, vtx[1].nTime) : std::make_pair(COutPoint(), (unsigned int)0);
     }
 
     // ppcoin: get max transaction timestamp
@@ -1374,7 +1377,7 @@ public:
         BLOCK_PROOF_OF_STAKE = (1 << 0), // is proof-of-stake block
         BLOCK_STAKE_ENTROPY  = (1 << 1), // entropy bit for stake modifier
         BLOCK_STAKE_MODIFIER = (1 << 2), // regenerated stake modifier
-        BLOCK_PROOF_OF_WORK  = (1 << 4), // is proof-of-work block
+        // DEBUG BLOCK_PROOF_OF_WORK  = (1 << 4), // is proof-of-work block
     };
 
     uint64_t nStakeModifier; // hash modifier for proof-of-stake
@@ -1440,9 +1443,12 @@ public:
         }
         else
         {
-            SetProofOfWork();
-            prevoutStake = COutPoint(block.vtx[0].GetHash(),0);
-            nStakeTime = block.vtx[0].nTime;
+            // DEBUG
+            //SetProofOfWork();
+            //prevoutStake = COutPoint(block.vtx[0].GetHash(),0);
+            //nStakeTime = block.vtx[0].nTime;
+            prevoutStake.SetNull();
+            nStakeTime = 0;
         }
 
         nVersion       = block.nVersion;
@@ -1532,10 +1538,11 @@ public:
         return (nFlags & BLOCK_PROOF_OF_STAKE);
     }
 
-    void SetProofOfWork()
-    {
-        nFlags |= BLOCK_PROOF_OF_WORK;
-    }
+    // DEBUG
+    //void SetProofOfWork()
+    //{
+    //    nFlags |= BLOCK_PROOF_OF_WORK;
+    //}
 
     void SetProofOfStake()
     {
@@ -1624,7 +1631,7 @@ public:
         READWRITE(nMoneySupply);
         READWRITE(nFlags);
         READWRITE(nStakeModifier);
-        if (true) // if (IsProofOfStake())
+        if (IsProofOfStake())
         {
             READWRITE(prevoutStake);
             READWRITE(nStakeTime);

@@ -50,13 +50,13 @@ static bool GetLastStakeModifier(const CBlockIndex* pindex, uint64_t& nStakeModi
 }
 
 // Get the block rate per minute during the past hour
-static unsigned int GetBlockRatePerMinute()
+static unsigned int GetBlockRatePerMinute(const CBlockIndex* pindexFrom)
 {
-    if (pindexBest->nHeight < 600)
+    if (pindexFrom->nHeight < 600)
         return 10;
 
     int nRate = 0;
-    CBlockIndex* pindex = pindexBest;
+    const CBlockIndex* pindex = pindexFrom;
     int64_t nTargetTime = GetAdjustedTime() - 3600;
 
     while (pindex->pprev && pindex->nTime > nTargetTime) {
@@ -110,7 +110,8 @@ static bool SelectBlockFromCandidates(vector<pair<int64_t, uint256> >& vSortedBy
             continue;
         // compute the selection hash by hashing its proof-hash and the
         // previous proof-of-stake modifier
-        uint256 hashProof = pindex->hashProofOfStake;
+        uint256 hashProof = pindex->IsProofOfStake()? pindex->hashProofOfStake : pindex->GetBlockHash();
+        // DEBUG uint256 hashProof = pindex->hashProofOfStake;
         CDataStream ss(SER_GETHASH, 0);
         ss << hashProof << nStakeModifierPrev;
         uint256 hashSelection = Hash(ss.begin(), ss.end());
@@ -160,13 +161,13 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
         fGeneratedStakeModifier = true;
         return true;  // genesis block's modifier is 0
     }
-    if (pindexCurrent->IsProofOfWork())
+    /* DEBUG if (pindexCurrent->IsProofOfWork())
     {
-        nStakeModifier = 1; // PoW modifier
+        nStakeModifier = 0; // PoW modifier
         if (pindexCurrent->nHeight == LAST_POW_BLOCK - (fTestNet ? 500 : nCoinbaseMaturity)) // Set a generated modifier before PoST
             fGeneratedStakeModifier = true;
         return true;
-    }
+    }*/
 
     // First find current stake modifier and its generation block time
     // if it's not old enough, return the same stake modifier
@@ -267,6 +268,12 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
     int64_t nStakeModifierTargetTime = nStakeModifierTime + nStakeModifierSelectionInterval;
     const CBlockIndex* pindex = pindexFrom;
 
+    /*// DEBUG Significant slowness returns 0. This forces a selection of the next generated modifier.
+    unsigned nRate = GetBlockRatePerMinute(pindexFrom);
+    if (!nRate)
+        nStakeModifierTargetTime = nStakeModifierTime + 1; // 1 second
+    // */
+
     if (fDebug)
         printf("GetKernelStakeModifier() Starting modifier height=%d time=%"PRId64" target=%"PRId64" nModifierInterval=%u\n",
             nStakeModifierHeight, nStakeModifierTime, nStakeModifierTargetTime, nModifierInterval);
@@ -349,16 +356,6 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     int64_t stakeTimeWeight = bnStakeTimeWeight.getuint64();
     targetProofOfStake = (bnStakeTimeWeight * bnTargetPerCoinDay).getuint256();
 
-    // Modifier interval is based on the block rate of the past hour.
-    // 1 per minute would give a target interval of 10 minutes. Faster rates shorten the interval.
-    // Significant slowness returns 0. This forces a 1 second selection interval in GetKernelStakeModifier.
-    // The interval is ajusted here because it is needed in CheckProofOfStake and CreateCoinStakeTime.
-    unsigned nRate = GetBlockRatePerMinute();
-    if (nRate)
-        nModifierInterval = (10 / nRate) * 60; // 1 to 10 minutes
-    else
-        nModifierInterval = 60; // 1 minute
-
     // Calculate hash
     CDataStream ss(SER_GETHASH, 0);
     uint64_t nStakeModifier = 0;
@@ -370,17 +367,9 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
 
     ss << nStakeModifier;
 
-    if (nStakeModifierHeight > LAST_POW_BLOCK)
-    {
-        ss << nTimeBlockFrom << nTxPrevOffset << txPrev.nTime << prevout.n << nTimeTx;
-        hashProofOfStake = Hash(ss.begin(), ss.end());
-    }
-    else
-    {
-        // PoW uses a hash that's not verified
-        ss << nTimeBlockFrom << 81 << nTimeBlockFrom - nTargetSpacing << 0 << nTimeBlockFrom;
-        hashProofOfStake = Hash(ss.begin(), ss.end());
-    }
+    ss << nTimeBlockFrom << nTxPrevOffset << txPrev.nTime << prevout.n << nTimeTx;
+    hashProofOfStake = Hash(ss.begin(), ss.end());
+
     if (fPrintProofOfStake)
     {
         printf("CheckStakeTimeKernelHash() : using modifier 0x%016"PRIx64" at height=%d timestamp=%s for block from height=%d timestamp=%s\n stakeTime=%d, coinDay=%d\n",
@@ -396,7 +385,8 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     }
 
     // Now check if proof-of-stake hash meets target protocol
-    if (heightBlockFrom > LAST_POW_BLOCK + 1) // DEBUG Skip the first PoST check
+    // DEBUG if (nStakeModifier > 0) // PoW modifier
+    //{
         if (CBigNum(hashProofOfStake) > bnStakeTimeWeight * bnTargetPerCoinDay)
         {
             if (fDebug)
@@ -404,6 +394,7 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
                     hashProofOfStake.GetHex().c_str(), bnStakeTimeWeight.ToString().c_str(), bnTargetPerCoinDay.ToString().c_str());
             return false;
         }
+    // DEBUG }
 
     if (fDebug && !fPrintProofOfStake)
     {
@@ -450,6 +441,7 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
     return true;
 }
 
+/* DEBUG
 // This is needed to get PoST to stake with pure PoW blocks behind it.
 // We need to fill out the pindex staking parameters. And we need to map a hashProofOfStake.
 bool CheckProofOfStakePoW(CBlock* pblock, const CTransaction& tx, uint256& hashProofOfStake)
@@ -462,7 +454,7 @@ bool CheckProofOfStakePoW(CBlock* pblock, const CTransaction& tx, uint256& hashP
 
     // Calculate hash
     CDataStream ss(SER_GETHASH, 0);
-    uint64_t nStakeModifier = 1; // PoW modifier
+    uint64_t nStakeModifier = 0; // PoW modifier
 
     ss << nStakeModifier;
 
@@ -479,6 +471,7 @@ bool CheckProofOfStakePoW(CBlock* pblock, const CTransaction& tx, uint256& hashP
     }
     return true;
 }
+*/
 
 // Check whether the coinstake timestamp meets protocol
 bool CheckCoinStakeTimestamp(int64_t nTimeBlock, int64_t nTimeTx)
