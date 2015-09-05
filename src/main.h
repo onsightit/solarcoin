@@ -1528,11 +1528,11 @@ public:
     static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart,
                                 unsigned int nRequired, unsigned int nToCheck);
 
-    // DEBUG
-    //bool IsProofOfWork() const
-    //{
-    //    return (nFlags & BLOCK_PROOF_OF_WORK);
-    //}
+    bool IsProofOfWork() const
+    {
+        // DEBUG return (nFlags & BLOCK_PROOF_OF_WORK);
+        return !(nFlags & BLOCK_PROOF_OF_STAKE);
+    }
 
     bool IsProofOfStake() const
     {
