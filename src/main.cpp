@@ -995,7 +995,7 @@ uint256 WantedByOrphan(const CBlock* pblockOrphan)
 int64_t GetProofOfWorkReward(int nHeight, int64_t nFees)
 {
     // Set starting subsidy
-    int64_t nSubsidy = 100 * COIN;
+    int64_t nSubsidy = (fTestNet ? 6036.378 * COIN : 100 * COIN);  // testnet value is based on 4000 blocks mined
 
     // Configure generation pool blocks
     if(nHeight < 99) {nSubsidy = (fTestNet ? 1000000000 * COIN : 1000000000 * COIN);}
