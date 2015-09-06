@@ -66,6 +66,7 @@ Value getmininginfo(const Array& params, bool fHelp)
     obj.push_back(Pair("stakeweight", weight));
     obj.push_back(Pair("stakeinterest",    (double)GetCurrentInterestRate(pindexBest)));
     obj.push_back(Pair("stakeinflation",    (double)GetCurrentInflationRate(averageStakeWeight)));
+    obj.push_back(Pair("blocksperhour", GetBlockRatePerHour(pindexBest)));
     obj.push_back(Pair("testnet",       fTestNet));
     return obj;
 }

@@ -839,7 +839,7 @@ int CMerkleTx::GetBlocksToMaturity() const
         return 0;
     int nMature = 0;
     if (IsCoinStake())
-        nMature = nCoinbaseMaturity + 1; // DEBUG
+        nMature = nCoinbaseMaturity + 1;
     else
         nMature = nCoinbaseMaturity_PoW + 1;
     return max(0, nMature - GetDepthInMainChain());
@@ -1096,6 +1096,20 @@ double GetCurrentInterestRate(CBlockIndex* pindexPrev)
     double interestRate = ((inflationRate * (INITIAL_COIN_SUPPLY + nSupplyGrowth)) / nAverageWeight) * 100;
 
     return interestRate;
+}
+
+// Get the block rate for one hour
+int GetBlockRatePerHour(CBlockIndex* pindexPrev)
+{
+    int nRate = 0;
+    CBlockIndex* pindex = pindexPrev;
+    int64_t nTargetTime = GetAdjustedTime() - 3600;
+
+    while (pindex && pindex->pprev && pindex->nTime > nTargetTime) {
+        nRate += 1;
+        pindex = pindex->pprev;
+    }
+    return nRate;
 }
 
 // Stakers coin reward based on coin stake time factor and targeted inflation rate PoST
@@ -2742,18 +2756,6 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         if (!mapProofOfStake.count(hash)) // add to mapProofOfStake
             mapProofOfStake.insert(make_pair(hash, hashProofOfStake));
     }
-    /* DEBUG else
-    {
-        // ppcoin: verify hash target of coinbase tx (requires hashPrevBlock)
-        if (!CheckProofOfStakePoW(pblock, pblock->vtx[0], hashProofOfStake))
-        {
-            printf("WARNING: ProcessBlock(): check proof-of-stake-pow failed for block %s\n", hash.ToString().c_str());
-            return false; // do not error here as we expect this during initial block download
-        }
-    }
-    if (!mapProofOfStake.count(hash)) // add to mapProofOfStake
-        mapProofOfStake.insert(make_pair(hash, hashProofOfStake));
-    */
 
     CBlockIndex* pcheckpoint = Checkpoints::GetLastSyncCheckpoint();
     if (pcheckpoint && pblock->hashPrevBlock != hashBestChain && !Checkpoints::WantedByPendingSyncCheckpoint(hash))

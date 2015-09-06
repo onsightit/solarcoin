@@ -141,6 +141,7 @@ int64_t GetStakeTimeFactoredWeight(int64_t timeWeight, int64_t bnCoinDayWeight, 
 double GetAverageStakeWeight(CBlockIndex* pindexPrev);
 double GetCurrentInterestRate(CBlockIndex* pindexPrev);
 double GetCurrentInflationRate(double nAverageWeight);
+int GetBlockRatePerHour(CBlockIndex* pindexPrev);
 unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime);
 unsigned int ComputeMinStake(unsigned int nBase, int64_t nTime, unsigned int nBlockTime);
 int GetNumBlocksOfPeers();
@@ -1173,7 +1174,6 @@ public:
 
     std::pair<COutPoint, unsigned int> GetProofOfStake() const
     {
-        // DEBUG return IsProofOfStake() ? std::make_pair(vtx[1].vin[0].prevout, vtx[1].nTime) : std::make_pair(COutPoint(vtx[0].GetHash(),0), vtx[0].nTime);
         return IsProofOfStake() ? std::make_pair(vtx[1].vin[0].prevout, vtx[1].nTime) : std::make_pair(COutPoint(), (unsigned int)0);
     }
 
@@ -1377,7 +1377,6 @@ public:
         BLOCK_PROOF_OF_STAKE = (1 << 0), // is proof-of-stake block
         BLOCK_STAKE_ENTROPY  = (1 << 1), // entropy bit for stake modifier
         BLOCK_STAKE_MODIFIER = (1 << 2), // regenerated stake modifier
-        // DEBUG BLOCK_PROOF_OF_WORK  = (1 << 4), // is proof-of-work block
     };
 
     uint64_t nStakeModifier; // hash modifier for proof-of-stake
@@ -1443,10 +1442,6 @@ public:
         }
         else
         {
-            // DEBUG
-            //SetProofOfWork();
-            //prevoutStake = COutPoint(block.vtx[0].GetHash(),0);
-            //nStakeTime = block.vtx[0].nTime;
             prevoutStake.SetNull();
             nStakeTime = 0;
         }
@@ -1530,7 +1525,6 @@ public:
 
     bool IsProofOfWork() const
     {
-        // DEBUG return (nFlags & BLOCK_PROOF_OF_WORK);
         return !(nFlags & BLOCK_PROOF_OF_STAKE);
     }
 
@@ -1538,12 +1532,6 @@ public:
     {
         return (nFlags & BLOCK_PROOF_OF_STAKE);
     }
-
-    // DEBUG
-    //void SetProofOfWork()
-    //{
-    //    nFlags |= BLOCK_PROOF_OF_WORK;
-    //}
 
     void SetProofOfStake()
     {
