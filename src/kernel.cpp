@@ -235,10 +235,6 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
     int64_t nStakeModifierTargetTime = nStakeModifierTime + nStakeModifierSelectionInterval;
     const CBlockIndex* pindex = pindexFrom;
 
-    if (fDebug)
-        printf("GetKernelStakeModifier() Starting modifier height=%d time=%"PRId64" target=%"PRId64" nModifierInterval=%u\n",
-            nStakeModifierHeight, nStakeModifierTime, nStakeModifierTargetTime, nModifierInterval);
-
     // loop to find the stake modifier later by a selection interval
     while (nStakeModifierTime < nStakeModifierTargetTime)
     {
@@ -253,8 +249,8 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
             else
             {
                 if (fDebug)
-                    printf("GetKernelStakeModifier() Nothing! Ending modifier height=%d time=%"PRId64"\n",
-                        nStakeModifierHeight, nStakeModifierTime);
+                    printf("GetKernelStakeModifier() Nothing! Ending modifier height=%d time=%"PRId64" target=%"PRId64"\n",
+                        nStakeModifierHeight, nStakeModifierTime, nStakeModifierTargetTime);
                 return false;
             }
         }
@@ -266,9 +262,6 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
         }
     }
     nStakeModifier = pindex->nStakeModifier;
-    if (fDebug)
-        printf("GetKernelStakeModifier() Ending modifier height=%d time=%"PRId64" modifier=%"PRId64"\n",
-            nStakeModifierHeight, nStakeModifierTime, nStakeModifier);
     return true;
 }
 

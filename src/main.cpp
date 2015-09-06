@@ -2516,9 +2516,6 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
         if (vtx[i].IsCoinBase())
             return DoS(100, error("CheckBlock() : more than one coinbase"));
 
-    if (fDebug)
-        printf("*** BlockTime=%"PRId64" Coinbase.nTime=%"PRId64" (w/FutureDrift=%"PRId64")\n", blocktime, (int64_t)vtx[0].nTime, FutureDrift((int64_t)vtx[0].nTime));
-
     // Check coinbase timestamp
     if (blocktime > FutureDrift((int64_t)vtx[0].nTime))
         return DoS(50, error("CheckBlock() : coinbase timestamp is too early"));
