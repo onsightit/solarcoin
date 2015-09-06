@@ -839,10 +839,10 @@ int CMerkleTx::GetBlocksToMaturity() const
         return 0;
     int nMature = 0;
     if (IsCoinStake())
-        nMature = nCoinbaseMaturity + 1;
+        nMature = nCoinbaseMaturity;
     else
-        nMature = nCoinbaseMaturity_PoW + 1;
-    return max(0, nMature - GetDepthInMainChain());
+        nMature = nCoinbaseMaturity_PoW;
+    return max(0, (nMature + 10) - GetDepthInMainChain());
 }
 
 bool CMerkleTx::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs)
@@ -3190,7 +3190,7 @@ bool LoadBlockIndex(bool fAllowNew)
         bnProofOfWorkLimit = bnProofOfWorkLimitTestNet; // 16 bits PoW target limit for testnet
         nStakeMinAge = 60 * 60; // test net min age is 60 minutes
         nCoinbaseMaturity = 10; // test maturity blocks
-        nCoinbaseMaturity_PoW = 1; // test maturity blocks
+        nCoinbaseMaturity_PoW = 2; // test maturity blocks
     }
     else
     {
