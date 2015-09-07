@@ -29,8 +29,8 @@ class CNode;
 static const int LAST_POW_BLOCK = 5000; // testnet
 static const int64_t INITIAL_COIN_SUPPLY = 34145512; // testnet
 
-//static const int LAST_POW_BLOCK = 800000;               // If you change this, or mining rewards, adjust INITIAL_COIN_SUPPLY
-//static const int64_t INITIAL_COIN_SUPPLY = 34145512; // Used in calculating interest rate (97.495085881B are out of circulation)
+//static const int LAST_POW_BLOCK = 825000;
+//static const int64_t INITIAL_COIN_SUPPLY = 34145512; // Used in calculating interest rate (97.990085882B are out of circulation)
 
 static const double COIN_SUPPLY_GROWTH_RATE = 1.35; // Circulation growth rate per block based on SLR grants of 710,000 / year
 
@@ -141,7 +141,8 @@ int64_t GetStakeTimeFactoredWeight(int64_t timeWeight, int64_t bnCoinDayWeight, 
 double GetAverageStakeWeight(CBlockIndex* pindexPrev);
 double GetCurrentInterestRate(CBlockIndex* pindexPrev);
 double GetCurrentInflationRate(double nAverageWeight);
-int GetBlockRatePerHour(CBlockIndex* pindexPrev);
+int64_t GetCurrentCoinSupply();
+int GetBlockRatePerHour();
 unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime);
 unsigned int ComputeMinStake(unsigned int nBase, int64_t nTime, unsigned int nBlockTime);
 int GetNumBlocksOfPeers();

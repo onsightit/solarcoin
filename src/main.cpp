@@ -995,7 +995,7 @@ uint256 WantedByOrphan(const CBlock* pblockOrphan)
 int64_t GetProofOfWorkReward(int nHeight, int64_t nFees)
 {
     // Set starting subsidy
-    int64_t nSubsidy = (fTestNet ? 6036.378 * COIN : 100 * COIN);  // testnet value is based on 4000 blocks mined
+    int64_t nSubsidy = (fTestNet ? 6965.63 * COIN : 100 * COIN);  // testnet value is based on 5000 - 98 blocks / INITIAL_COIN_SUPPLY
 
     // Configure generation pool blocks
     if(nHeight < 99) {nSubsidy = (fTestNet ? 1000000000 * COIN : 1000000000 * COIN);}
@@ -1090,19 +1090,24 @@ double GetCurrentInflationRate(double nAverageWeight)
 // get current interest rate by targeting for network stake dependent inflation rate PoST
 double GetCurrentInterestRate(CBlockIndex* pindexPrev)
 {
-    double nSupplyGrowth = (pindexPrev->nHeight - LAST_POW_BLOCK) * COIN_SUPPLY_GROWTH_RATE;
     double nAverageWeight = GetAverageStakeWeight(pindexPrev);
     double inflationRate = GetCurrentInflationRate(nAverageWeight) / 100;
-    double interestRate = ((inflationRate * (INITIAL_COIN_SUPPLY + nSupplyGrowth)) / nAverageWeight) * 100;
+    double interestRate = ((inflationRate * GetCurrentCoinSupply()) / nAverageWeight) * 100;
 
     return interestRate;
 }
 
+// Get the current coin supply
+int64_t GetCurrentCoinSupply()
+{
+    return (INITIAL_COIN_SUPPLY + ((pindexBest->nHeight - LAST_POW_BLOCK) * COIN_SUPPLY_GROWTH_RATE));
+}
+
 // Get the block rate for one hour
-int GetBlockRatePerHour(CBlockIndex* pindexPrev)
+int GetBlockRatePerHour()
 {
     int nRate = 0;
-    CBlockIndex* pindex = pindexPrev;
+    CBlockIndex* pindex = pindexBest;
     int64_t nTargetTime = GetAdjustedTime() - 3600;
 
     while (pindex && pindex->pprev && pindex->nTime > nTargetTime) {

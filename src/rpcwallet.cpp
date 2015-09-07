@@ -103,7 +103,8 @@ Value getinfo(const Array& params, bool fHelp)
         }
     }
 
-    obj.push_back(Pair("blocksperhour", GetBlockRatePerHour(pindexBest->pprev)));
+    obj.push_back(Pair("coinsupply",    GetCurrentCoinSupply()));
+    obj.push_back(Pair("blocksperhour", GetBlockRatePerHour()));
     obj.push_back(Pair("testnet",       fTestNet));
     obj.push_back(Pair("keypoololdest", (boost::int64_t)pwalletMain->GetOldestKeyPoolTime()));
     obj.push_back(Pair("keypoolsize",   (int)pwalletMain->GetKeyPoolSize()));
