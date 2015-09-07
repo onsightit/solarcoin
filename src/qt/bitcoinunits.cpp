@@ -71,9 +71,10 @@ int BitcoinUnits::amountDigits(int unit)
 {
     switch(unit)
     {
-    case SLR: return 8; // 21,000,000 (# digits, without commas)
-    case mSLR: return 11; // 21,000,000,000
-    case uSLR: return 14; // 21,000,000,000,000
+    // DEBUG added 2 decimals to each
+    case SLR: return 10; // 2,100,000,000 (# digits, without commas)
+    case mSLR: return 13; // 2,100,000,000,000
+    case uSLR: return 16; // 2,100,000,000,000,000
     default: return 0;
     }
 }
@@ -216,9 +217,9 @@ bool BitcoinUnits::parse(int unit, const QString &value, qint64 *val_out)
     bool ok = false;
     QString str = whole + decimals.leftJustified(num_decimals, '0');
 
-    if(str.size() > 18)
+    if(str.size() > 18 && whole.toLongLong() > 92233720368 && decimals.toLongLong() > 54775807) // DEBUG Max Value = 92,233,720,368.54775807
     {
-        return false; // Longer numbers will exceed 63 bits
+        return false; // Larger numbers will exceed 63 bits
     }
     qint64 retvalue = str.toLongLong(&ok);
     if(val_out)

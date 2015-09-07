@@ -147,7 +147,8 @@ void BitcoinAmountField::unitChanged(int idx)
 
     // Set max length after retrieving the value, to prevent truncation
     amount->setDecimals(BitcoinUnits::decimals(currentUnit));
-    amount->setMaximum(qPow(10, BitcoinUnits::amountDigits(currentUnit)) - qPow(10, -amount->decimals()));
+    // amount->setMaximum(qPow(10, BitcoinUnits::amountDigits(currentUnit)) - qPow(10, - amount->decimals())); // DEBUG
+    amount->setMaximum(92233720368.54775807); // DEBUG Max int64 value
 
     if(valid)
     {
