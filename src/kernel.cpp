@@ -248,7 +248,7 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
             }
             else
             {
-                if (fDebug)
+                if (fDebug && GetBoolArg("-printstakemodifier"))
                     printf("GetKernelStakeModifier() Nothing! Ending modifier height=%d time=%"PRId64" target=%"PRId64"\n",
                         nStakeModifierHeight, nStakeModifierTime, nStakeModifierTargetTime);
                 return false;
@@ -340,12 +340,7 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
 
     // Now check if proof-of-stake hash meets target protocol
     if (CBigNum(hashProofOfStake) > bnStakeTimeWeight * bnTargetPerCoinDay)
-    {
-        if (fDebug)
-            printf("CheckStakeTimeKernelHash() : proof-of-stake failed to meet target protocol. hashProof=%s > bnStakeTimeWeight=%s * bnTargetPerCoinDay=%s\n",
-                hashProofOfStake.GetHex().c_str(), bnStakeTimeWeight.ToString().c_str(), bnTargetPerCoinDay.ToString().c_str());
         return false;
-    }
 
     if (fDebug && !fPrintProofOfStake)
     {
