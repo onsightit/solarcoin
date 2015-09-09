@@ -3658,6 +3658,7 @@ void static ProcessGetData(CNode* pfrom)
                             // no response
                     }
 
+                    /* DEBUG
                     // Trigger them to send a getblocks request for the next batch of inventory
                     if (inv.hash == pfrom->hashContinue)
                     {
@@ -3668,7 +3669,7 @@ void static ProcessGetData(CNode* pfrom)
                         vInv.push_back(CInv(MSG_BLOCK, hashBestChain));
                         pfrom->PushMessage("inv", vInv);
                         pfrom->hashContinue = 0;
-                    }
+                    }*/
                 }
             }
             else if (inv.IsKnownType())
@@ -4058,8 +4059,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 printf("  getblocks stopping at %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
                 // ppcoin: tell downloading node about the latest block if it's
                 // without risk being rejected due to stake connection check
-                // DEBUG if (hashStop != hashBestChain && pindex->GetBlockTime() + nStakeMinAge > pindexBest->GetBlockTime())
-                //    pfrom->PushInventory(CInv(MSG_BLOCK, hashBestChain));
+                if (hashStop != hashBestChain && pindex->IsProofOfStake() && pindex->GetBlockTime() + nStakeMinAge > pindexBest->GetBlockTime())
+                    pfrom->PushInventory(CInv(MSG_BLOCK, hashBestChain));
                 break;
             }
             pfrom->PushInventory(CInv(MSG_BLOCK, pindex->GetBlockHash()));
