@@ -565,6 +565,15 @@ void StakeMiner(CWallet *pwallet)
                 return;
         }
 
+        // prevent large wallet stake/attack
+        while (pwallet->GetBalance() - nReserveBalance > (GetCurrentCoinSupply() * 0.45) * COIN)
+        {
+            nLastCoinStakeSearchInterval = 0;
+            MilliSleep(60000);
+            if (fShutdown)
+                return;
+        }
+
         //
         // Create new block
         //
