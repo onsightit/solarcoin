@@ -2835,7 +2835,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         {
             CBlock* pblockOrphan = (*mi).second;
             uint256 orphanhash = pblockOrphan->GetHash();
-            if (pblockrOphan->IsProofOfStake())
+            if (pblockOrphan->IsProofOfStake())
             {
                 uint256 hashProofOfStake = 0, targetProofOfStake = 0;
                 if (!CheckProofOfStake(pblockOrphan->vtx[1], pblockOrphan->nBits, hashProofOfStake, targetProofOfStake))
