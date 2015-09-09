@@ -2834,6 +2834,17 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
              ++mi)
         {
             CBlock* pblockOrphan = (*mi).second;
+            if (pblockOrphan->IsProofOfStake())
+            {
+                uint256 hashProofOfStake = 0, targetProofOfStake = 0;
+                if (!CheckProofOfStake(pblockOrphan->vtx[1], pblockOrphan->nBits, hashProofOfStake, targetProofOfStake))
+                {
+                    printf("WARNING: ProcessBlock(): check proof-of-stake failed for orphan block %s\n", pblockOrphan->GetHash().ToString().c_str());
+                    continue;
+                }
+                if (!mapProofOfStake.count(hash)) // add to mapProofOfStake
+                    mapProofOfStake.insert(make_pair(hash, hashProofOfStake));
+            }
             if (pblockOrphan->AcceptBlock())
                 vWorkQueue.push_back(pblockOrphan->GetHash());
             mapOrphanBlocks.erase(pblockOrphan->GetHash());
