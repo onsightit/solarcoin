@@ -2747,7 +2747,8 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     }
 
     // ppcoin: verify hash target and signature of coinstake tx
-    if (pblock->IsProofOfStake() && mapBlockIndex.count(pblock->hashPrevBlock)) // Orphan it if we don't have the previous block
+    // Orphan it if we don't have the previous block
+    if (pblock->IsProofOfStake() && mapBlockIndex.count(pblock->hashPrevBlock))
     {
         uint256 hashProofOfStake = 0, targetProofOfStake = 0;
         if (!CheckProofOfStake(pblock->vtx[1], pblock->nBits, hashProofOfStake, targetProofOfStake))
