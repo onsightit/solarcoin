@@ -3658,7 +3658,6 @@ void static ProcessGetData(CNode* pfrom)
                             // no response
                     }
 
-                    /* DEBUG
                     // Trigger them to send a getblocks request for the next batch of inventory
                     if (inv.hash == pfrom->hashContinue)
                     {
@@ -3666,10 +3665,16 @@ void static ProcessGetData(CNode* pfrom)
                         // and we want it right after the last block so they don't
                         // wait for other stuff first.
                         vector<CInv> vInv;
-                        vInv.push_back(CInv(MSG_BLOCK, hashBestChain));
-                        pfrom->PushMessage("inv", vInv);
-                        pfrom->hashContinue = 0;
-                    }*/
+                        CBlockIndex* pindex = mapBlockIndex[pfrom->hashContinue];
+                        if (pindex && pindex->pnext)
+                        {
+                            pindex = pindex->pnext;
+                            // DEBUG vInv.push_back(CInv(MSG_BLOCK, hashBestChain));
+                            vInv.push_back(CInv(MSG_BLOCK, pindex->GetBlockHash()));
+                            pfrom->PushMessage("inv", vInv);
+                            pfrom->hashContinue = 0;
+                        }
+                    }
                 }
             }
             else if (inv.IsKnownType())
