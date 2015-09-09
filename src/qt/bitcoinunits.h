@@ -46,7 +46,7 @@ public:
     //! Format as string using decimal points defined in options
     static QString format(int unit, qint64 amount, bool plussign=false, bool hideamounts=false);
     //! Format as string using specified decimal points
-    static QString formatMaxDecimals(int unit, qint64 n, int decimals, bool plussign=false, bool hideamounts=false);
+    static QString formatMaxDecimals(int unit, qint64 n, int decimals, bool plussign=false, bool hideamounts=false, bool pretty=true);
     //! Format as string using max fee decimal points
     static QString formatFee(int unit, qint64 amount, bool plussign=false);
     //! Format as string (with unit) using decimal points defined in options

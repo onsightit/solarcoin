@@ -110,7 +110,7 @@ QString BitcoinUnits::format(int unit, qint64 n, bool fPlus, bool fHideAmounts)
     return formatMaxDecimals(unit, n, decimals(unit), fPlus, fHideAmounts);
 }
 
-QString BitcoinUnits::formatMaxDecimals(int unit, qint64 n, int decimals, bool fPlus, bool fHideAmounts)
+QString BitcoinUnits::formatMaxDecimals(int unit, qint64 n, int decimals, bool fPlus, bool fHideAmounts, bool fPretty)
 {
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
@@ -120,7 +120,9 @@ QString BitcoinUnits::formatMaxDecimals(int unit, qint64 n, int decimals, bool f
     qint64 n_abs = (n > 0 ? n : -n);
     qint64 quotient = n_abs / coin;
     qint64 remainder = n_abs % coin;
-    QString quotient_str = QString("%L1").arg(quotient);
+    QString quotient_str = QString::number(quotient);
+    if (fPretty)
+        quotient_str = QString("%L1").arg(quotient);
     QString remainder_str = QString::number(remainder).rightJustified(maxdecimals(unit), '0').left(decimals);
 
     // Pad zeros after remainder up to number of decimals
