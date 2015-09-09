@@ -2747,7 +2747,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     }
 
     // ppcoin: verify hash target and signature of coinstake tx
-    if (pblock->IsProofOfStake())
+    if (pblock->IsProofOfStake() && mapBlockIndex.count(pblock->hashPrevBlock)) // Orphan it if we don't have the previous block
     {
         uint256 hashProofOfStake = 0, targetProofOfStake = 0;
         if (!CheckProofOfStake(pblock->vtx[1], pblock->nBits, hashProofOfStake, targetProofOfStake))
@@ -3665,15 +3665,9 @@ void static ProcessGetData(CNode* pfrom)
                         // and we want it right after the last block so they don't
                         // wait for other stuff first.
                         vector<CInv> vInv;
-                        CBlockIndex* pindex = mapBlockIndex[pfrom->hashContinue];
-                        if (pindex && pindex->pnext)
-                        {
-                            pindex = pindex->pnext;
-                            // DEBUG vInv.push_back(CInv(MSG_BLOCK, hashBestChain));
-                            vInv.push_back(CInv(MSG_BLOCK, pindex->GetBlockHash()));
-                            pfrom->PushMessage("inv", vInv);
-                            pfrom->hashContinue = 0;
-                        }
+                        vInv.push_back(CInv(MSG_BLOCK, hashBestChain));
+                        pfrom->PushMessage("inv", vInv);
+                        pfrom->hashContinue = 0;
                     }
                 }
             }
