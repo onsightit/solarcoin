@@ -428,7 +428,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
         bool fInsertedNew = ret.second;
         if (fInsertedNew)
         {
-            wtx.nTimeReceived = GetAdjustedTime();
+            wtx.nTimeReceived = (wtxIn.nTimeReceived ? wtxIn.nTimeReceived : GetAdjustedTime()); // DEBUG
             wtx.nOrderPos = IncOrderPosNext();
 
             wtx.nTimeSmart = wtx.nTimeReceived;

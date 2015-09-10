@@ -1517,7 +1517,7 @@ void BitcoinGUI::updateStakingIcon()
         else if (vNodes.empty())
             labelStakingIcon->setToolTip(tr("Out of sync and not staking because the wallet is offline."));
         else if (pwalletMain->GetBalance() - nReserveBalance > (GetCurrentCoinSupply() * 0.45) * COIN) // prevent large wallet stake/attack
-            labelStakingIcon->setToolTip(tr("In sync but not staking because balance exceeds 45% of coin supply."));
+            labelStakingIcon->setToolTip(tr("In sync at block %1\nNot staking because balance exceeds 45% of coin supply.").arg(currentBlock));
         else
             labelStakingIcon->setToolTip(tr("In sync at block %1\nNot staking, earning Stake-Time.").arg(currentBlock));
     }

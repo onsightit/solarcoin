@@ -222,14 +222,17 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             uint256 hash;
             ssKey >> hash;
             CWalletTx& wtx = pwallet->mapWallet[hash];
+
             if (fLegacyWallet)
             {
+                CWalletTx wtxNew = wtx;
                 // Temporarily change the serialized type to pull in Legacy txns without tx.nTime
-                ssValue.SetType(SER_GETHASH);
-                ssValue >> wtx;
-                if (!wtx.IsCoinBase())
-                    wtx.nTime = wtx.nTimeReceived;
-
+                ssValue.SetType(SER_LEGACYPROTOCOL);
+                ssValue >> wtxNew;
+                wtxNew.nTime = wtxNew.nTimeReceived;
+                pwallet->mapWallet.erase(hash);
+                pwallet->mapWallet.insert(make_pair(hash, wtxNew));
+                wss.vWalletUpgrade.push_back(hash);
                 // Set it back
                 ssValue.SetType(SER_DISK);
             }
@@ -237,8 +240,10 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             {
                 ssValue >> wtx;
             }
-            if (wtx.CheckTransaction() && (wtx.GetHash() == hash))
+            if (wtx.CheckTransaction() && (fLegacyWallet ? true : wtx.GetHash() == hash))
+            {
                 wtx.BindWallet(pwallet);
+            }
             else
             {
                 pwallet->mapWallet.erase(hash);
@@ -467,7 +472,9 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
         // Legacy 1.5 wallets have txns w/o timestamps
         // This allows us to upgrade the legacy wtx.nTime
         if (pwallet->GetVersion() < FEATURE_LATEST)
+        {
             fLegacyWallet = true;
+        }
 
         // Get cursor
         Dbc* pcursor = GetCursor();
@@ -526,11 +533,6 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
     if (result != DB_LOAD_OK)
         return result;
 
-    if (fLegacyWallet)
-    {
-        pwallet->SetMinVersion(FEATURE_LATEST);
-        printf("Wallet upgraded to version %d\n", pwallet->GetVersion());
-    }
     printf("nFileVersion = %d\n", wss.nFileVersion);
 
     printf("Keys: %u plaintext, %u encrypted, %u w/ metadata, %u total\n",
@@ -542,7 +544,15 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
 
 
     BOOST_FOREACH(uint256 hash, wss.vWalletUpgrade)
+    {
         WriteTx(hash, pwallet->mapWallet[hash]);
+    }
+
+    if (fLegacyWallet)
+    {
+        pwallet->SetMinVersion(FEATURE_LATEST);
+        printf("Wallet upgraded to version %d\n", pwallet->GetVersion());
+    }
 
     // Rewrite encrypted wallets of versions 0.4.0 and 0.5.0rc:
     if (wss.fIsEncrypted && (wss.nFileVersion == 40000 || wss.nFileVersion == 50000))
