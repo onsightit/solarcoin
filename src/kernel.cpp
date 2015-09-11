@@ -143,7 +143,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
         return error("ComputeNextStakeModifier: unable to get last modifier");
 
     if (fDebug)
-        printf("ComputeNextStakeModifier: prev modifier=0x%016"PRIx64" time=%s nModifierInterval=%u\n", nStakeModifier, DateTimeStrFormat(nModifierTime).c_str(), nModifierInterval);
+        printf("ComputeNextStakeModifier: prev modifier=0x%016"PRIx64" time=%s\n", nStakeModifier, DateTimeStrFormat(nModifierTime).c_str());
 
     if (nModifierTime / nModifierInterval >= pindexPrev->GetBlockTime() / nModifierInterval)
     {
