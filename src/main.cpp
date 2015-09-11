@@ -1108,7 +1108,7 @@ int GetBlockRatePerHour()
 {
     int nRate = 0;
     CBlockIndex* pindex = pindexBest;
-    int64_t nTargetTime = GetAdjustedTime() - 3600;
+    int64_t nTargetTime = pindexBest->nTime - 3600;
 
     while (pindex && pindex->pprev && pindex->nTime > nTargetTime) {
         nRate += 1;
@@ -4071,7 +4071,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 printf("  getblocks stopping at %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
                 // ppcoin: tell downloading node about the latest block if it's
                 // without risk being rejected due to stake connection check
-                if (hashStop != hashBestChain && pindex->IsProofOfStake() && pindex->GetBlockTime() + nStakeMinAge > pindexBest->GetBlockTime())
+                if (hashStop != hashBestChain && pindex->GetBlockTime() + nStakeMinAge > pindexBest->GetBlockTime())
                     pfrom->PushInventory(CInv(MSG_BLOCK, hashBestChain));
                 break;
             }
