@@ -231,7 +231,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     labelVersionIcon = new QLabel();
     labelVersionIcon->setContentsMargins(0,0,0,0);
-    labelVersionIcon->setPixmap(QIcon(":/icons/statusGood").pixmap(4, STATUSBAR_ICONSIZE));
+    labelVersionIcon->setPixmap(QIcon(":/icons/statusWarn").pixmap(4, STATUSBAR_ICONSIZE)); // using warn for color matching gui
     versionLabel = new QLabel();
     versionLabel->setContentsMargins(0,0,0,0);
     if (!STATUSBAR_MARGIN)
@@ -815,7 +815,7 @@ void BitcoinGUI::setVersionIcon(bool newVersion)
     switch(newVersion)
     {
         case true: icon = ":/icons/statusBad"; versionLabel->setStyleSheet("QLabel {color: red;}"); break;
-        case false: icon = ":/icons/statusGood"; versionLabel->setStyleSheet("QLabel {color: white;}"); break;
+        case false: icon = ":/icons/statusWarn"; versionLabel->setStyleSheet("QLabel {color: white;}"); break; // using warn for color matching gui
     }
     labelVersionIcon->setPixmap(QIcon(icon).pixmap(72,STATUSBAR_ICONSIZE));
     labelVersionIcon->setToolTip(newVersion ? tr("Your wallet is out of date!\nDownload the newest version in Help.") : tr("You have the most current wallet version."));
