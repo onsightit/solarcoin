@@ -240,7 +240,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             {
                 ssValue >> wtx;
             }
-            if (wtx.CheckTransaction() && (fLegacyWallet ? true : wtx.GetHash() == hash))
+            if (wtx.CheckTransaction() && wtx.GetHash() == hash)
             {
                 wtx.BindWallet(pwallet);
             }
