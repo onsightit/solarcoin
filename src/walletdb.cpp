@@ -225,13 +225,10 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
 
             if (fLegacyWallet)
             {
-                CWalletTx wtxNew = wtx;
                 // Temporarily change the serialized type to pull in Legacy txns without tx.nTime
                 ssValue.SetType(SER_LEGACYPROTOCOL);
-                ssValue >> wtxNew;
-                wtxNew.nTime = wtxNew.nTimeReceived;
-                pwallet->mapWallet.erase(hash);
-                pwallet->mapWallet.insert(make_pair(hash, wtxNew));
+                ssValue >> wtx;
+                wtx.nTime = wtx.nTimeReceived;
                 wss.vWalletUpgrade.push_back(hash);
                 // Set it back
                 ssValue.SetType(SER_DISK);

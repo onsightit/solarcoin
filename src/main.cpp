@@ -3692,21 +3692,37 @@ void static ProcessGetData(CNode* pfrom)
                     LOCK(cs_mapRelay);
                     map<CInv, CDataStream>::iterator mi = mapRelay.find(inv);
                     if (mi != mapRelay.end()) {
-                        if (false && pfrom->nVersion <= PROTOCOL_VERSION_POW) // DEBUG this later.
+                        if (pfrom->nVersion <= PROTOCOL_VERSION_POW)
                         {
-                            printf("*** DEBUG Pushing mapRelay item to node version=%d\n", pfrom->nVersion);
-                            CDataStream ss(SER_NETWORK|SER_LEGACYPROTOCOL, PROTOCOL_VERSION);
-                            ss.reserve(1000);
-                            ss << (*mi).second;
-
-                            pfrom->nSendBytes -= 4; // DEBUG
-                            pfrom->PushMessage(inv.GetCommand(), ss);
+                            if ((*mi).second.size() > 40) // Hack for sending less data than promised. Ignore if second getdata request from node is not big enough
+                            {
+                                CTransaction tx;
+                                (*mi).second >> tx;
+                                if (tx.IsStandard() && tx.CheckTransaction())
+                                {
+                                    CDataStream ss(SER_NETWORK|SER_LEGACYPROTOCOL, PROTOCOL_VERSION);
+                                    ss.reserve(1000);
+                                    ss << tx;
+                                    pfrom->PushMessage(inv.GetCommand(), ss);
+                                    pushed = true;
+                                }
+                                else
+                                {
+                                    if (fDebug)
+                                        printf("ProcessGetData() 1 : invalid tx\n");
+                                }
+                            }
+                            else
+                            {
+                                if (fDebug)
+                                    printf("ProcessGetData() 1 : invalid iteration strCommand=%s\n", inv.GetCommand());
+                            }
                         }
                         else
                         {
                             pfrom->PushMessage(inv.GetCommand(), (*mi).second);
+                            pushed = true;
                         }
-                        pushed = true;
                     }
                 }
                 if (!pushed && inv.type == MSG_TX) {
@@ -3716,11 +3732,19 @@ void static ProcessGetData(CNode* pfrom)
                         if (pfrom->nVersion <= PROTOCOL_VERSION_POW)
                             nType |= SER_LEGACYPROTOCOL;
                         CTransaction tx = mempool.lookup(inv.hash);
-                        CDataStream ss(nType, PROTOCOL_VERSION);
-                        ss.reserve(1000);
-                        ss << tx;
-                        pfrom->PushMessage("tx", ss);
-                        pushed = true;
+                        if (tx.IsStandard() && tx.CheckTransaction())
+                        {
+                            CDataStream ss(nType, PROTOCOL_VERSION);
+                            ss.reserve(1000);
+                            ss << tx;
+                            pfrom->PushMessage("tx", ss);
+                            pushed = true;
+                        }
+                        else
+                        {
+                            if (fDebug)
+                                printf("ProcessGetData() 2 : invalid tx\n");
+                        }
                     }
                 }
                 if (!pushed) {
@@ -4465,6 +4489,9 @@ bool ProcessMessages(CNode* pfrom)
 
         // get next message
         CNetMessage& msg = *it;
+
+        if (fDebug)
+            printf("ProcessMessages() : nVersion=%d nSendSize=%d msg.hdr.nMessageSize=%d strCommand=%s\n", pfrom->nVersion, pfrom->nSendSize, msg.hdr.nMessageSize, msg.hdr.GetCommand().c_str());
 
         // end, if an incomplete message is found
         if (!msg.complete())
