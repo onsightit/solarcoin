@@ -3708,11 +3708,6 @@ void static ProcessGetData(CNode* pfrom)
                             {
                                 CTransaction tx;
                                 (*mi).second >> tx;
-
-                                // DEBUG
-                                printf("*** DEBUG : Push tx to legacy node\n");
-                                tx.print();
-
                                 CDataStream ss(SER_NETWORK|SER_LEGACYPROTOCOL, PROTOCOL_VERSION);
                                 ss.reserve(1000);
                                 ss << tx;
@@ -3729,8 +3724,6 @@ void static ProcessGetData(CNode* pfrom)
                         }
                         else
                         {
-                            // DEBUG
-                            printf("*** DEBUG : Push tx to 2.0 node\n");
                             pfrom->PushMessage(inv.GetCommand(), (*mi).second);
                             pushed = true;
                         }
