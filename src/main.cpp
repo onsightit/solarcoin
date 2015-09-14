@@ -3591,7 +3591,8 @@ void static ProcessGetData(CNode* pfrom)
 
     vector<CInv> vNotFound;
 
-    while (it != pfrom->vRecvGetData.end()) {
+    while (it != pfrom->vRecvGetData.end())
+    {
         // Don't bother if send buffer is too full to respond anyway
         if (pfrom->nSendSize >= SendBufferSize())
             break;
@@ -3604,6 +3605,7 @@ void static ProcessGetData(CNode* pfrom)
 
         const CInv &inv = *it;
         {
+            bool fTrack = true;
             boost::this_thread::interruption_point();
             it++;
 
@@ -3618,14 +3620,17 @@ void static ProcessGetData(CNode* pfrom)
                     // checkpoint, only serve it if it's in the checkpointed chain
                     int nHeight = ((*mi).second)->nHeight;
                     CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
-                    if (pcheckpoint && nHeight < pcheckpoint->nHeight) {
+                    if (pcheckpoint && nHeight < pcheckpoint->nHeight)
+                    {
                        if (!((*mi).second)->IsInMainChain())
                        {
                          printf("ProcessGetData(): ignoring request for old block that isn't in the main chain\n");
                          send = false;
                        }
                     }
-                } else {
+                }
+                else
+                {
                     send = false;
                 }
                 if (send)
@@ -3640,7 +3645,9 @@ void static ProcessGetData(CNode* pfrom)
                     ss.reserve(MAX_BLOCK_SIZE);
                     ss << block;
                     if (inv.type == MSG_BLOCK)
+                    {
                         pfrom->PushMessage("block", ss);
+                    }
                     else // MSG_FILTERED_BLOCK)
                     {
                         LOCK(pfrom->cs_filter);
@@ -3691,31 +3698,26 @@ void static ProcessGetData(CNode* pfrom)
                 {
                     LOCK(cs_mapRelay);
                     map<CInv, CDataStream>::iterator mi = mapRelay.find(inv);
-                    if (mi != mapRelay.end()) {
+                    if (mi != mapRelay.end())
+                    {
                         if (pfrom->nVersion <= PROTOCOL_VERSION_POW)
                         {
-                            if ((*mi).second.size() > 40) // Hack for sending less data than promised. Ignore if second getdata request from node is not big enough
+                            // PROTOCOL_VERSION_POW nodes will send a second request, for this node sending less data than promised.
+                            // Ignore if second getdata request is not big enough
+                            if ((*mi).second.size() > 40)
                             {
                                 CTransaction tx;
                                 (*mi).second >> tx;
-                                if (tx.IsStandard() && tx.CheckTransaction())
-                                {
-                                    CDataStream ss(SER_NETWORK|SER_LEGACYPROTOCOL, PROTOCOL_VERSION);
-                                    ss.reserve(1000);
-                                    ss << tx;
-                                    pfrom->PushMessage(inv.GetCommand(), ss);
-                                    pushed = true;
-                                }
-                                else
-                                {
-                                    if (fDebug)
-                                        printf("ProcessGetData() 1 : invalid tx\n");
-                                }
+                                CDataStream ss(SER_NETWORK|SER_LEGACYPROTOCOL, PROTOCOL_VERSION);
+                                ss.reserve(1000);
+                                ss << tx;
+                                pfrom->PushMessage(inv.GetCommand(), ss);
+                                pushed = true;
                             }
                             else
                             {
-                                if (fDebug)
-                                    printf("ProcessGetData() 1 : invalid iteration strCommand=%s\n", inv.GetCommand());
+                                pushed = true;
+                                fTrack = false;
                             }
                         }
                         else
@@ -3725,35 +3727,30 @@ void static ProcessGetData(CNode* pfrom)
                         }
                     }
                 }
-                if (!pushed && inv.type == MSG_TX) {
+                if (!pushed && inv.type == MSG_TX)
+                {
                     LOCK(mempool.cs);
                     if (mempool.exists(inv.hash)) {
                         int nType = SER_NETWORK;
                         if (pfrom->nVersion <= PROTOCOL_VERSION_POW)
                             nType |= SER_LEGACYPROTOCOL;
                         CTransaction tx = mempool.lookup(inv.hash);
-                        if (tx.IsStandard() && tx.CheckTransaction())
-                        {
-                            CDataStream ss(nType, PROTOCOL_VERSION);
-                            ss.reserve(1000);
-                            ss << tx;
-                            pfrom->PushMessage("tx", ss);
-                            pushed = true;
-                        }
-                        else
-                        {
-                            if (fDebug)
-                                printf("ProcessGetData() 2 : invalid tx\n");
-                        }
+                        CDataStream ss(nType, PROTOCOL_VERSION);
+                        ss.reserve(1000);
+                        ss << tx;
+                        pfrom->PushMessage("tx", ss);
+                        pushed = true;
                     }
                 }
-                if (!pushed) {
+                if (!pushed)
+                {
                     vNotFound.push_back(inv);
                 }
             }
 
             // Track requests for our stuff.
-            Inventory(inv.hash);
+            if (fTrack)
+                Inventory(inv.hash);
 
             if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK)
                 break;
@@ -3762,7 +3759,8 @@ void static ProcessGetData(CNode* pfrom)
 
     pfrom->vRecvGetData.erase(pfrom->vRecvGetData.begin(), it);
 
-    if (!vNotFound.empty()) {
+    if (!vNotFound.empty())
+    {
         // Let the peer know that we didn't find what it asked for, so it doesn't
         // have to wait around forever. Currently only SPV clients actually care
         // about this message: it's needed when they are recursively walking the
@@ -4578,7 +4576,7 @@ bool ProcessMessages(CNode* pfrom)
         }
 
         if (!fRet)
-            printf("ProcessMessage(%s, %u bytes) FAILED\n", strCommand.c_str(), nMessageSize);
+            printf("ProcessMessages(%s, %u bytes) FAILED\n", strCommand.c_str(), nMessageSize);
 
         break;
     }
