@@ -3717,6 +3717,8 @@ void static ProcessGetData(CNode* pfrom)
                                 ss.reserve(1000);
                                 ss << tx;
                                 pfrom->PushMessage(inv.GetCommand(), ss);
+                                // restore (*mi).second
+                                (*mi).second << tx;
                                 pushed = true;
                             }
                             else
