@@ -1151,7 +1151,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
     return path;
 }
 
-boost::filesystem::path GetConfigFile()
+const boost::filesystem::path GetConfigFile()
 {
     namespace fs = boost::filesystem;
 
@@ -1159,11 +1159,13 @@ boost::filesystem::path GetConfigFile()
     std::string confArg(GetArg("-conf", conf));
     fs::path pathConfigFile(confArg);
 
+#ifndef MAC_OSX
     if (pathConfigFile.is_relative())
     {
         pathConfigFile = fs::current_path() / confArg;  // set it to default current path
         if (!fs::exists(pathConfigFile)) pathConfigFile = GetDataDir(false) / confArg;
     }
+#endif
 
     if (!fs::exists(pathConfigFile)) pathConfigFile = GetDataDir(false) / conf;
     if (!fs::exists(pathConfigFile)) pathConfigFile = GetProgramDir() / conf;

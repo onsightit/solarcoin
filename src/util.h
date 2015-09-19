@@ -232,7 +232,7 @@ bool RenameOver(boost::filesystem::path src, boost::filesystem::path dest);
 boost::filesystem::path GetDefaultDataDir();
 const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
 const boost::filesystem::path &GetProgramDir();
-boost::filesystem::path GetConfigFile();
+const boost::filesystem::path GetConfigFile();
 boost::filesystem::path GetPidFile();
 #ifndef WIN32
 void CreatePidFile(const boost::filesystem::path &path, pid_t pid);

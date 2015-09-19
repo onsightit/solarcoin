@@ -34,7 +34,7 @@ src/quazip/.qmake.stash
 *.patch
 .solarcoin
 .qmake.stash
-VeriCoin-Qt.app
+SolarCoin-Qt.app
 #compilation and Qt preprocessor part
 *.qm
 Makefile
