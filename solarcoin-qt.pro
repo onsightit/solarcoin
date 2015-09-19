@@ -1,5 +1,3 @@
-### MACOSX RUN qmake solarcoin-qt.pro FROM COMMAND LINE, NOT CREATOR ###
-
 TEMPLATE = app
 TARGET = solarcoin-qt
 VERSION = 1.6.1
