@@ -92,7 +92,7 @@ MOC_DIR = build
 UI_DIR = build
 
 # use: qmake "RELEASE=1"
-#contains(RELEASE, 1) {
+contains(RELEASE, 1) {
     # Mac: compile for maximum compatibility (10.6, 64-bit (Apple no longer supports 32 bit macs))
     macx:QMAKE_CXXFLAGS += -mmacosx-version-min=10.6 -arch x86_64 -isysroot /Developer/SDKs/MacOSX10.6.sdk
     macx:QMAKE_CFLAGS += -mmacosx-version-min=10.6 -arch x86_64 -isysroot  /Developer/SDKs/MacOSX10.6.sdk
@@ -101,7 +101,7 @@ UI_DIR = build
         # Linux: static link
         LIBS += -Wl,-Bstatic
     }
-#}
+}
 
 !win32 {
 # for extra security against potential buffer overflows: enable GCCs Stack Smashing Protection
