@@ -2385,6 +2385,11 @@ bool CTransaction::GetStakeTime(CTxDB& txdb, uint64_t& nStakeTime, CBlockIndex* 
 
         int64_t nValueIn = txPrev.vout[txin.prevout.n].nValue;
         int64_t timeWeight = nTime - txPrev.nTime;
+
+        // Prevent really large stake weights by maxing at 30 days weight
+        if (timeWeight > 30 * (24 * 60 * 60))
+            timeWeight = 30 * (24 * 60 * 60);
+
         int64_t CoinDay = nValueIn * timeWeight / COIN / (24 * 60 * 60);
         int64_t factoredTimeWeight = GetStakeTimeFactoredWeight(timeWeight, CoinDay, pindexPrev);
         bnStakeTime += CBigNum(nValueIn) * factoredTimeWeight / COIN / (24 * 60 * 60);

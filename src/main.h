@@ -29,7 +29,7 @@ class CNode;
 //static const int LAST_POW_BLOCK = 5000; // testnet
 //static const int64_t INITIAL_COIN_SUPPLY = 34145512; // testnet
 
-static const int LAST_POW_BLOCK = 830000;
+static const int LAST_POW_BLOCK = 830058;
 static const int64_t INITIAL_COIN_SUPPLY = 34145512; // Used in calculating interest rate (97.990085882B are out of circulation)
 
 static const double COIN_SUPPLY_GROWTH_RATE = 1.35; // Circulation growth rate per block based on SLR grants of 710,000 / year
