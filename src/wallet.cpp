@@ -1217,10 +1217,6 @@ bool CWallet::SelectCoinsMinConf(int64_t nTargetValue, unsigned int nSpendTime, 
         if (pcoin->nTime > nSpendTime)
             continue;
 
-        // Limit coin age to one year.
-        if (pcoin->nTime < nSpendTime - 31536000)
-            continue;
-
         int64_t n = pcoin->vout[i].nValue;
 
         pair<int64_t,pair<const CWalletTx*,unsigned int> > coin = make_pair(n,make_pair(pcoin, i));
@@ -1341,10 +1337,6 @@ bool CWallet::SelectCoinsSimple(int64_t nTargetValue, unsigned int nSpendTime, i
 
         // Follow the timestamp rules
         if (pcoin->nTime > nSpendTime)
-            continue;
-
-        // Limit coin age to one year.
-        if (pcoin->nTime < nSpendTime - 31536000)
             continue;
 
         int64_t n = pcoin->vout[i].nValue;
