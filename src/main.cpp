@@ -1094,6 +1094,10 @@ double GetCurrentInterestRate(CBlockIndex* pindexPrev)
     double inflationRate = GetCurrentInflationRate(nAverageWeight) / 100;
     double interestRate = ((inflationRate * GetCurrentCoinSupply()) / nAverageWeight) * 100;
 
+    // Cap interest rate
+    if (interestRate > MAX_INTEREST_RATE)
+        interestRate = MAX_INTEREST_RATE;
+
     return interestRate;
 }
 
