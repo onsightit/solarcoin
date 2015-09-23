@@ -557,8 +557,7 @@ void StakeMiner(CWallet *pwallet)
                 return;
         }
 
-        // DEBUG while ((vNodes.size() < 5 && !fTestNet) || vNodes.size() < 1 || IsInitialBlockDownload() || nBestHeight < GetNumBlocksOfPeers())
-        while ((vNodes.size() < 4 && !fTestNet) || vNodes.size() < 1 || nBestHeight < GetNumBlocksOfPeers() - 500)
+        while ((vNodes.size() < 5 && !fTestNet) || vNodes.size() < 1 || IsInitialBlockDownload() || nBestHeight < GetNumBlocksOfPeers())
         {
             nLastCoinStakeSearchInterval = 0;
             MilliSleep(60000);
