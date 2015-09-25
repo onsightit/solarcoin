@@ -1877,6 +1877,10 @@ void ThreadMessageHandler2(void* parg)
 
         if (fSleep)
             MilliSleep(100);
+        if (fRequestShutdown)
+            StartShutdown();
+        if (fShutdown)
+            return;
     }
 }
 
