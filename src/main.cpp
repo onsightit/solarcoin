@@ -3815,7 +3815,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         if (pfrom->nVersion <= PROTOCOL_VERSION_POW)
             pfrom->ssSend.nType |= SER_LEGACYPROTOCOL;
 
-        if (pfrom->nVersion < MIN_PROTO_VERSION || pfrom->nVersion == 70003)
+        if (pfrom->nVersion < MIN_PROTO_VERSION || (pfrom->nVersion <= 70003 && nBestHeight > LAST_POW_BLOCK))
         {
             // disconnect from peers older than this proto version
             printf("partner %s using obsolete version %i; disconnecting\n", pfrom->addr.ToString().c_str(), pfrom->nVersion);
