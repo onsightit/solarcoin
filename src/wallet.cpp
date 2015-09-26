@@ -1753,6 +1753,9 @@ bool CWallet::CreateCoinStakeTime(const CKeyStore& keystore, unsigned int nBits,
         nCredit += nReward;
     }
 
+    if (fDebug && GetBoolArg("-printcoinstake"))
+        printf("CreateCoinStakeTime : nCredit=%"PRId64"\n", nCredit);
+
     // Set output amount
     if (txNew.vout.size() == 3)
     {
