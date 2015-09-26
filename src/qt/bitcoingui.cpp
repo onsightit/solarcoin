@@ -1475,8 +1475,11 @@ void BitcoinGUI::updateStakingIcon()
         stakingLabel->setText(QString("Staking"));
         labelBlocksIcon->hide();
         labelStakingIcon->show();
-        int nStakeTimePower = pwalletMain->StakeTimeEarned(nWeight, pindexBest->pprev);
 
+        labelStakingIcon->setPixmap(QIcon(":/icons/stake100").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
+        labelStakingIcon->setToolTip(tr("In sync and staking...\nBlock number: %2\nExpected time to earn interest: %3").arg(currentBlock).arg(text));
+        /* DISABLED
+        int nStakeTimePower = pwalletMain->StakeTimeEarned(nWeight, pindexBest->pprev);
         if (nStakeTimePower <= 100 && nStakeTimePower > 75)
         {
             labelStakingIcon->setPixmap(QIcon(":/icons/stake100").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
@@ -1498,6 +1501,7 @@ void BitcoinGUI::updateStakingIcon()
             labelStakingIcon->setPixmap(QIcon(":/icons/stake0").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
         }
         labelStakingIcon->setToolTip(tr("In sync and staking...\nEarnable matured interest: %1%\nBlock number: %2\nExpected time to earn interest: %3").arg(nStakeTimePower).arg(currentBlock).arg(text));
+        */
     }
     else
     {

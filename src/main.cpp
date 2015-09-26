@@ -1104,7 +1104,11 @@ double GetCurrentInterestRate(CBlockIndex* pindexPrev)
 // Get the current coin supply
 int64_t GetCurrentCoinSupply()
 {
-    return (INITIAL_COIN_SUPPLY + ((pindexBest->nHeight - LAST_POW_BLOCK) * COIN_SUPPLY_GROWTH_RATE));
+    // removed addition of 1.35 SLR / block after 835000 + 1000
+    if (pindexBest->nHeight > LAST_POW_BLOCK + 1000)
+        return INITIAL_COIN_SUPPLY;
+    else
+        return (INITIAL_COIN_SUPPLY + ((pindexBest->nHeight - LAST_POW_BLOCK) * COIN_SUPPLY_GROWTH_RATE));
 }
 
 // Get the block rate for one hour
