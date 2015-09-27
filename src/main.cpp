@@ -1111,9 +1111,9 @@ double GetCurrentInterestRate(CBlockIndex* pindexPrev)
     double interestRate = 0;
 
     // Fixed interest rate after 835000 + 1000
-    if (pindexPrev->nHeight > LAST_POW_BLOCK + 1000)
+    if (pindexPrev->nHeight > TWO_PERCENT_INT_HEIGHT)
     {
-        interestRate = MAX_INTEREST_RATE;
+        interestRate = TWO_PERCENT_INT;
     }
     else
     {
@@ -1133,7 +1133,7 @@ double GetCurrentInterestRate(CBlockIndex* pindexPrev)
 int64_t GetCurrentCoinSupply(CBlockIndex* pindexPrev)
 {
     // removed addition of 1.35 SLR / block after 835000 + 1000
-    if (pindexPrev->nHeight > LAST_POW_BLOCK + 1000)
+    if (pindexPrev->nHeight > TWO_PERCENT_INT_HEIGHT)
         return INITIAL_COIN_SUPPLY;
     else
         return (INITIAL_COIN_SUPPLY + ((pindexPrev->nHeight - LAST_POW_BLOCK) * COIN_SUPPLY_GROWTH_RATE));
