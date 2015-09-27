@@ -1110,8 +1110,8 @@ double GetCurrentInterestRate(CBlockIndex* pindexPrev)
 {
     double interestRate = 0;
 
-    // Fixed interest rate after 835000 + 500
-    if (pindexBest->nHeight > LAST_POW_BLOCK + 500)
+    // Fixed interest rate after 835000 + 1000
+    if (pindexPrev->nHeight > LAST_POW_BLOCK + 1000)
     {
         interestRate = MAX_INTEREST_RATE;
     }
@@ -1119,16 +1119,24 @@ double GetCurrentInterestRate(CBlockIndex* pindexPrev)
     {
         double nAverageWeight = GetAverageStakeWeight(pindexPrev);
         double inflationRate = GetCurrentInflationRate(nAverageWeight) / 100;
-        interestRate = ((inflationRate * GetCurrentCoinSupply()) / nAverageWeight) * 100;
+        interestRate = ((inflationRate * GetCurrentCoinSupply(pindexPrev)) / nAverageWeight) * 100;
+
+        // Cap interest rate (must use the 2.0.2 interest rate value)
+        if (interestRate > 10.0)
+            interestRate = 10.0;
     }
 
     return interestRate;
 }
 
 // Get the current coin supply
-int64_t GetCurrentCoinSupply()
+int64_t GetCurrentCoinSupply(CBlockIndex* pindexPrev)
 {
-    return (INITIAL_COIN_SUPPLY + ((pindexBest->nHeight - LAST_POW_BLOCK) * COIN_SUPPLY_GROWTH_RATE));
+    // removed addition of 1.35 SLR / block after 835000 + 1000
+    if (pindexPrev->nHeight > LAST_POW_BLOCK + 1000)
+        return INITIAL_COIN_SUPPLY;
+    else
+        return (INITIAL_COIN_SUPPLY + ((pindexPrev->nHeight - LAST_POW_BLOCK) * COIN_SUPPLY_GROWTH_RATE));
 }
 
 // Get the block rate for one hour
@@ -2409,6 +2417,10 @@ bool CTransaction::GetStakeTime(CTxDB& txdb, uint64_t& nStakeTime, CBlockIndex* 
 
         int64_t nValueIn = txPrev.vout[txin.prevout.n].nValue;
         int64_t timeWeight = nTime - txPrev.nTime;
+
+        // Prevent really large stake weights by maxing at 30 days weight (2.0.2 restriction)
+        if (timeWeight > 30 * (24 * 60 * 60))
+            timeWeight = 30 * (24 * 60 * 60);
 
         int64_t CoinDay = nValueIn * timeWeight / COIN / (24 * 60 * 60);
         int64_t factoredTimeWeight = GetStakeTimeFactoredWeight(timeWeight, CoinDay, pindexPrev);
@@ -3835,7 +3847,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         if (pfrom->nVersion <= PROTOCOL_VERSION_POW)
             pfrom->ssSend.nType |= SER_LEGACYPROTOCOL;
 
-        if (pfrom->nVersion < MIN_PROTO_VERSION || (pfrom->nVersion <= 70003 && nBestHeight > LAST_POW_BLOCK))
+        if (pfrom->nVersion < MIN_PROTO_VERSION || pfrom->nVersion == 70003)
         {
             // disconnect from peers older than this proto version
             printf("partner %s using obsolete version %i; disconnecting\n", pfrom->addr.ToString().c_str(), pfrom->nVersion);
