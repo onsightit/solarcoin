@@ -1478,7 +1478,7 @@ void BitcoinGUI::updateStakingIcon()
 
         labelStakingIcon->setPixmap(QIcon(":/icons/stake100").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
         labelStakingIcon->setToolTip(tr("In sync and staking...\nBlock number: %2\nExpected time to earn interest: %3").arg(currentBlock).arg(text));
-        /* DISABLED
+        /* DISABLED in 2.0.4
         int nStakeTimePower = pwalletMain->StakeTimeEarned(nWeight, pindexBest->pprev);
         if (nStakeTimePower <= 100 && nStakeTimePower > 75)
         {

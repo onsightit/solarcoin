@@ -72,7 +72,7 @@ public:
     };
 
     /** Number of confirmation recommended for accepting a transaction */
-    static const int RecommendedNumConfirmations = 10;
+    static const int RecommendedNumConfirmations = 6;
 
     TransactionRecord():
             hash(), time(0), type(Other), address(""), debit(0), credit(0), txcomment(""), idx(0)

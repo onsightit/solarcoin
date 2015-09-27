@@ -63,6 +63,9 @@ CBlockIndex* pindexBest = NULL;
 int64_t nTimeBestReceived = 0;
 int64_t nBestBlockTime = 0;
 
+int nAverageStakeWeightHeightCached = 0;
+double dAverageStakeWeightCached = 0;
+
 CMedianFilter<int> cPeerBlockCounts(5, 0); // Amount of blocks that other nodes claim to have
 
 map<uint256, CBlock*> mapOrphanBlocks;
@@ -1066,17 +1069,32 @@ double GetAverageStakeWeight(CBlockIndex* pindexPrev)
     double weightSum = 0.0, weightAve = 0.0;
     if (nBestHeight < 1)
         return weightAve;
+
+    // Use cached weight if it's still valid
+    if (pindexPrev->nHeight == nAverageStakeWeightHeightCached)
+    {
+        if (fDebug && GetBoolArg("-printcoinstake"))
+            printf("Using cached average stake weight\n");
+        return dAverageStakeWeightCached;
+    }
+    nAverageStakeWeightHeightCached = pindexPrev->nHeight;
+
     int i;
 
     CBlockIndex* currentBlockIndex = pindexPrev;
+
     for (i = 0; currentBlockIndex && i < 60; i++)
     {
         double tempWeight = GetPoSKernelPS(currentBlockIndex);
         weightSum += tempWeight;
         currentBlockIndex = currentBlockIndex->pprev;
     }
-    weightAve = weightSum/i;
-    return weightAve+21;
+    weightAve = (weightSum/i)+21;
+
+    // Cache the stake weight value
+    dAverageStakeWeightCached = weightAve;
+
+    return weightAve;
 }
 
 // get current inflation rate using average stake weight ~1.5-2.5% (measure of liquidity) PoST
@@ -1090,13 +1108,19 @@ double GetCurrentInflationRate(double nAverageWeight)
 // get current interest rate by targeting for network stake dependent inflation rate PoST
 double GetCurrentInterestRate(CBlockIndex* pindexPrev)
 {
-    double nAverageWeight = GetAverageStakeWeight(pindexPrev);
-    double inflationRate = GetCurrentInflationRate(nAverageWeight) / 100;
-    double interestRate = ((inflationRate * GetCurrentCoinSupply()) / nAverageWeight) * 100;
+    double interestRate = 0;
 
-    // Cap interest rate
-    if (interestRate > MAX_INTEREST_RATE)
+    // Fixed interest rate after 835000 + 500
+    if (pindexBest->nHeight > LAST_POW_BLOCK + 500)
+    {
         interestRate = MAX_INTEREST_RATE;
+    }
+    else
+    {
+        double nAverageWeight = GetAverageStakeWeight(pindexPrev);
+        double inflationRate = GetCurrentInflationRate(nAverageWeight) / 100;
+        interestRate = ((inflationRate * GetCurrentCoinSupply()) / nAverageWeight) * 100;
+    }
 
     return interestRate;
 }
@@ -1104,11 +1128,7 @@ double GetCurrentInterestRate(CBlockIndex* pindexPrev)
 // Get the current coin supply
 int64_t GetCurrentCoinSupply()
 {
-    // removed addition of 1.35 SLR / block after 835000 + 1000
-    if (pindexBest->nHeight > LAST_POW_BLOCK + 1000)
-        return INITIAL_COIN_SUPPLY;
-    else
-        return (INITIAL_COIN_SUPPLY + ((pindexBest->nHeight - LAST_POW_BLOCK) * COIN_SUPPLY_GROWTH_RATE));
+    return (INITIAL_COIN_SUPPLY + ((pindexBest->nHeight - LAST_POW_BLOCK) * COIN_SUPPLY_GROWTH_RATE));
 }
 
 // Get the block rate for one hour
@@ -2389,10 +2409,6 @@ bool CTransaction::GetStakeTime(CTxDB& txdb, uint64_t& nStakeTime, CBlockIndex* 
 
         int64_t nValueIn = txPrev.vout[txin.prevout.n].nValue;
         int64_t timeWeight = nTime - txPrev.nTime;
-
-        // Prevent really large stake weights by maxing at 30 days weight
-        if (timeWeight > 30 * (24 * 60 * 60))
-            timeWeight = 30 * (24 * 60 * 60);
 
         int64_t CoinDay = nValueIn * timeWeight / COIN / (24 * 60 * 60);
         int64_t factoredTimeWeight = GetStakeTimeFactoredWeight(timeWeight, CoinDay, pindexPrev);
