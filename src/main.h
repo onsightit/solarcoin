@@ -30,7 +30,7 @@ class CNode;
 //static const int64_t INITIAL_COIN_SUPPLY = 34145512; // testnet
 //static const int TWO_PERCENT_INT_HEIGHT = LAST_POW_BLOCK + 10; // testnet
 
-static const int LAST_POW_BLOCK = 835000;
+static const int LAST_POW_BLOCK = 835213;
 static const int64_t INITIAL_COIN_SUPPLY = 34145512; // Used in calculating interest rate (97.990085882B are out of circulation)
 static const int TWO_PERCENT_INT_HEIGHT = LAST_POW_BLOCK + 1000;
 
