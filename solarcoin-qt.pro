@@ -101,7 +101,7 @@ UI_DIR = build
     macx:QMAKE_OBJECTIVE_CFLAGS += -mmacosx-version-min=10.6 -arch x86_64 -isysroot  /Developer/SDKs/MacOSX10.6.sdk
     !windows:!macx {
         # Linux: static link
-        LIBS += -Wl,-Bstatic
+        #LIBS += -Wl,-Bstatic
     }
 #}
 
