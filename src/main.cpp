@@ -3847,7 +3847,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         if (pfrom->nVersion <= PROTOCOL_VERSION_POW)
             pfrom->ssSend.nType |= SER_LEGACYPROTOCOL;
 
-        if (pfrom->nVersion < MIN_PROTO_VERSION || pfrom->nVersion == 70003 || (pfrom->nVersion == PROTOCOL_VERSION_POW && pfrom->nStartingHeight > LAST_POW_BLOCK))
+        if (pfrom->nVersion < MIN_PROTO_VERSION || pfrom->nVersion == 70003)
         {
             // disconnect from peers older than this proto version
             printf("partner %s using obsolete version %i; disconnecting\n", pfrom->addr.ToString().c_str(), pfrom->nVersion);
@@ -3866,6 +3866,15 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
         if (!vRecv.empty())
             vRecv >> pfrom->nStartingHeight;
+
+        if (pfrom->nVersion == PROTOCOL_VERSION_POW && pfrom->nStartingHeight > LAST_POW_BLOCK)
+        {
+            // disconnect from peers older than this proto version
+            printf("partner %s using obsolete version %i past PoW; disconnecting\n", pfrom->addr.ToString().c_str(), pfrom->nVersion);
+            pfrom->fDisconnect = true;
+            return false;
+        }
+
         if (!vRecv.empty())
             vRecv >> pfrom->fRelayTxes; // set to true after we get the first filter* message
         else
