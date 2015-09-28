@@ -1326,7 +1326,7 @@ bool CWallet::SelectCoinsSimple(int64_t nTargetValue, unsigned int nSpendTime, i
     setCoinsRet.clear();
     nValueRet = 0;
 
-        BOOST_FOREACH(COutput output, vCoins)
+    BOOST_FOREACH(COutput output, vCoins)
     {
         const CWalletTx *pcoin = output.tx;
         int i = output.i;
@@ -1518,7 +1518,7 @@ bool CWallet::GetStakeWeight(const CKeyStore& keystore, uint64_t& nWeight)
     set<pair<const CWalletTx*,unsigned int> > setCoins;
     int64_t nValueIn = 0;
 
-    if (!SelectCoinsSimple(nBalance - nReserveBalance, GetTime(), nCoinbaseMaturity + 10, setCoins, nValueIn))
+    if (!SelectCoinsSimple(nBalance - nReserveBalance, GetTime(), nCoinbaseMaturity, setCoins, nValueIn))
         return false;
 
     if (setCoins.empty())
@@ -1591,7 +1591,7 @@ bool CWallet::CreateCoinStakeTime(const CKeyStore& keystore, unsigned int nBits,
     int64_t nValueIn = 0;
 
     // Select coins with suitable depth
-    if (!SelectCoinsSimple(nBalance - nReserveBalance, txNew.nTime, nCoinbaseMaturity + 10, setCoins, nValueIn))
+    if (!SelectCoinsSimple(nBalance - nReserveBalance, txNew.nTime, nCoinbaseMaturity, setCoins, nValueIn))
         return false;
 
     if (setCoins.empty())

@@ -845,7 +845,7 @@ int CMerkleTx::GetBlocksToMaturity() const
         nMature = nCoinbaseMaturity;
     else
         nMature = nCoinbaseMaturity_PoW;
-    return max(0, (nMature + 10) - GetDepthInMainChain());
+    return max(0, (nMature + 1) - GetDepthInMainChain());
 }
 
 bool CMerkleTx::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs)
