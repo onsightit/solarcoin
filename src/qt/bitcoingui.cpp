@@ -486,9 +486,8 @@ void BitcoinGUI::createActions()
     aboutAction = new QAction(QIcon(":/icons/about"), tr("&About SolarCoin"), this);
     aboutAction->setToolTip(tr("Show information about SolarCoin"));
     aboutAction->setMenuRole(QAction::AboutRole);
-    aboutPostAction = new QAction(QIcon(":/icons/PoSTicon"), tr("&About PoST"), this);
+    aboutPostAction = new QAction(QIcon(":/icons/PoSTicon"), tr("About &PoST"), this);
     aboutPostAction->setToolTip(tr("Show information about PoST protocol"));
-    aboutPostAction->setMenuRole(QAction::AboutRole);
     aboutQtAction = new QAction(QIcon(":icons/about-qt"), tr("About &Qt"), this);
     aboutQtAction->setToolTip(tr("Show information about Qt"));
     aboutQtAction->setMenuRole(QAction::AboutQtRole);
@@ -527,8 +526,8 @@ void BitcoinGUI::createActions()
 
     connect(quitAction, SIGNAL(triggered()), this, SLOT(exitApp()));
     connect(logoutAction, SIGNAL(triggered()), this, SLOT(logout()));
-    connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
     connect(aboutPostAction, SIGNAL(triggered()), this, SLOT(aboutPostClicked()));
+    connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
     connect(aboutQtAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
     connect(optionsAction, SIGNAL(triggered()), this, SLOT(optionsClicked()));
     connect(toggleHideAction, SIGNAL(triggered()), this, SLOT(toggleHidden()));
