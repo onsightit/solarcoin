@@ -269,6 +269,9 @@ bool CTransaction::ReadFromDisk(CTxDB& txdb, COutPoint prevout, CTxIndex& txinde
     if (!txdb.ReadTxIndex(prevout.hash, txindexRet))
         return false;
 
+    // Fix for PoW txns between 835001 and LAST_POW_BLOCK
+    if (txindexRet.pos.nBlockPos >= 356193881 && txindexRet.pos.nBlockPos <= 356265878)
+        txindexRet.pos.nTxPos -= 1;
 
     if (!ReadFromDisk(txindexRet.pos))
         return false;
@@ -1073,16 +1076,12 @@ double GetAverageStakeWeight(CBlockIndex* pindexPrev)
     // Use cached weight if it's still valid
     if (pindexPrev->nHeight == nAverageStakeWeightHeightCached)
     {
-        if (fDebug && GetBoolArg("-printcoinstake"))
-            printf("Using cached average stake weight\n");
         return dAverageStakeWeightCached;
     }
     nAverageStakeWeightHeightCached = pindexPrev->nHeight;
 
     int i;
-
     CBlockIndex* currentBlockIndex = pindexPrev;
-
     for (i = 0; currentBlockIndex && i < 60; i++)
     {
         double tempWeight = GetPoSKernelPS(currentBlockIndex);

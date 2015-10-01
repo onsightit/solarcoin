@@ -129,13 +129,6 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool fPri
     Array txinfo;
     BOOST_FOREACH (const CTransaction& tx, block.vtx)
     {
-        // Fix for transition from PoST back to PoW before 835214
-        if (blockindex->nHeight <= LAST_POW_BLOCK && blockindex->nHeight > 835000) {
-            txinfo.push_back("");
-            printf("*** DEBUG Found bad tx.\n");
-            break;
-        }
-
         if (fPrintTransactionDetail)
         {
             Object entry;

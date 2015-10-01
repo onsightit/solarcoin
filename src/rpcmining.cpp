@@ -406,7 +406,6 @@ Value getblocktemplate(const Array& params, bool fHelp)
     pblock->UpdateTime(pindexPrev);
     pblock->nNonce = 0;
     pblock->vtx[0].nTime = pblock->nTime; // If creating a legacy block, also update the coinbase timestamp.
-    pblock->hashMerkleRoot = pblock->BuildMerkleTree(); // DEBUG
 
     Array transactions;
     map<uint256, int64_t> setTxIndex;
