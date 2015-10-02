@@ -270,7 +270,7 @@ bool CTransaction::ReadFromDisk(CTxDB& txdb, COutPoint prevout, CTxIndex& txinde
         return false;
 
     // Fix for PoW txns between 835001 and LAST_POW_BLOCK
-    if (txindexRet.pos.nBlockPos >= 356193881 && txindexRet.pos.nBlockPos <= 356265878)
+    if (txindexRet.pos.nTxPos - txindexRet.pos.nBlockPos == 82)
         txindexRet.pos.nTxPos -= 1;
 
     if (!ReadFromDisk(txindexRet.pos))
