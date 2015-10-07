@@ -2851,7 +2851,10 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
             // ppcoin: getblocks may not obtain the ancestor block rejected
             // earlier by duplicate-stake check so we ask for it again directly
             if (!IsInitialBlockDownload())
+            {
                 pfrom->AskFor(CInv(MSG_BLOCK, WantedByOrphan(pblock2)));
+                pfrom->Misbehaving(1);
+            }
         }
         return true;
     }
@@ -3842,7 +3845,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         if (pfrom->nVersion <= PROTOCOL_VERSION_POW)
             pfrom->ssSend.nType |= SER_LEGACYPROTOCOL;
 
-        if (pfrom->nVersion < MIN_PROTO_VERSION || pfrom->nVersion == 70003)
+        if (pfrom->nVersion < MIN_PROTO_VERSION || pfrom->nVersion == 70003 || pfrom->nVersion > PROTOCOL_VERSION)
         {
             // disconnect from peers older than this proto version
             printf("partner %s using obsolete version %i; disconnecting\n", pfrom->addr.ToString().c_str(), pfrom->nVersion);
@@ -4132,7 +4135,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         if (pindex)
             pindex = pindex->pnext;
         int nLimit = 500;
-        printf("getblocks %d to %s limit %d\n", (pindex ? pindex->nHeight : -1), hashStop.ToString().c_str(), nLimit);
+        printf("getblocks %d to %s limit %d ip=%s\n", (pindex ? pindex->nHeight : -1), hashStop.ToString().c_str(), nLimit, pfrom->addrName.c_str());
         for (; pindex; pindex = pindex->pnext)
         {
             if (pindex->GetBlockHash() == hashStop)
