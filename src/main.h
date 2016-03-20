@@ -26,18 +26,22 @@ class CInv;
 class CRequestTracker;
 class CNode;
 
-//static const int LAST_POW_BLOCK = 5000; // testnet
-//static const int64_t INITIAL_COIN_SUPPLY = 34145512; // testnet
-//static const int TWO_PERCENT_INT_HEIGHT = LAST_POW_BLOCK + 10; // testnet
+// Testnet
+static const int LAST_POW_BLOCK = 5000; // testnet
+static const int64_t INITIAL_COIN_SUPPLY = 34145512; // testnet
+static const int TWO_PERCENT_INT_HEIGHT = LAST_POW_BLOCK + 10; // testnet
+static const int FORK_HEIGHT_1 = 5500;
 
-static const int LAST_POW_BLOCK = 835213;
-static const int64_t INITIAL_COIN_SUPPLY = 34145512; // Used in calculating interest rate (97.990085882B are out of circulation)
-static const int TWO_PERCENT_INT_HEIGHT = LAST_POW_BLOCK + 1000;
+// Mainnet
+//static const int LAST_POW_BLOCK = 835213;
+//static const int64_t INITIAL_COIN_SUPPLY = 34145512; // Used in calculating interest rate (97.990085882B are out of circulation)
+//static const int TWO_PERCENT_INT_HEIGHT = LAST_POW_BLOCK + 1000;
+//static const int FORK_HEIGHT_1 = 1100000;
 
 static const double COIN_SUPPLY_GROWTH_RATE = 1.35; // Circulation growth rate per block based on SLR grants of 710,000 / year
 static const double TWO_PERCENT_INT = 2.0;
 
-static const unsigned int MAX_BLOCK_SIZE = 1000000;
+static const unsigned int MAX_BLOCK_SIZE = 2000000;
 static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/4;
 static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
 static const unsigned int MAX_ORPHAN_TRANSACTIONS = MAX_BLOCK_SIZE/100;
@@ -469,8 +473,9 @@ class CTransaction
 {
 public:
     static const int LEGACY_VERSION_1 = 1;
-    static const int LEGACY_VERSION_2 = 2;
-    static const int CURRENT_VERSION = 3;
+    static const int LEGACY_VERSION_2 = 2; // V3 - Includes nTime
+    static const int LEGACY_VERSION_3 = 3; // V4 - Includes nTime in tx hash
+    static const int CURRENT_VERSION = 4;
     int nVersion;
     unsigned int nTime;
     std::vector<CTxIn> vin;
@@ -491,7 +496,8 @@ public:
     (
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
-        if (!(nType & (SER_GETHASH|SER_LEGACYPROTOCOL))) {
+        // if (!(nType & (SER_GETHASH|SER_LEGACYPROTOCOL))) {
+        if (!(nType & (SER_GETHASH|SER_LEGACYPROTOCOL)) || this->nVersion > LEGACY_VERSION_3) {
             READWRITE(nTime);
         } else if (nType & SER_DISK) {
             READWRITE(nTime);
@@ -508,7 +514,10 @@ public:
     {
         if (nBestHeight >= LAST_POW_BLOCK)
         {
-            nVersion = CTransaction::CURRENT_VERSION;
+            if (nBestHeight >= FORK_HEIGHT_1)
+                nVersion = CTransaction::CURRENT_VERSION;
+            else
+                nVersion = CTransaction::LEGACY_VERSION_3;
             nTime = GetAdjustedTime();
         }
         else
