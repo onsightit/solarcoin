@@ -1,0 +1,62 @@
+﻿
+SolarCoin END USER LICENSE AGREEMENT
+ 
+IMPORTANT: PLEASE READ THE TERMS AND CONDITIONS OF THIS END USER LICENSE AGREEMENT ("LICENSE AGREEMENT") CAREFULLY BEFORE USING THE SOFTWARE (AS DEFINED BELOW). SolarCoin Foundation PBC ("SOLARCOIN") IS WILLING TO LICENSE THE SOFTWARE TO YOU AS THE INDIVIDUAL, THE COMPANY, OR THE LEGAL ENTITY THAT WILL BE UTILIZING THE SOFTWARE (REFERENCED BELOW AS "YOU" OR "YOUR") ONLY ON THE CONDITION THAT YOU ACCEPT ALL OF THE TERMS OF THIS LICENSE AGREEMENT. THIS IS A LEGAL AND ENFORCEABLE CONTRACT BETWEEN YOU AND SOLARCOIN. BY CLICKING THE "I AGREE" OR "YES" BUTTON OR OTHERWISE INDICATING ASSENT ELECTRONICALLY, OR INSTALLING THE SOFTWARE, YOU AGREE TO THE TERMS AND CONDITIONS OF THIS LICENSE AGREEMENT. IF YOU DO NOT AGREE TO ALL OF THESE TERMS AND CONDITIONS, CLICK THE "I DO NOT AGREE"", "CANCEL" OR "NO" OR "CLOSE WINDOW" BUTTON OR OTHERWISE INDICATE REFUSAL, DO NOT DOWNLOAD, ORDER, OPEN, INSTALL OR USE THE SOFTWARE,
+  
+1. License
+The software (including all its accompanying features and services) and any software documentation (the "Documentation") that accompanies this License Agreement (collectively the "Software") is the property of SolarCoin or its licensors, and is protected by copyright law with the exception of open-source licensed elements of the code and uncompiled code. 
+
+
+ 
+This License Agreement governs any releases, revisions, updates or enhancements to the Software that SolarCoin may make available to You. Except as may be modified by the Documentation, and subject to SolarCoin’s right to terminate for Your breach pursuant to Section 6, Your rights and obligations under this License Agreement with respect to the use of this Software are as follows.
+
+
+2. Software Feature and Content Updates:
+You have the right to receive new features to the Software as SolarCoin. SolarCoin continually strives to improve the usability and performance of its products and services. In order to optimize the Software SolarCoin may, at its discretion and without notice, add, modify or remove features from the Software at any time.
+  
+3. Privacy; Data Protection:
+From time to time, the Software may collect certain information from the computer on which it is installed, which may include:
+* Status information regarding installation and operation of the Software. This information indicates to SolarCoin whether installation of the Software was successfully completed as well as whether the Software has encountered an error. The status information could contain personally identifiable information only if such information is included in the name of the file or folder encountered by the Software at the time of installation or error. 
+* The Internet Protocol (IP) address and/or Media Access Control (MAC) address and the Machine ID of the computer on which the Software is installed to enable the Software to function and for license administration purposes.
+* Other general, statistical information used for product analysis, and for improving product functionality.
+ 
+Information may be transferred to the SolarCoin group in the United States or other countries that may have less protective data protection laws than the region in which You are situated (including the European Union) and may be accessible by SolarCoin employees or contractors exclusively to be used in accordance with the purposes described above. For the same purposes the information may be shared with partners and vendors that process information on behalf of SolarCoin. SolarCoin has taken steps so that the collected information, if transferred, receives an adequate level of protection. Subject to applicable laws, SolarCoin reserves the right to cooperate with any legal process and any law enforcement or other government inquiry related to your use of this Software. This means that SolarCoin may provide documents and information relevant to a court subpoena or to a law enforcement or other government investigation.
+ 
+4. Limited Warranty
+SolarCoin does not warrant that the Software will meet Your requirements or that operation of the Software will be uninterrupted or that the Software will be error-free..
+ 
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE ABOVE WARRANTY IS EXCLUSIVE AND IN LIEU OF ALL OTHER WARRANTIES, WHETHER EXPRESS OR IMPLIED, INCLUDING THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT OF INTELLECTUAL PROPERTY RIGHTS. THIS WARRANTY GIVES YOU SPECIFIC LEGAL RIGHTS. YOU MAY HAVE OTHER RIGHTS, WHICH VARY FROM STATE TO STATE AND COUNTRY TO COUNTRY.
+ 
+5. Disclaimer of Damages
+SOME STATES AND COUNTRIES DO NOT ALLOW THE LIMITATION OR EXCLUSION OF LIABILITY FOR INCIDENTAL OR CONSEQUENTIAL DAMAGES, SO THE BELOW LIMITATION OR EXCLUSION MAY NOT APPLY TO YOU.
+ 
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW AND REGARDLESS OF WHETHER ANY REMEDY SET FORTH HEREIN FAILS OF ITS ESSENTIAL PURPOSE, IN NO EVENT WILL SOLARCOIN OR ITS LICENSORS BE LIABLE TO YOU FOR ANY SPECIAL, CONSEQUENTIAL, INDIRECT, OR SIMILAR DAMAGES, INCLUDING ANY LOST PROFITS OR LOST DATA ARISING OUT OF THE USE OR INABILITY TO USE THE SOFTWARE EVEN IF SOLARCOIN HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+ 
+IN NO CASE SHALL SOLARCOIN’S OR ITS LICENSORS’ LIABILITY EXCEED THE PURCHASE PRICE of $0.00 WHICH YOU PAID FOR THE APPLICABLE SERVICE PERIOD. The disclaimers and limitations set forth above will apply regardless of whether You accept the Software.
+ 
+
+
+ 
+6. Export Regulation
+You acknowledge that the Software and related technical data and services (collectively "Controlled Technology") may be subject to the import and export laws of the United States, specifically the U.S. Export Administration Regulations (EAR), and the laws of any country where Controlled Technology is imported or re-exported. You agree to comply with all relevant laws and will not export any Controlled Technology in contravention to U.S. law nor to any prohibited country, entity, or person for which an export license or other governmental approval is required. All SolarCoin product is prohibited for export or re-export to Cuba, North Korea, Iran, Syria and Sudan and to any country subject to relevant trade sanctions. USE OR FACILITATION OF SOLARCOIN PRODUCT IN CONNECTION WITH ANY ACTIVITY INCLUDING, BUT NOT LIMITED TO, THE DESIGN, DEVELOPMENT, FABRICATION, TRAINING, OR TESTING OF CHEMICAL, BIOLOGICAL, OR NUCLEAR MATERIALS, OR MISSILES, DRONES, OR SPACE LAUNCH VEHICLES CAPABLE OF DELIVERING WEAPONS OF MASS DESTRUCTION IS PROHIBITED, IN ACCORDANCE WITH U.S. LAW.
+ 
+7. General
+This License Agreement will be governed by the laws of the State of California, United States of America. This License Agreement is the entire agreement between You and SolarCoin relating to the Software and: (i) supersedes all prior or contemporaneous oral or written communications, proposals, and representations with respect to its subject matter; and (ii) prevails over any conflicting or additional terms of any quote, order, acknowledgment, or similar communications between the parties. Notwithstanding the foregoing, nothing in this License Agreement will diminish any rights You may have under existing consumer protection legislation or other applicable laws in Your jurisdiction that may not be waived by contract. This License Agreement shall terminate upon Your breach of any term contained in this License Agreement and You shall cease use of and destroy all copies of the Software and Documentation. The disclaimers of warranties and damages and limitations on liability shall survive termination. This License Agreement may only be modified by the Documentation or by a written document that has been signed by both You and SolarCoin.
+Warranty Disclaimer
+THE SOFTWARE IS PROVIDED "AS IS" AND NO WARRANTIES ARE MADE TO ANY PERSON OR ENTITY WITH RESPECT TO THE SOFTWARE OR ANY SERVICES AND DISCLAIMS ALL IMPLIED WARRANTIES, INCLUDING WITHOUT LIMITATION WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+ 
+Limitation of Damages and Remedies
+IN NO EVENT SHALL ANY PARTY BE LIABLE UNDER CONTRACT, TORT, STRICT LIABILITY OR OTHER LEGAL OR EQUITABLE THEORY FOR ANY INDIRECT, INCIDENTAL, SPECIAL OR CONSEQUENTIAL DAMAGES IN CONNECTION WITH THE SOFTWARE. NOTWITHSTANDING ANYTHING HEREIN TO THE CONTRARY, THE TOTAL LIABILITY OWING TO END USER, INCLUDING BUT NOT LIMITED TO DAMAGES OR LIABILITY ARISING OUT OF CONTRACT, TORT, BREACH OF WARRANTY, INFRINGEMENT OR OTHERWISE, SHALL NOT IN ANY EVENT EXCEED THE FEES PAID BY END USER WITH RESPECT TO THE SOFTWARE. NO PARTY SHALL BE LIABLE FOR LOSS OR INACCURACY OF DATA, COST OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, SYSTEM DOWNTIME, FAILURE OF SECURITY MECHANISMS, GOODWILL, PROFITS OR OTHER BUSINESS LOSS, REGARDLESS OF LEGAL THEORY, EVEN IF SUCH PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+ 
+THE PARTIES AGREE THAT THE LIMITATIONS OF THIS SECTION ARE ESSENTIAL AND THAT END USER WOULD NOT BE PERMITTED TO USE THE SOFTWARE ABSENT THE TERMS OF THIS SECTION. THIS SECTION SHALL SURVIVE AND APPLY EVEN IF ANY REMEDY SPECIFIED IN THIS EULA SHALL BE FOUND TO HAVE FAILED OF ITS ESSENTIAL PURPOSE. THIS SOFTWARE IS NOT FAULT-TOLERANT AND IS NOT DESIGNED OR INTENDED FOR USE IN ANY HAZARDOUS ENVIRONMENT REQUIRING FAIL-SAFE PERFORMANCE OR OPERATION. THIS SOFTWARE IS NOT FOR USE IN THE OPERATION OF AIRCRAFT NAVIGATION, NUCLEAR FACILITIES, OR COMMUNICATION SYSTEMS, WEAPONS SYSTEMS, DIRECT OR INDIRECT LIFE-SUPPORT SYSTEMS, AIR TRAFFIC CONTROL, OR ANY APPLICATION OR INSTALLATION WHERE FAILURE COULD RESULT IN DEATH, SEVERE PHYSICAL INJURY OR PROPERTY DAMAGE.
+ 
+Export Compliance
+End User acknowledges that the Software is subject to export restrictions by the United States government and import restrictions by certain foreign governments. End User shall not and shall not allow any third-party to remove or export from the United States or allow the export or re-export of any part of the Software or any direct product thereof: (i) into (or to a national or resident of) any embargoed or terrorist-supporting country; (ii) to anyone on the U.S. Commerce Department’s Table of Denial Orders or U.S. Treasury Department’s list of Specially Designated Nationals; (iii) to any country to which such export or re-export is restricted or prohibited, or as to which the United States government or any agency thereof requires an export license or other governmental approval at the time of export or re-export without first obtaining such license or approval; or (iv) otherwise in violation of any export or import restrictions, laws or regulations of any United States or foreign agency or authority. End User agrees to the foregoing and warrants that it is not located in, under the control of, or a national or resident of any such prohibited country or on any such prohibited party list. The Software is further restricted from being used for the design or development of nuclear, chemical, or biological weapons or missile technology, or for terrorist activity, without the prior permission of the United States government.
+ 
+Government Users
+The Software is commercial computer software. If the user or licensee of the Software is an agency, department, or other entity of the United States Government, the use, duplication, reproduction, release, modification, disclosure, or transfer of the Software, or any related documentation of any kind, including technical data and manuals, is restricted by a license agreement or by the terms of this EULA in accordance with Federal Acquisition Regulation 12.212 for civilian purposes and Defense Federal Acquisition Regulation Supplement 227.7202 for military purposes. All other use is prohibited.
+ 
+Governing Law
+This EULA and all related actions and proceedings shall be governed by the laws of the State of California and the United States without regard to conflicts of laws provisions thereof, and without regard to the United Nations Convention on the International Sale of Goods. Termination and Survival
+ 
+Upon any termination of this EULA, End User shall immediately cease use of the Software and remove all Software from its systems. The terms set forth in the sections entitled Restrictions, Ownership, Confidentiality, Warranty Disclaimer, Limitation of Damages and Remedies shall survive any termination of this EULA.
