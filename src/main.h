@@ -42,6 +42,7 @@ static const double COIN_SUPPLY_GROWTH_RATE = 1.35; // Circulation growth rate p
 static const double TWO_PERCENT_INT = 2.0;
 
 static const unsigned int MAX_BLOCK_SIZE = 2000000;
+static const unsigned int MAX_BLOCK_SIZE_1M = 1000000;
 static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/4;
 static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
 static const unsigned int MAX_ORPHAN_TRANSACTIONS = MAX_BLOCK_SIZE/100;

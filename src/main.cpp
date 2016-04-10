@@ -467,7 +467,7 @@ bool CTransaction::CheckTransaction() const
     if (vout.empty())
         return DoS(10, error("CTransaction::CheckTransaction() : vout empty"));
     // Size limits
-    if (::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
+    if (::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > (nBestHeight >= FORK_HEIGHT_1 ? MAX_BLOCK_SIZE : MAX_BLOCK_SIZE_1M))
         return DoS(100, error("CTransaction::CheckTransaction() : size limits failed"));
 
     // Check for negative or overflow output values
@@ -2515,7 +2515,8 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
     int64_t blocktime = GetBlockTime();
 
     // Size limits
-    if (vtx.empty() || vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
+    if (vtx.empty() || vtx.size() > (nBestHeight >= FORK_HEIGHT_1 ? MAX_BLOCK_SIZE : MAX_BLOCK_SIZE_1M) ||
+            ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > (nBestHeight >= FORK_HEIGHT_1 ? MAX_BLOCK_SIZE : MAX_BLOCK_SIZE_1M))
         return DoS(100, error("CheckBlock() : size limits failed"));
 
     bool fProofOfStake = IsProofOfStake(); // RTI: Only need to call this once
@@ -3025,7 +3026,7 @@ uint256 CPartialMerkleTree::ExtractMatches(std::vector<uint256> &vMatch) {
     if (nTransactions == 0)
         return 0;
     // check for excessively high numbers of transactions
-    if (nTransactions > MAX_BLOCK_SIZE / 60) // 60 is the lower bound for the size of a serialized CTransaction
+    if (nTransactions > (nBestHeight >= FORK_HEIGHT_1 ? MAX_BLOCK_SIZE : MAX_BLOCK_SIZE_1M) / 60) // 60 is the lower bound for the size of a serialized CTransaction
         return 0;
     // there can never be more hashes provided than one for every txid
     if (vHash.size() > nTransactions)
@@ -3492,7 +3493,7 @@ bool LoadExternalBlockFile(FILE* fileIn)
                 fseek(blkdat, nPos, SEEK_SET);
                 unsigned int nSize;
                 blkdat >> nSize;
-                if (nSize > 0 && nSize <= MAX_BLOCK_SIZE)
+                if (nSize > 0 && nSize <= (nBestHeight >= FORK_HEIGHT_1 ? MAX_BLOCK_SIZE : MAX_BLOCK_SIZE_1M))
                 {
                     CBlock block;
                     blkdat >> block;
@@ -3681,7 +3682,7 @@ void static ProcessGetData(CNode* pfrom)
                     if (pfrom->nVersion <= PROTOCOL_VERSION_POW)
                         nType |= SER_LEGACYPROTOCOL;
                     CDataStream ss(nType, PROTOCOL_VERSION);
-                    ss.reserve(MAX_BLOCK_SIZE);
+                    ss.reserve((nBestHeight >= FORK_HEIGHT_1 ? MAX_BLOCK_SIZE : MAX_BLOCK_SIZE_1M));
                     ss << block;
                     if (inv.type == MSG_BLOCK)
                     {
