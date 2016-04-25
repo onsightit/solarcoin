@@ -534,7 +534,7 @@ int64_t CTransaction::GetMinFee(unsigned int nBlockSize, enum GetMinFee_mode mod
     }
     else
     {
-        if (fAllowFree)
+        if (fAllowFree && nBestHeight < LAST_POW_BLOCK)
         {
             // There is a free transaction area in blocks created by most miners,
             // * If we are relaying we allow transactions up to DEFAULT_BLOCK_PRIORITY_SIZE - 1000
