@@ -30,7 +30,7 @@ class CNode;
 static const int LAST_POW_BLOCK = 8100; // testnet
 static const int64_t INITIAL_COIN_SUPPLY = 34145512; // testnet
 static const int TWO_PERCENT_INT_HEIGHT = LAST_POW_BLOCK + 10; // testnet
-static const int FORK_HEIGHT_1 = 8120;
+static const int FORK_HEIGHT_1 = 8125;
 
 // Mainnet
 //static const int LAST_POW_BLOCK = 835213;
