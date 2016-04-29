@@ -1769,10 +1769,6 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
                     if (pindex->nBlockPos == txindex.pos.nBlockPos && pindex->nFile == txindex.pos.nFile)
                         return error("ConnectInputs() : tried to spend %s at depth %d", txPrev.IsCoinBase() ? "coinbase" : "coinstake", pindexBlock->nHeight - pindex->nHeight);
             }
-            // ppcoin: check transaction version
-            if (txPrev.nVersion < CTransaction::CURRENT_VERSION && nBestHeight >= FORK_HEIGHT_1)
-                return DoS(100, error("ConnectInputs() : transaction version earlier than current version at FORK_HEIGHT_1. txPrev.nVersion=%d nVersion=%d", txPrev.nVersion, nVersion));
-
             // ppcoin: check transaction timestamp
             if (txPrev.nVersion > CTransaction::LEGACY_VERSION_2 && txPrev.nTime > nTime)
                 return DoS(100, error("ConnectInputs() : transaction timestamp earlier than input transaction. txPrev.nTime=%u nTime=%u txPrev.nVersion=%d nVersion=%d", txPrev.nTime, nTime, txPrev.nVersion, nVersion));
