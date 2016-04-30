@@ -27,16 +27,16 @@ class CRequestTracker;
 class CNode;
 
 // Testnet
-static const int LAST_POW_BLOCK = 8000; // testnet
-static const int64_t INITIAL_COIN_SUPPLY = 34145512; // testnet
-static const int TWO_PERCENT_INT_HEIGHT = LAST_POW_BLOCK + 10; // testnet
-static const int FORK_HEIGHT_1 = 8020;
+//static const int LAST_POW_BLOCK = 8000; // testnet
+//static const int64_t INITIAL_COIN_SUPPLY = 34145512; // testnet
+//static const int TWO_PERCENT_INT_HEIGHT = LAST_POW_BLOCK + 10; // testnet
+//static const int FORK_HEIGHT_1 = 8020;
 
 // Mainnet
-//static const int LAST_POW_BLOCK = 835213;
-//static const int64_t INITIAL_COIN_SUPPLY = 34145512; // Used in calculating interest rate (97.990085882B are out of circulation)
-//static const int TWO_PERCENT_INT_HEIGHT = LAST_POW_BLOCK + 1000;
-//static const int FORK_HEIGHT_1 = 1145000;
+static const int LAST_POW_BLOCK = 835213;
+static const int64_t INITIAL_COIN_SUPPLY = 34145512; // Used in calculating interest rate (97.990085882B are out of circulation)
+static const int TWO_PERCENT_INT_HEIGHT = LAST_POW_BLOCK + 1000;
+static const int FORK_HEIGHT_1 = 1167000;
 
 static const double COIN_SUPPLY_GROWTH_RATE = 1.35; // Circulation growth rate per block based on SLR grants of 710,000 / year
 static const double TWO_PERCENT_INT = 2.0;
