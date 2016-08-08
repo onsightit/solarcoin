@@ -330,9 +330,9 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
 
 Value sendtoaddress(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 2 || params.size() > 4)
+    if (fHelp || params.size() < 2 || params.size() > 5)
         throw runtime_error(
-            "sendtoaddress <solarcoinaddress> <amount> [comment] [comment-to] [tx-comment]\n"
+            "sendtoaddress <solarcoinaddress> <amount> [comment] [comment-to] [text:txcomment]\n"
             "<amount> is a real and is rounded to the nearest 0.000001"
             + HelpRequiringPassphrase());
 
@@ -704,7 +704,7 @@ Value sendfrom(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 3 || params.size() > 6)
         throw runtime_error(
-            "sendfrom <fromaccount> <tosolarcoinaddress> <amount> [minconf=1] [comment] [comment-to] [tx-comment]\n"
+            "sendfrom <fromaccount> <tosolarcoinaddress> <amount> [minconf=1] [comment] [comment-to] [text:txcomment]\n"
             "<amount> is a real and is rounded to the nearest 0.000001"
             + HelpRequiringPassphrase());
 
@@ -757,7 +757,7 @@ Value sendmany(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 4)
         throw runtime_error(
-            "sendmany <fromaccount> {address:amount,...} [minconf=1] [comment] [tx-comment]\n"
+            "sendmany <fromaccount> {address:amount,...} [minconf=1] [comment] [text:txcomment]\n"
             "amounts are double-precision floating point numbers"
             + HelpRequiringPassphrase());
 
