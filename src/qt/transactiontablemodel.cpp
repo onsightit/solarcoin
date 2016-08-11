@@ -442,8 +442,12 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
 QString TransactionTableModel::formatTxComment(const TransactionRecord *wtx, bool tooltip) const
 {
     QString wtxComment(wtx->txcomment.c_str());
-    if (!wtxComment.isNull() && !wtxComment.isEmpty() && wtx->txcomment.find("text:", 1, 5))
-        wtxComment = QString(wtx->txcomment.substr(5, wtx->txcomment.size()-5).c_str());
+    if (!wtxComment.isNull() && !wtxComment.isEmpty())
+    {
+        // Strip the 5 character text: or other heading
+        if ((int)wtx->txcomment.find(":") == 4)
+            wtxComment = QString(wtx->txcomment.substr(5, wtx->txcomment.size()-5).c_str());
+    }
 
     switch(wtx->type)
     {
