@@ -196,7 +196,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QString &txcomment, co
         std::string strTxComment = txcomment.toStdString();
 
         // txcomment must begin with "text:".
-        if (!strTxComment.empty() && strTxComment.substr(0,5).compare("text:"))
+        if (!strTxComment.empty() && strTxComment.substr(0,5).compare("text:") != 0)
             strTxComment = "text:" + strTxComment;
         if (nBestHeight >= TX_COMMENT_V2_HEIGHT)
             strTxComment.resize(MAX_TX_COMMENT_LEN_V2);

@@ -358,7 +358,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
         if (nBestHeight >= (int)TX_COMMENT_V2_HEIGHT)
             TxCommentMaxLen = MAX_TX_COMMENT_LEN_V2;
         txcomment = params[4].get_str();
-        if (txcomment.substr(0,5).compare("text:"))
+        if (txcomment.substr(0,5).compare("text:") != 0)
             txcomment = "text:" + txcomment;
         if (txcomment.length() > TxCommentMaxLen)
             txcomment.resize(TxCommentMaxLen);
@@ -733,7 +733,7 @@ Value sendfrom(const Array& params, bool fHelp)
         if (nBestHeight >= (int)TX_COMMENT_V2_HEIGHT)
             TxCommentMaxLen = MAX_TX_COMMENT_LEN_V2;
         txcomment = params[6].get_str();
-        if (txcomment.substr(0,5).compare("text:"))
+        if (txcomment.substr(0,5).compare("text:") != 0)
             txcomment = "text:" + txcomment;
         if (txcomment.length() > TxCommentMaxLen)
             txcomment.resize(TxCommentMaxLen);
@@ -781,7 +781,7 @@ Value sendmany(const Array& params, bool fHelp)
         if (nBestHeight >= (int)TX_COMMENT_V2_HEIGHT)
             TxCommentMaxLen = MAX_TX_COMMENT_LEN_V2;
         strTxComment = params[4].get_str();
-        if (strTxComment.substr(0,5).compare("text:"))
+        if (strTxComment.substr(0,5).compare("text:") != 0)
             strTxComment = "text:" + strTxComment;
         if (strTxComment.length() > TxCommentMaxLen)
             strTxComment.resize(TxCommentMaxLen);
