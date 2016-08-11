@@ -195,8 +195,8 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QString &txcomment, co
         int64_t nFeeRequired = 0;
         std::string strTxComment = txcomment.toStdString();
 
-        // strTxComment may begin: text: or any other 4 char heading followed by ":".
-        if (!strTxComment.empty() && (int)strTxComment.find(":") != 4)
+        // txcomment must begin with "text:".
+        if (!strTxComment.empty() && strTxComment.substr(0,5).compare("text:"))
             strTxComment = "text:" + strTxComment;
         if (nBestHeight >= TX_COMMENT_V2_HEIGHT)
             strTxComment.resize(MAX_TX_COMMENT_LEN_V2);

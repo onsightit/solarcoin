@@ -332,9 +332,8 @@ Value sendtoaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 5)
         throw runtime_error(
-            "sendtoaddress <solarcoinaddress> <amount> [comment] [comment-to] [[text:]txcomment]\n"
-            "<amount> is a real and is rounded to the nearest 0.000001\n"
-            "[text:] is an optional header prepended to the txcomment eg: 'text:Hello World!'"
+            "sendtoaddress <solarcoinaddress> <amount> [comment] [comment-to] [txcomment]\n"
+            "<amount> is a real and is rounded to the nearest 0.000001"
             + HelpRequiringPassphrase());
 
     CBitcoinAddress address(params[0].get_str());
@@ -359,7 +358,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
         if (nBestHeight >= (int)TX_COMMENT_V2_HEIGHT)
             TxCommentMaxLen = MAX_TX_COMMENT_LEN_V2;
         txcomment = params[4].get_str();
-        if ((int)txcomment.find(":") != 4)
+        if (txcomment.substr(0,5).compare("text:"))
             txcomment = "text:" + txcomment;
         if (txcomment.length() > TxCommentMaxLen)
             txcomment.resize(TxCommentMaxLen);
@@ -706,9 +705,8 @@ Value sendfrom(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 3 || params.size() > 7)
         throw runtime_error(
-            "sendfrom <fromaccount> <tosolarcoinaddress> <amount> [minconf=1] [comment] [comment-to] [[text:]txcomment]\n"
-            "<amount> is a real and is rounded to the nearest 0.000001\n"
-            "[text:] is an optional header prepended to the txcomment eg: 'text:Hello World!'"
+            "sendfrom <fromaccount> <tosolarcoinaddress> <amount> [minconf=1] [comment] [comment-to] [txcomment]\n"
+            "<amount> is a real and is rounded to the nearest 0.000001"
             + HelpRequiringPassphrase());
 
     string strAccount = AccountFromValue(params[0]);
@@ -735,7 +733,7 @@ Value sendfrom(const Array& params, bool fHelp)
         if (nBestHeight >= (int)TX_COMMENT_V2_HEIGHT)
             TxCommentMaxLen = MAX_TX_COMMENT_LEN_V2;
         txcomment = params[6].get_str();
-        if ((int)txcomment.find(":") != 4)
+        if (txcomment.substr(0,5).compare("text:"))
             txcomment = "text:" + txcomment;
         if (txcomment.length() > TxCommentMaxLen)
             txcomment.resize(TxCommentMaxLen);
@@ -761,9 +759,8 @@ Value sendmany(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 5)
         throw runtime_error(
-            "sendmany <fromaccount> {address:amount,...} [minconf=1] [comment] [[text:]txcomment]\n"
-            "amounts are double-precision floating point numbers\n"
-            "[text:] is an optional header prepended to the txcomment eg: 'text:Hello World!'"
+            "sendmany <fromaccount> {address:amount,...} [minconf=1] [comment] [txcomment]\n"
+            "amounts are double-precision floating point numbers"
             + HelpRequiringPassphrase());
 
     string strAccount = AccountFromValue(params[0]);
@@ -784,7 +781,7 @@ Value sendmany(const Array& params, bool fHelp)
         if (nBestHeight >= (int)TX_COMMENT_V2_HEIGHT)
             TxCommentMaxLen = MAX_TX_COMMENT_LEN_V2;
         strTxComment = params[4].get_str();
-        if ((int)strTxComment.find(":") != 4)
+        if (strTxComment.substr(0,5).compare("text:"))
             strTxComment = "text:" + strTxComment;
         if (strTxComment.length() > TxCommentMaxLen)
             strTxComment.resize(TxCommentMaxLen);
