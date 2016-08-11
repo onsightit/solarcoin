@@ -198,10 +198,11 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QString &txcomment, co
         // txcomment must begin with "text:".
         if (!strTxComment.empty() && strTxComment.substr(0,5).compare("text:") != 0)
             strTxComment = "text:" + strTxComment;
-        if (nBestHeight >= TX_COMMENT_V2_HEIGHT)
-            strTxComment.resize(MAX_TX_COMMENT_LEN_V2);
-        else
-            strTxComment.resize(MAX_TX_COMMENT_LEN_V1);
+        unsigned int TxCommentMaxLen = MAX_TX_COMMENT_LEN_V1;
+        if (nBestHeight >= (int)TX_COMMENT_V2_HEIGHT)
+            TxCommentMaxLen = MAX_TX_COMMENT_LEN_V2;
+        if (strTxComment.length() > TxCommentMaxLen)
+            strTxComment.resize(TxCommentMaxLen);
 
         bool fCreated = wallet->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, strTxComment, coinControl);
 

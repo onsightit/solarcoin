@@ -354,12 +354,12 @@ Value sendtoaddress(const Array& params, bool fHelp)
     std::string txcomment;
     if (params.size() > 4 && params[4].type() != null_type && !params[4].get_str().empty())
     {
-        unsigned int TxCommentMaxLen = MAX_TX_COMMENT_LEN_V1;
-        if (nBestHeight >= (int)TX_COMMENT_V2_HEIGHT)
-            TxCommentMaxLen = MAX_TX_COMMENT_LEN_V2;
         txcomment = params[4].get_str();
         if (txcomment.substr(0,5).compare("text:") != 0)
             txcomment = "text:" + txcomment;
+        unsigned int TxCommentMaxLen = MAX_TX_COMMENT_LEN_V1;
+        if (nBestHeight >= (int)TX_COMMENT_V2_HEIGHT)
+            TxCommentMaxLen = MAX_TX_COMMENT_LEN_V2;
         if (txcomment.length() > TxCommentMaxLen)
             txcomment.resize(TxCommentMaxLen);
     }

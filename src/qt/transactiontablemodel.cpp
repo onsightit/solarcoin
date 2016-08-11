@@ -445,6 +445,7 @@ QString TransactionTableModel::formatTxComment(const TransactionRecord *wtx, boo
     if (!wtxComment.isNull() && !wtxComment.isEmpty())
     {
         // Strip the 5 character "text:" heading
+        if (wtx->txcomment.substr(0,5).compare("text:") == 0)
             wtxComment = QString(wtx->txcomment.substr(5, wtx->txcomment.size()-5).c_str());
     }
 
