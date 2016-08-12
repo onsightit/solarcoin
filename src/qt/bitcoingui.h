@@ -19,6 +19,7 @@ class SignVerifyMessageDialog;
 class Notificator;
 class RPCConsole;
 class Downloader;
+class ImportKeys;
 class WebView;
 //class GetSolarCoinPage;
 class ClaimsPage;
@@ -127,6 +128,7 @@ private:
     QAction *unlockWalletAction;
     QAction *openRPCConsoleAction;
     QAction *reloadBlockchainAction;
+    QAction *importKeysAction;
     QAction *rescanWalletAction;
     QAction *checkForUpdateAction;
 
@@ -178,6 +180,8 @@ public slots:
     void handleURI(QString strURI);
     void reloadBlockchainActionEnabled(bool enabled);
     void reloadBlockchain(bool autoReload=false);
+    void importKeysActionEnabled(bool enabled);
+    void importKeys(bool autoImport=false);
     void checkForUpdateActionEnabled(bool enabled);
     void checkForUpdate();
 

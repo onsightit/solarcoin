@@ -10,6 +10,8 @@
 #include <QPushButton>
 #include <QKeyEvent>
 
+extern bool fWalletUnlockStakingOnly;
+
 using namespace GUIUtil;
 
 AskPassphraseDialog::AskPassphraseDialog(Mode mode, QWidget *parent) :
@@ -36,10 +38,11 @@ AskPassphraseDialog::AskPassphraseDialog(Mode mode, QWidget *parent) :
         case Encrypt: // Ask passphrase x2
             ui->passLabel1->hide();
             ui->passEdit1->hide();
+            ui->stakingCheckBox->hide();
             ui->warningLabel->setText(tr("Enter a new password for the wallet.<br/>Please use a password of <b>10 or more random characters</b>, or <b>eight or more words</b>."));
             setWindowTitle(tr("Encrypt Wallet"));
             break;
-        case Lock: // Ask passphrase
+        case Lock: // Ask passphrase / Turn off staking
             ui->warningLabel->setText(tr("Click OK to turn off staking."));
             ui->passLabel1->hide();
             ui->passEdit1->hide();
@@ -47,14 +50,16 @@ AskPassphraseDialog::AskPassphraseDialog(Mode mode, QWidget *parent) :
             ui->passEdit2->hide();
             ui->passLabel3->hide();
             ui->passEdit3->hide();
+            ui->stakingCheckBox->hide();
             setWindowTitle(tr("Staking off"));
             break;
-        case Unlock: // Ask passphrase
+        case Unlock: // Ask passphrase / Option For staking only
             ui->warningLabel->setText(tr("Enter your wallet password."));
             ui->passLabel2->hide();
             ui->passEdit2->hide();
             ui->passLabel3->hide();
             ui->passEdit3->hide();
+            ui->stakingCheckBox->show();
             setWindowTitle(tr("Enter Password"));
             break;
         case Decrypt:   // Ask passphrase
@@ -63,10 +68,12 @@ AskPassphraseDialog::AskPassphraseDialog(Mode mode, QWidget *parent) :
             ui->passEdit2->hide();
             ui->passLabel3->hide();
             ui->passEdit3->hide();
+            ui->stakingCheckBox->hide();
             setWindowTitle(tr("Decrypt Wallet"));
             break;
         case ChangePass: // Ask old passphrase + new passphrase x2
             ui->warningLabel->setText(tr("Enter the old and new password to the wallet."));
+            ui->stakingCheckBox->hide();
             setWindowTitle(tr("Change Passphrase"));
             break;
     }
@@ -139,7 +146,7 @@ void AskPassphraseDialog::accept()
                 {
                     QMessageBox::warning(this, tr("Wallet encrypted"),
                                          "<qt>" + 
-                                         tr("SolarCoin will now restart to finish the encryption process. "
+                                         tr("HealthCoin will now restart to finish the encryption process. "
                                          "Remember that encrypting your wallet cannot fully protect "
                                          "your coins from being stolen by malware infecting your computer.") + 
                                          "<br><br><b>" + 
@@ -182,13 +189,17 @@ void AskPassphraseDialog::accept()
         }
         break;
     case Unlock:
-        if(!model->setWalletLocked(false, oldpass))
+        if (model->getEncryptionStatus() == WalletModel::Unlocked && !fWalletUnlockStakingOnly)
+            model->setWalletLocked(true, oldpass);
+
+        if (!model->setWalletLocked(false, oldpass))
         {
             QMessageBox::critical(this, tr("Wallet unlock failed"),
                                   tr("The password entered for the wallet was incorrect."));
         }
         else
         {
+            fWalletUnlockStakingOnly = ui->stakingCheckBox->isChecked();
             QDialog::accept(); // Success
         }
         break;
@@ -240,8 +251,6 @@ void AskPassphraseDialog::textChanged()
         acceptable = true;
         break;
     case Unlock: // Old passphrase x1
-        acceptable = true;
-        break;
     case Decrypt:
         acceptable = !ui->passEdit1->text().isEmpty();
         break;

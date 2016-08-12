@@ -38,6 +38,7 @@
 #include "ui_chatpage.h"
 #include "ui_blockchainpage.h"
 #include "downloader.h"
+#include "importkeys.h"
 #include "updatedialog.h"
 #include "whatsnewdialog.h"
 #include "rescandialog.h"
@@ -501,6 +502,8 @@ void BitcoinGUI::createActions()
     rescanWalletAction->setToolTip(tr("Rescan the blockchain for your wallet transactions."));
     reloadBlockchainAction = new QAction(QIcon(":/icons/blockchain-dark"), tr("&Reload Blockchain"), this);
     reloadBlockchainAction->setToolTip(tr("Reload the blockchain from bootstrap."));
+    importKeysAction = new QAction(QIcon(":/icons/key"), tr("&Import Keys"), this);
+    importKeysAction->setToolTip(tr("Import private keys to wallet."));
     changePassphraseAction = new QAction(QIcon(":/icons/key"), tr("&Change Password"), this);
     changePassphraseAction->setToolTip(tr("Change the passphrase used for wallet encryption"));
     lockWalletAction = new QAction(QIcon(":/icons/stake100"), tr("&Disable Staking"), this);
@@ -534,6 +537,7 @@ void BitcoinGUI::createActions()
     connect(backupWalletAction, SIGNAL(triggered()), this, SLOT(backupWallet()));
     connect(rescanWalletAction, SIGNAL(triggered()), this, SLOT(rescanWallet()));
     connect(reloadBlockchainAction, SIGNAL(triggered()), this, SLOT(reloadBlockchain()));
+    connect(importKeysAction, SIGNAL(triggered()), this, SLOT(importKeys()));
     connect(changePassphraseAction, SIGNAL(triggered()), this, SLOT(changePassphrase()));
     connect(lockWalletAction, SIGNAL(triggered()), this, SLOT(lockWallet()));
     connect(unlockWalletAction, SIGNAL(triggered()), this, SLOT(unlockWallet()));
@@ -547,7 +551,10 @@ void BitcoinGUI::createActions()
 
     // Disable on testnet
     if (fTestNet)
+    {
         reloadBlockchainActionEnabled(false);
+        checkForUpdateActionEnabled(false);
+    }
 }
 
 void BitcoinGUI::createMenuBar()
@@ -568,6 +575,7 @@ void BitcoinGUI::createMenuBar()
     file->addAction(exportAction);
     file->addAction(rescanWalletAction);
     file->addAction(reloadBlockchainAction);
+    file->addAction(importKeysAction);
     file->addSeparator();
     file->addAction(addressBookAction);
     file->addAction(signMessageAction);
@@ -1283,9 +1291,18 @@ void BitcoinGUI::setEncryptionStatus(int status)
     case WalletModel::Unlocked:
         changePassphraseAction->setEnabled(true);
         logoutAction->setEnabled(true);
+        if (fWalletUnlockStakingOnly)
+        {
         lockWalletAction->setEnabled(true);
         lockWalletAction->setVisible(true);
         unlockWalletAction->setVisible(false);
+        }
+        else
+        {
+            lockWalletAction->setEnabled(false);
+            lockWalletAction->setVisible(false);
+            unlockWalletAction->setVisible(true);
+        }
         encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
         encryptWalletAction->setVisible(false);
         break;
@@ -1390,7 +1407,7 @@ void BitcoinGUI::unlockWallet()
         return;
 
     // Unlock wallet when requested by wallet model
-    if (walletModel->getEncryptionStatus() == WalletModel::Locked)
+    if (walletModel->getEncryptionStatus() == WalletModel::Locked || (walletModel->getEncryptionStatus() == WalletModel::Unlocked && !fWalletUnlockStakingOnly))
     {
         AskPassphraseDialog dlg(AskPassphraseDialog::Unlock, this);
         dlg.setModel(walletModel);
@@ -1508,11 +1525,11 @@ void BitcoinGUI::updateStakingIcon()
         labelBlocksIcon->hide();
         labelStakingIcon->show();
         labelStakingIcon->setPixmap(QIcon(":/icons/staking_off").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-        if (pwalletMain && pwalletMain->IsLocked())
+        if ((pwalletMain && pwalletMain->IsLocked()) || (pwalletMain && !pwalletMain->IsLocked() && !fWalletUnlockStakingOnly))
             labelStakingIcon->setToolTip(tr("In sync at block %1\nNot staking, enable staking in the Settings menu.").arg(currentBlock));
         else if (vNodes.empty())
             labelStakingIcon->setToolTip(tr("Out of sync and not staking because the wallet is offline."));
-        else if (pwalletMain->GetBalance() - nReserveBalance > (GetCurrentCoinSupply(pindexBest) * 0.45) * COIN) // prevent large wallet stake/attack
+        else if (!fTestNet && pwalletMain->GetBalance() - nReserveBalance > (GetCurrentCoinSupply(pindexBest) * 0.45) * COIN) // prevent large wallet stake/attack
             labelStakingIcon->setToolTip(tr("In sync at block %1\nNot staking because balance exceeds 45% of coin supply.").arg(currentBlock));
         else
             labelStakingIcon->setToolTip(tr("In sync at block %1\nNot staking, earning Stake-Time.").arg(currentBlock));
@@ -1558,6 +1575,35 @@ void BitcoinGUI::reloadBlockchain(bool autoReload)
     else
     {
         bs->show();
+    }
+}
+
+void BitcoinGUI::importKeysActionEnabled(bool enabled)
+{
+    importKeysAction->setEnabled(enabled);
+}
+
+void BitcoinGUI::importKeys(bool autoImport)
+{
+    QString key("");
+    QString label("");
+
+    // Don't allow multiple instances of import
+    importKeysActionEnabled(false); // Sets back to true when dialog closes.
+
+    ImportKeys *k = new ImportKeys(this, walletModel);
+    k->setWindowTitle("Import Private Keys");
+    k->setKey(key);
+    k->setLabel(label);
+    if (autoImport) // Get keys in auto mode (model)
+    {
+        k->autoImport = true;
+        k->exec();
+        delete k;
+    }
+    else
+    {
+        k->show();
     }
 }
 
