@@ -1139,12 +1139,14 @@ int GetBlockRatePerHour()
 {
     int nRate = 0;
     CBlockIndex* pindex = pindexBest;
-    int64_t nTargetTime = pindexBest->nTime - 3600;
+    int64_t nTargetTime = GetAdjustedTime() - 3600;
 
     while (pindex && pindex->pprev && pindex->nTime > nTargetTime) {
         nRate += 1;
         pindex = pindex->pprev;
     }
+    if (nRate < nTargetSpacing / 2)
+        printf("GetBlockRatePerHour: Warning, block rate (%d) is less than half of nTargetSpacing=%d.\n", nRate, nTargetSpacing);
     return nRate;
 }
 
