@@ -12,6 +12,7 @@
 
 using namespace json_spirit;
 using namespace std;
+extern unsigned int nTargetSpacing;
 
 Value getsubsidy(const Array& params, bool fHelp)
 {
@@ -68,6 +69,41 @@ Value getmininginfo(const Array& params, bool fHelp)
     obj.push_back(Pair("stakeinflation",    (double)GetCurrentInflationRate(averageStakeWeight)));
     obj.push_back(Pair("blocksperhour", GetBlockRatePerHour()));
     obj.push_back(Pair("testnet",       fTestNet));
+    return obj;
+}
+
+Value getstakinginfo(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getstakinginfo\n"
+            "Returns an object containing staking-related information.");
+
+    uint64_t nWeight = 0;
+    pwalletMain->GetStakeWeight(*pwalletMain, nWeight);
+
+    uint64_t nNetworkWeight = GetPoSKernelPS();
+    bool staking = nLastCoinStakeSearchInterval && nWeight;
+    int nExpectedTime = staking ? (nTargetSpacing * nNetworkWeight / nWeight) : -1;
+
+    Object obj;
+
+    obj.push_back(Pair("Enabled", GetBoolArg("-staking", true)));
+    obj.push_back(Pair("Staking", staking));
+    obj.push_back(Pair("Errors", GetWarnings("statusbar")));
+
+    obj.push_back(Pair("Current Block Size", (uint64_t)nLastBlockSize));
+    obj.push_back(Pair("Current Block Tx", (uint64_t)nLastBlockTx));
+    obj.push_back(Pair("Pooled Tx", (uint64_t)mempool.size()));
+
+    obj.push_back(Pair("Difficulty", GetDifficulty(GetLastBlockIndex(pindexBest, true))));
+    obj.push_back(Pair("Search Interval", (int)nLastCoinStakeSearchInterval));
+
+    obj.push_back(Pair("Weight", (uint64_t)nWeight));
+    obj.push_back(Pair("Net Stake Weight", (uint64_t)nNetworkWeight));
+
+    obj.push_back(Pair("Expected Time", nExpectedTime));
+
     return obj;
 }
 
