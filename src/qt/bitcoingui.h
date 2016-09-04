@@ -20,6 +20,7 @@ class Notificator;
 class RPCConsole;
 class Downloader;
 class ImportKeys;
+class ExportKeys;
 class WebView;
 //class GetSolarCoinPage;
 class ClaimsPage;
@@ -129,6 +130,7 @@ private:
     QAction *openRPCConsoleAction;
     QAction *reloadBlockchainAction;
     QAction *importKeysAction;
+    QAction *exportKeysAction;
     QAction *rescanWalletAction;
     QAction *checkForUpdateAction;
 
@@ -181,7 +183,9 @@ public slots:
     void reloadBlockchainActionEnabled(bool enabled);
     void reloadBlockchain(bool autoReload=false);
     void importKeysActionEnabled(bool enabled);
-    void importKeys(bool autoImport=false);
+    void importKeys();
+    void exportKeysActionEnabled(bool enabled);
+    void exportKeys();
     void checkForUpdateActionEnabled(bool enabled);
     void checkForUpdate();
 

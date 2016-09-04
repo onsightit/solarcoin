@@ -4,6 +4,7 @@
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "util.h"
+#include "askpassphrasedialog.h"
 
 //#include <iostream>
 //#include <fstream>
@@ -36,16 +37,23 @@ ImportKeys::ImportKeys(QWidget *parent, WalletModel *walletModel) :
     ui->labelEdit->setText("");
     ui->statusLabel->setWordWrap(true);
     ui->statusLabel->setFont(qFont);
+    ui->unlockButton->setEnabled(true);
+    ui->unlockButton->setAutoDefault(false);
+    ui->importButton->setEnabled(false);
     ui->importButton->setAutoDefault(false);
     ui->quitButton->setAutoDefault(false);
+
+    ui->statusLabel->setText(tr("Import a private key from another wallet's exported address. Your wallet must be unlocked and not staking.\n"));
 
     // These will be set true when Cancel/Continue/Quit pressed
     importkeysQuit = false;
     requestAborted = false;
     importFinished = false;
 
-    // These are set by the class creating the ImportKeys object
-    autoImport = false;
+    if (walletModel->getEncryptionStatus() == WalletModel::Unlocked && !fWalletUnlockStakingOnly)
+    {
+        ui->unlockButton->setEnabled(false);
+    }
 
     connect(ui->keyEdit, SIGNAL(textChanged(QString)),
                 this, SLOT(enableImportButton()));
@@ -58,18 +66,18 @@ ImportKeys::~ImportKeys()
 
 void ImportKeys::showEvent(QShowEvent *e)
 {
-    if (autoImport)
-    {
-        ui->quitButton->setEnabled(true);
-        on_importButton_clicked();
-    }
 }
 
-void ImportKeys::on_continueButton_clicked() // Next button
+void ImportKeys::on_unlockButton_clicked()
 {
-    if (importFinished && autoImport)
+    AskPassphraseDialog dlg(AskPassphraseDialog::Unlock, this);
+    dlg.setModel(walletModel);
+    dlg.exec();
+
+    if (walletModel->getEncryptionStatus() == WalletModel::Unlocked && !fWalletUnlockStakingOnly)
     {
-        on_quitButton_clicked();
+        ui->unlockButton->setEnabled(false);
+        ui->unlockButton->setDefault(false);
     }
 }
 
@@ -88,6 +96,9 @@ void ImportKeys::on_quitButton_clicked() // Cancel button
     }
     BitcoinGUI *p = qobject_cast<BitcoinGUI *>(parent());
     p->importKeysActionEnabled(true); // Set menu option back to true when dialog closes.
+
+    if (walletModel->getEncryptionStatus() == WalletModel::Unlocked && !fWalletUnlockStakingOnly)
+        fWalletUnlockStakingOnly = true;
 
     this->close();
 }
@@ -109,7 +120,6 @@ void ImportKeys::cancelImport()
 
     ui->importButton->setEnabled(true);
     ui->importButton->setDefault(true);
-    ui->quitButton->setEnabled(true);
 }
 
 void ImportKeys::on_importButton_clicked()
@@ -123,9 +133,6 @@ void ImportKeys::on_importButton_clicked()
     // These will be set true when Cancel/Quit pressed
     importkeysQuit = false;
     requestAborted = false;
-
-    // import button disabled after requesting import.
-    ui->importButton->setEnabled(false);
 
     startRequest(key, label);
 }
@@ -152,14 +159,15 @@ void ImportKeys::startRequest(QString k, QString l)
 
     if (!fGood)
     {
-        statusText = tr("Invalid private key.");
+        statusText = tr("Invalid private key: ").append(strSecret.c_str());
         ui->statusLabel->setText(statusText);
         requestAborted = true;
     }
     if (fWalletUnlockStakingOnly)
     {
-        statusText = tr("Warning: Wallet is unlocked for staking only.\n\n1. Go to Settings->Disable Staking and click \"OK\".\n2. Go to Settings->Enable Staking, enter your password and UNCHECK \"For staking only\".");
+        statusText = tr("Please unlock the wallet to continue. Enter your password and UNCHECK \"For staking only\".");
         ui->statusLabel->setText(statusText);
+        ui->importButton->setEnabled(false);
         requestAborted = true;
     }
 
@@ -222,22 +230,16 @@ void ImportKeys::importkeysFinished()
     // when canceled
     if (requestAborted)
     {
-        ui->importButton->setEnabled(true);
-        ui->importButton->setDefault(true);
-        ui->quitButton->setEnabled(true);
+        ui->importButton->setEnabled(false);
+        ui->quitButton->setDefault(true);
         return;
     }
 
-    ui->statusLabel->setText(tr("Import was successful.  Import another or press 'Quit'."));
+    ui->statusLabel->setText(tr("Import was successful.  Import another or press 'Cancel'."));
     ui->importButton->setEnabled(false);
-    ui->quitButton->setDefault(false);
+    ui->quitButton->setDefault(true);
 
     importFinished = true;
-
-    if (autoImport)
-    {
-        on_quitButton_clicked();
-    }
 }
 
 void ImportKeys::on_keyEdit_returnPressed()
@@ -256,14 +258,7 @@ void ImportKeys::setKey(QString k)
     key = k;
 
     ui->keyEdit->setText(key);
-    if (autoImport)
-    {
-        ui->keyEdit->setEnabled(false);
-    }
-    else
-    {
-        ui->keyEdit->setEnabled(true);
-    }
+    ui->keyEdit->setEnabled(true);
 }
 
 // This is called when the Key is already pre-defined
@@ -272,12 +267,5 @@ void ImportKeys::setLabel(QString l)
     label = l;
 
     ui->labelEdit->setText(label);
-    if (autoImport)
-    {
-        ui->labelEdit->setEnabled(false);
-    }
-    else
-    {
-        ui->labelEdit->setEnabled(true);
-    }
+    ui->labelEdit->setEnabled(true);
 }

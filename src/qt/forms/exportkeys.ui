@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ImportKeys</class>
- <widget class="QDialog" name="ImportKeys">
+ <class>ExportKeys</class>
+ <widget class="QDialog" name="ExportKeys">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,27 +11,10 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>ImportKeys</string>
+   <string>ExportKeys</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
-    <widget class="QLabel" name="keyLabel">
-     <property name="text">
-      <string>Private Key:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="1">
-    <widget class="QLineEdit" name="keyEdit">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <property name="placeholderText">
-      <string>1HpHagT65TZzG1PH3CSu63k8DbpvD8s5ip4nEB3kEsreAnchuDf</string>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="0" colspan="2">
+   <item row="3" column="0" colspan="2">
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <property name="spacing">
       <number>10</number>
@@ -72,7 +55,10 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="importButton">
+      <widget class="QPushButton" name="exportButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="minimumSize">
         <size>
          <width>100</width>
@@ -80,7 +66,7 @@
         </size>
        </property>
        <property name="text">
-        <string>Import</string>
+        <string>Export</string>
        </property>
        <property name="autoDefault">
         <bool>false</bool>
@@ -105,7 +91,7 @@
      </item>
     </layout>
    </item>
-   <item row="3" column="0" colspan="2">
+   <item row="2" column="0" colspan="2">
     <widget class="QLabel" name="statusLabel">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -133,17 +119,29 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="1">
-    <widget class="QLineEdit" name="labelEdit">
-     <property name="placeholderText">
-      <string>Joey</string>
+   <item row="1" column="0">
+    <widget class="QPushButton" name="addressButton">
+     <property name="maximumSize">
+      <size>
+       <width>110</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>Address Book</string>
      </property>
     </widget>
    </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="labelLabel">
+   <item row="1" column="1">
+    <widget class="QLabel" name="addressLabel">
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
      <property name="text">
-      <string>Addr Label:</string>
+      <string/>
+     </property>
+     <property name="textInteractionFlags">
+      <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
      </property>
     </widget>
    </item>

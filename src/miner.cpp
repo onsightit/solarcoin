@@ -560,7 +560,7 @@ void StakeMiner(CWallet *pwallet)
                 return;
         }
 
-        while ((vNodes.size() < 5 && !fTestNet) || vNodes.size() < 1 || IsInitialBlockDownload() || nBestHeight < GetNumBlocksOfPeers())
+        while ((vNodes.size() < 3 && !fTestNet) || vNodes.size() < 1 || IsInitialBlockDownload() || nBestHeight < GetNumBlocksOfPeers())
         {
             nLastCoinStakeSearchInterval = 0;
             MilliSleep(60000);
@@ -569,7 +569,7 @@ void StakeMiner(CWallet *pwallet)
         }
 
         // prevent large wallet stake/attack
-        while (pwallet->GetBalance() - nReserveBalance > (GetCurrentCoinSupply(pindexBest) * 0.45) * COIN)
+        while (!fTestNet && pwallet->GetBalance() - nReserveBalance > (GetCurrentCoinSupply(pindexBest) * 45 / 100) * COIN)
         {
             nLastCoinStakeSearchInterval = 0;
             MilliSleep(60000);

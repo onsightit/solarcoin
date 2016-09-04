@@ -192,7 +192,7 @@ void AskPassphraseDialog::accept()
         if (model->getEncryptionStatus() == WalletModel::Unlocked && !fWalletUnlockStakingOnly)
             model->setWalletLocked(true, oldpass);
 
-        if (!model->setWalletLocked(false, oldpass))
+        if (model->getEncryptionStatus() == WalletModel::Locked && !model->setWalletLocked(false, oldpass))
         {
             QMessageBox::critical(this, tr("Wallet unlock failed"),
                                   tr("The password entered for the wallet was incorrect."));

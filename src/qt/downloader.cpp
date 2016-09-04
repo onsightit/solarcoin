@@ -260,7 +260,10 @@ void Downloader::startRequest(QUrl url)
     // and returns a new QNetworkReply object
     // opened for reading which emits
     // the readyRead() signal whenever new data arrives.
-    reply = manager->get(QNetworkRequest(url));
+    QNetworkRequest request;
+    request.setUrl(url);
+    request.setRawHeader("User-Agent", "Downloader 1.0");
+    reply = manager->get(request);
     reply->ignoreSslErrors();
 
     // Whenever more data is received from the network,
@@ -330,7 +333,14 @@ void Downloader::downloaderFinished()
             delete file;
             file = 0;
         }
-        ui->statusLabel->setText("Error: Download ended prematurely.");
+        if (!reply->errorString().isEmpty())
+        {
+            ui->statusLabel->setText(tr("Error: Download ended prematurely.\n\n%1").arg(reply->errorString()));
+        }
+        else
+        {
+            ui->statusLabel->setText(tr("Error: Download ended prematurely."));
+        }
         ui->downloadButton->setEnabled(true);
         ui->downloadButton->setDefault(true);
         ui->continueButton->setEnabled(false);

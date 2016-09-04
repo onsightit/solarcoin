@@ -339,6 +339,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/clientversion.h \
     src/qt/downloader.h \
     src/qt/importkeys.h \
+    src/qt/exportkeys.h \
     src/qt/updatedialog.h \
     src/qt/cookiejar.h \
     src/qt/autosaver.h \
@@ -416,6 +417,7 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/rpcconsole.cpp \
     src/qt/downloader.cpp \
     src/qt/importkeys.cpp \
+    src/qt/exportkeys.cpp \
     src/qt/updatedialog.cpp \
     src/qt/rescandialog.cpp \
     src/qt/cookiejar.cpp \
@@ -470,6 +472,7 @@ FORMS += \
     src/qt/forms/optionsdialog.ui \
     src/qt/forms/downloader.ui \
     src/qt/forms/importkeys.ui \
+    src/qt/forms/exportkeys.ui \
     src/qt/forms/updatedialog.ui \
     src/qt/forms/rescandialog.ui \
     src/qt/forms/transactionspage.ui \

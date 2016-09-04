@@ -1119,8 +1119,10 @@ void CWallet::AvailableCoinsMinConf(vector<COutput>& vCoins, int nConf) const
                 continue;
 
             for (unsigned int i = 0; i < pcoin->vout.size(); i++)
+            {
                 if (!(pcoin->IsSpent(i)) && IsMine(pcoin->vout[i]) && pcoin->vout[i].nValue >= nMinimumInputValue)
                     vCoins.push_back(COutput(pcoin, i, pcoin->GetDepthInMainChain()));
+            }
         }
     }
 }
@@ -1509,8 +1511,12 @@ bool CWallet::GetStakeWeight(const CKeyStore& keystore, uint64_t& nWeight)
 {
     // Choose coins to use
     int64_t nBalance = GetBalance();
+    int64_t nBalanceLimit = (GetCurrentCoinSupply(pindexBest) * 45 / 100) * COIN; // prevent large wallet stake/attack
 
     if (nBalance <= nReserveBalance)
+        return false;
+
+    if (!fTestNet && nBalance - nReserveBalance > nBalanceLimit)
         return false;
 
     vector<const CWalletTx*> vwtxPrev;
@@ -2463,3 +2469,4 @@ void CWallet::GetKeyBirthTimes(std::map<CKeyID, int64_t> &mapKeyBirth) const {
     for (std::map<CKeyID, CBlockIndex*>::const_iterator it = mapKeyFirstBlock.begin(); it != mapKeyFirstBlock.end(); it++)
         mapKeyBirth[it->first] = it->second->nTime - 7200; // block times can be 2h off
 }
+

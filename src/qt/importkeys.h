@@ -36,9 +36,6 @@ public:
     bool importkeysQuit;
     bool importFinished;
 
-    // These are set by the class creating the ImportKeys object
-    bool autoImport;
-
 protected:
     void closeEvent(QCloseEvent *event);
 
@@ -47,9 +44,9 @@ private slots:
 
     void on_quitButton_clicked();
 
-    void on_continueButton_clicked();
-
     void on_keyEdit_returnPressed();
+
+    void on_unlockButton_clicked();
 
     // slot for finished() signal from reply
     void importkeysFinished();

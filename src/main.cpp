@@ -466,6 +466,9 @@ bool CTransaction::CheckTransaction() const
         return DoS(10, error("CTransaction::CheckTransaction() : vin empty"));
     if (vout.empty())
         return DoS(10, error("CTransaction::CheckTransaction() : vout empty"));
+    // Time (prevent mempool memory exhaustion attack) // courtesy john-connor
+    if (nTime > FutureDrift(GetAdjustedTime()))
+        return DoS(10, error("CTransaction::CheckTransaction() : timestamp is too far into the future"));
     // Size limits
     if (::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > (nBestHeight >= FORK_HEIGHT_1 ? MAX_BLOCK_SIZE : MAX_BLOCK_SIZE_1M))
         return DoS(100, error("CTransaction::CheckTransaction() : size limits failed"));
@@ -1114,6 +1117,7 @@ double GetCurrentInterestRate(CBlockIndex* pindexPrev)
     {
         double nAverageWeight = GetAverageStakeWeight(pindexPrev);
         double inflationRate = GetCurrentInflationRate(nAverageWeight) / 100;
+        // Bug fix: Should be "GetCurrentCoinSupply(pindexPrev) * COIN", but this code is no longer executed.
         interestRate = ((inflationRate * GetCurrentCoinSupply(pindexPrev)) / nAverageWeight) * 100;
 
         // Cap interest rate (must use the 2.0.2 interest rate value)
@@ -1124,12 +1128,17 @@ double GetCurrentInterestRate(CBlockIndex* pindexPrev)
     return interestRate;
 }
 
-// Get the current coin supply
+// Get the current coin supply / COIN
 int64_t GetCurrentCoinSupply(CBlockIndex* pindexPrev)
 {
     // removed addition of 1.35 SLR / block after 835000 + 1000
     if (pindexPrev->nHeight > TWO_PERCENT_INT_HEIGHT)
-        return INITIAL_COIN_SUPPLY;
+        if (pindexPrev->nHeight > BUG_FIX_HEIGHT)
+            // Bug fix: pindexPrev->nMoneySupply is an int64_t that has overflowed and is now negative.
+            // Use the real coin supply + expected growth rate since TWO_PERCENT_INT_HEIGHT from granting.
+            return ((pindexPrev->nMoneySupply - (98000000000 * COIN)) / COIN) + (int64_t)((double)(pindexPrev->nHeight - TWO_PERCENT_INT_HEIGHT) * COIN_SUPPLY_GROWTH_RATE);
+        else
+            return INITIAL_COIN_SUPPLY;
     else
         return (INITIAL_COIN_SUPPLY + ((pindexPrev->nHeight - LAST_POW_BLOCK) * COIN_SUPPLY_GROWTH_RATE));
 }

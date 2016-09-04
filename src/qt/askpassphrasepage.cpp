@@ -153,7 +153,7 @@ void AskPassphrasePage::accept()
         emit lockWalletFeatures(true);
         break;
     case Unlock: // Turn on staking
-        if(!model->setWalletLocked(false, oldpass))
+        if(model->getEncryptionStatus() == WalletModel::Locked && !model->setWalletLocked(false, oldpass))
         {
             ui->messageLabel->setText(tr("The passphrase entered for the wallet is incorrect."));
         }

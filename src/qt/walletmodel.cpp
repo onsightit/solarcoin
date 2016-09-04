@@ -12,6 +12,8 @@
 #include <QSet>
 #include <QTimer>
 
+extern int64_t nWalletUnlockTime;
+
 WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *parent) :
     QObject(parent), wallet(wallet), optionsModel(optionsModel), addressTableModel(0),
     transactionTableModel(0),
@@ -297,11 +299,13 @@ bool WalletModel::setWalletLocked(bool locked, const SecureString &passPhrase)
     if(locked)
     {
         // Lock
+        nWalletUnlockTime = 0;
         return wallet->Lock();
     }
     else
     {
         // Unlock
+        nWalletUnlockTime = 999999999;
         return wallet->Unlock(passPhrase);
     }
 }

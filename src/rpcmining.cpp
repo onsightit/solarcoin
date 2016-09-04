@@ -83,26 +83,26 @@ Value getstakinginfo(const Array& params, bool fHelp)
     pwalletMain->GetStakeWeight(*pwalletMain, nWeight);
 
     uint64_t nNetworkWeight = GetPoSKernelPS();
-    bool staking = nLastCoinStakeSearchInterval && nWeight;
+    bool enabled = pwalletMain->IsCrypted() && !pwalletMain->IsLocked() && fWalletUnlockStakingOnly;
+    bool staking = enabled && nLastCoinStakeSearchInterval && nWeight;
     int nExpectedTime = staking ? (nTargetSpacing * nNetworkWeight / nWeight) : -1;
 
     Object obj;
 
-    obj.push_back(Pair("Enabled", GetBoolArg("-staking", true)));
+    obj.push_back(Pair("Enabled", enabled));
     obj.push_back(Pair("Staking", staking));
+    obj.push_back(Pair("Stake",   ValueFromAmount(pwalletMain->GetStake())));
     obj.push_back(Pair("Errors", GetWarnings("statusbar")));
+
+    obj.push_back(Pair("Difficulty", GetDifficulty(GetLastBlockIndex(pindexBest, true))));
+    obj.push_back(Pair("Search Interval", (int)nLastCoinStakeSearchInterval));
+    obj.push_back(Pair("Weight", (uint64_t)nWeight));
+    obj.push_back(Pair("Net Stake Weight", (uint64_t)nNetworkWeight));
+    obj.push_back(Pair("Expected Time", nExpectedTime));
 
     obj.push_back(Pair("Current Block Size", (uint64_t)nLastBlockSize));
     obj.push_back(Pair("Current Block Tx", (uint64_t)nLastBlockTx));
     obj.push_back(Pair("Pooled Tx", (uint64_t)mempool.size()));
-
-    obj.push_back(Pair("Difficulty", GetDifficulty(GetLastBlockIndex(pindexBest, true))));
-    obj.push_back(Pair("Search Interval", (int)nLastCoinStakeSearchInterval));
-
-    obj.push_back(Pair("Weight", (uint64_t)nWeight));
-    obj.push_back(Pair("Net Stake Weight", (uint64_t)nNetworkWeight));
-
-    obj.push_back(Pair("Expected Time", nExpectedTime));
 
     return obj;
 }
