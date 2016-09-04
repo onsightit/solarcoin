@@ -1,7 +1,10 @@
 *~
 build
 debug
-release
+release/*.exe
+release/*.cpp
+release/*.o
+src/quazip/release
 src/*.exe
 src/solarcoin
 src/solarcoind
