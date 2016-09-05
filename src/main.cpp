@@ -1108,7 +1108,7 @@ double GetCurrentInterestRate(CBlockIndex* pindexPrev)
 {
     double interestRate = 0;
 
-    // Fixed interest rate after 835000 + 1000
+    // Fixed interest rate after PoW + 1000
     if (pindexPrev->nHeight > TWO_PERCENT_INT_HEIGHT)
     {
         interestRate = TWO_PERCENT_INT;
