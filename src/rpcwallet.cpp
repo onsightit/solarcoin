@@ -35,7 +35,7 @@ void EnsureWalletIsUnlocked()
 void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
 {
     int confirms = wtx.GetDepthInMainChain();
-    entry.push_back(Pair("txcomment", wtx.strTxComment));
+    entry.push_back(Pair("tx-comment", wtx.strTxComment));
     entry.push_back(Pair("confirmations", confirms));
     if (wtx.IsCoinBase() || wtx.IsCoinStake())
         entry.push_back(Pair("generated", true));
@@ -1819,16 +1819,32 @@ Value makekeypair(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
-            "makekeypair [prefix]\n"
+            "makekeypair [suffix]\n"
             "Make a public/private key pair.\n"
-            "[prefix] is optional preferred prefix for the public key.\n");
+            "[suffix] is optional preferred suffix for the public key.\n");
 
-    string strPrefix = "";
+    int j, i = 0;
+    string strSuffix = "";
     if (params.size() > 0)
-        strPrefix = params[0].get_str();
+    {
+        strSuffix = params[0].get_str();
+        i = 10000 * min((int)strSuffix.length(), 3); // Longer suffixes need more iterations.
+        j = i;
+    }
  
     CKey key;
     key.MakeNewKey(false);
+    size_t suffix_begin = HexStr(key.GetPubKey().Raw()).length() - strSuffix.length();
+    while(i && strSuffix != HexStr(key.GetPubKey().Raw()).substr(suffix_begin, strSuffix.length()))
+    {
+        key.MakeNewKey(false);
+        i--;
+    }
+    if (!i && !strSuffix.empty())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Could not generate a public key with the preferred suffix.");
+
+    if (fDebug && i)
+        printf("DEBUG: Found suffix in %d iterations.\n", j - i);
 
     CPrivKey vchPrivKey = key.GetPrivKey();
     Object result;
