@@ -90,7 +90,18 @@ Value getinfo(const Array& params, bool fHelp)
 
     if (pindexBest->nHeight > LAST_POW_BLOCK)
     {
-    obj.push_back(Pair("interestrate",  GetCurrentInterestRate(pindexBest->pprev)));
+        double nNetworkWeight = GetAverageStakeWeight(pindexBest->pprev);
+        obj.push_back(Pair("networkweight", nNetworkWeight));
+        if (nNetworkWeight > 0)
+        {
+            obj.push_back(Pair("inflationrate", GetCurrentInflationRate(GetAverageStakeWeight(pindexBest->pprev))));
+            obj.push_back(Pair("interestrate",  GetCurrentInterestRate(pindexBest->pprev)));
+        }
+        else
+        {
+            obj.push_back(Pair("inflationrate", "n/a"));
+            obj.push_back(Pair("interestrate",  "n/a"));
+        }
     }
 
     obj.push_back(Pair("coinsupply",    GetCurrentCoinSupply(pindexBest)));
@@ -1819,36 +1830,28 @@ Value makekeypair(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
-            "makekeypair [suffix]\n"
+            "makekeypair [compressed=true]\n"
             "Make a public/private key pair.\n"
-            "[suffix] is optional preferred suffix for the public key.\n");
+            "[compressed=true] Set false for uncompressed Public key.\n");
 
     int j, i = 0;
-    string strSuffix = "";
+    bool compressed = true;
     if (params.size() > 0)
     {
-        strSuffix = params[0].get_str();
-        i = 10000 * min((int)strSuffix.length(), 3); // Longer suffixes need more iterations.
-        j = i;
+        compressed = (params[0].get_str() == "false" ? false : true);
     }
- 
-    CKey key;
-    key.MakeNewKey(false);
-    size_t suffix_begin = HexStr(key.GetPubKey().Raw()).length() - strSuffix.length();
-    while(i && strSuffix != HexStr(key.GetPubKey().Raw()).substr(suffix_begin, strSuffix.length()))
-    {
-        key.MakeNewKey(false);
-        i--;
-    }
-    if (!i && !strSuffix.empty())
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Could not generate a public key with the preferred suffix.");
 
-    if (fDebug && i)
-        printf("DEBUG: Found suffix in %d iterations.\n", j - i);
+    CKey key;
+    key.MakeNewKey(compressed);
 
     CPrivKey vchPrivKey = key.GetPrivKey();
     Object result;
     result.push_back(Pair("PrivateKey", HexStr<CPrivKey::iterator>(vchPrivKey.begin(), vchPrivKey.end())));
     result.push_back(Pair("PublicKey", HexStr(key.GetPubKey().Raw())));
+
+    CKeyID keyID = key.GetPubKey().GetID();
+    result.push_back(Pair("Address", CBitcoinAddress(keyID).ToString()));
+
     return result;
 }
+
