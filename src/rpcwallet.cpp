@@ -1830,11 +1830,10 @@ Value makekeypair(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
-            "makekeypair [compressed=true]\n"
-            "Make a public/private key pair.\n"
-            "[compressed=true] Set false for uncompressed Public key.\n");
+            "makekeypair [compress Public key]\n"
+            "Make a public/private key pair and address.\n"
+            "[compress Public key] Default, true. Use false for uncompressed Public key.\n");
 
-    int j, i = 0;
     bool compressed = true;
     if (params.size() > 0)
     {
