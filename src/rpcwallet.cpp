@@ -1830,9 +1830,9 @@ Value makekeypair(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
-            "makekeypair [compress Public key]\n"
-            "Make a public/private key pair and address.\n"
-            "[compress Public key] Default, true. Use false for uncompressed Public key.\n");
+                "makekeypair [compress Public key]\n"
+                "Make a public/private key pair and address/privkey.\n"
+                "[compress Public key] Default, true. Use false for uncompressed Public key.\n");
 
     bool compressed = true;
     if (params.size() > 0)
@@ -1840,16 +1840,26 @@ Value makekeypair(const Array& params, bool fHelp)
         compressed = (params[0].get_str() == "false" ? false : true);
     }
 
+    RandAddSeedPerfmon();
     CKey key;
     key.MakeNewKey(compressed);
+    if (compressed)
+        pwalletMain->SetMinVersion(FEATURE_COMPRPUBKEY);
 
-    CPrivKey vchPrivKey = key.GetPrivKey();
-    Object result;
-    result.push_back(Pair("PrivateKey", HexStr<CPrivKey::iterator>(vchPrivKey.begin(), vchPrivKey.end())));
-    result.push_back(Pair("PublicKey", HexStr(key.GetPubKey().Raw())));
-
+    CPubKey pubKey = key.GetPubKey();
+    CPrivKey privKey = key.GetPrivKey();
     CKeyID keyID = key.GetPubKey().GetID();
-    result.push_back(Pair("Address", CBitcoinAddress(keyID).ToString()));
+    CBitcoinAddress address = CBitcoinAddress(keyID).ToString();
+    if (!address.GetKeyID(keyID))
+        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
+    CSecret secret = key.GetSecret(compressed);
+
+    Object result;
+    result.push_back(Pair("PublicKey", HexStr(pubKey.Raw())));
+    result.push_back(Pair("PrivateKey", HexStr<CPrivKey::iterator>(privKey.begin(), privKey.end())));
+
+    result.push_back(Pair("Address", address.ToString()));
+    result.push_back(Pair("PrivKey", CBitcoinSecret(secret, compressed).ToString()));
 
     return result;
 }

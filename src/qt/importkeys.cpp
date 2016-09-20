@@ -145,7 +145,6 @@ void ImportKeys::startRequest(QString k, QString l)
     QString statusText(tr("Please wait for the import to complete..."));
     ui->statusLabel->setText(statusText);
 
-    // TODO: call importprivkey key label
     std::string strSecret = k.toStdString();
     std::string strLabel = "";
     if (l.size() > 1)
