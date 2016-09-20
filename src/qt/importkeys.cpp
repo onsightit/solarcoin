@@ -6,13 +6,7 @@
 #include "util.h"
 #include "askpassphrasedialog.h"
 
-//#include <iostream>
-//#include <fstream>
-
 #include "init.h" // for pwalletMain
-//#include "bitcoinrpc.h"
-//#include "ui_interface.h"
-//#include "base58.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/variant/get.hpp>
@@ -142,7 +136,7 @@ void ImportKeys::startRequest(QString k, QString l)
 {
     importFinished = false;
 
-    QString statusText(tr("Please wait for the import to complete..."));
+    QString statusText(tr("Starting import..."));
     ui->statusLabel->setText(statusText);
 
     std::string strSecret = k.toStdString();
@@ -177,7 +171,7 @@ void ImportKeys::startRequest(QString k, QString l)
         CSecret secret = vchSecret.GetSecret(fCompressed);
         key.SetSecret(secret, fCompressed);
         CKeyID vchAddress = key.GetPubKey().GetID();
-        while (true)
+        while(true)
         {
             LOCK2(cs_main, pwalletMain->cs_wallet);
 
@@ -203,11 +197,16 @@ void ImportKeys::startRequest(QString k, QString l)
                 break;
             }
 
-            // whenever a key is imported, we need to scan the whole chain
-            pwalletMain->nTimeFirstKey = 1; // 0 would be considered 'no value'
+            // Schedule a wallet rescan
+            fRescan = true;
+            fRestart = true;
 
-            pwalletMain->ScanForWalletTransactions(pindexGenesisBlock, true);
-            pwalletMain->ReacceptWalletTransactions();
+            // whenever a key is imported, we need to scan the whole chain
+            //pwalletMain->nTimeFirstKey = 1; // 0 would be considered 'no value'
+
+            //pwalletMain->ScanForWalletTransactions(pindexGenesisBlock, true);
+            //pwalletMain->ReacceptWalletTransactions();
+
             break;
         }
     }
@@ -234,7 +233,7 @@ void ImportKeys::importkeysFinished()
         return;
     }
 
-    ui->statusLabel->setText(tr("Import was successful.  Import another or press 'Cancel'."));
+    ui->statusLabel->setText(tr("Import was successful. Import another key, or press 'Cancel'.\n\nNote: Your wallet needs to rescan the blockchain for transactions releated to the imported key(s). Shutdown the wallet to begin scanning."));
     ui->importButton->setEnabled(false);
     ui->quitButton->setDefault(true);
 

@@ -1840,18 +1840,13 @@ Value makekeypair(const Array& params, bool fHelp)
         compressed = (params[0].get_str() == "false" ? false : true);
     }
 
-    RandAddSeedPerfmon();
     CKey key;
     key.MakeNewKey(compressed);
-    if (compressed)
-        pwalletMain->SetMinVersion(FEATURE_COMPRPUBKEY);
 
     CPubKey pubKey = key.GetPubKey();
     CPrivKey privKey = key.GetPrivKey();
     CKeyID keyID = key.GetPubKey().GetID();
     CBitcoinAddress address = CBitcoinAddress(keyID).ToString();
-    if (!address.GetKeyID(keyID))
-        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
     CSecret secret = key.GetSecret(compressed);
 
     Object result;
