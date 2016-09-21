@@ -1387,7 +1387,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
         // txdb must be opened before the mapWallet lock
         CTxDB txdb("r");
         {
-            nFeeRet = nTransactionFee;
+            nFeeRet = GetMinTxFee();
             while (true)
             {
                 wtxNew.vin.clear();
@@ -1416,9 +1416,10 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
                 // if sub-cent change is required, the fee must be raised to at least MIN_TX_FEE
                 // or until nChange becomes zero
                 // NOTE: this depends on the exact behaviour of GetMinFee
-                if (nFeeRet < MIN_TX_FEE && nChange > 0 && nChange < CENT)
+                int64_t nMinTxFee = GetMinTxFee();
+                if (nFeeRet < nMinTxFee && nChange > 0 && nChange < CENT)
                 {
-                    int64_t nMoveToFee = min(nChange, MIN_TX_FEE - nFeeRet);
+                    int64_t nMoveToFee = min(nChange, nMinTxFee - nFeeRet);
                     nChange -= nMoveToFee;
                     nFeeRet += nMoveToFee;
                 }
@@ -1477,7 +1478,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
                 dPriority /= nBytes;
 
                 // Check that enough fee is included
-                int64_t nPayFee = nTransactionFee * (1 + (int64_t)nBytes / 1000);
+                int64_t nPayFee = GetMinTxFee() * (1 + (int64_t)nBytes / 1000);
                 bool fAllowFree = CTransaction::AllowFree(dPriority);
                 int64_t nMinFee = wtxNew.GetMinFee(1, GMF_SEND, nBytes, fAllowFree);
 
@@ -1884,7 +1885,7 @@ string CWallet::SendMoneyToDestination(const CTxDestination& address, int64_t nV
     // Check amount
     if (nValue <= 0)
         return _("Invalid amount");
-    if (nValue + nTransactionFee > GetBalance())
+    if (nValue + GetMinTxFee() > GetBalance())
         return _("Insufficient funds");
 
     // Parse Bitcoin address

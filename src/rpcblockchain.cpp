@@ -83,7 +83,7 @@ double GetPoSKernelPS(CBlockIndex* pindexPrev)
         if (pindexPrev->IsProofOfStake())
         {
             dStakeKernelsTriedAvg += GetDifficulty(pindexPrev) * 4294967296.0;
-            if (pindexPrev->nHeight > BUG_FIX_HEIGHT)
+            if (pindexPrev->nHeight > FORK_HEIGHT_2)
                 nStakesTime += max((int)(pindexPrevStake ? (pindexPrevStake->nTime - pindexPrev->nTime) : 0), 0); // Bug fix: Prevent negative stake weight
             else
                 nStakesTime += pindexPrevStake ? (pindexPrevStake->nTime - pindexPrev->nTime) : 0;
@@ -193,7 +193,7 @@ Value getdifficulty(const Array& params, bool fHelp)
 
 Value settxfee(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 1 || params.size() > 1 || AmountFromValue(params[0]) < MIN_TX_FEE)
+    if (fHelp || params.size() < 1 || params.size() > 1 || AmountFromValue(params[0]) < GetMinTxFee())
         throw runtime_error(
             "settxfee <amount>\n"
             "<amount> is a real and is rounded to the nearest 0.01");

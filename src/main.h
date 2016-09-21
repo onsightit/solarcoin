@@ -31,14 +31,14 @@ class CNode;
 //static const int64_t INITIAL_COIN_SUPPLY = 34145512; // testnet
 //static const int TWO_PERCENT_INT_HEIGHT = LAST_POW_BLOCK + 10; // testnet
 //static const int FORK_HEIGHT_1 = 8020;
-//static const int BUG_FIX_HEIGHT = 8030;
+//static const int FORK_HEIGHT_2 = 8030;
 
 // Mainnet
 static const int LAST_POW_BLOCK = 835213;
 static const int64_t INITIAL_COIN_SUPPLY = 34145512; // Used in calculating interest rate (97.990085882B are out of circulation)
 static const int TWO_PERCENT_INT_HEIGHT = LAST_POW_BLOCK + 1000;
 static const int FORK_HEIGHT_1 = 1177000;
-static const int BUG_FIX_HEIGHT = 1400000;
+static const int FORK_HEIGHT_2 = 1400000;
 
 static const double COIN_SUPPLY_GROWTH_RATE = 1.35; // Circulation growth rate per block based on SLR grants of 710,000 / year
 static const double TWO_PERCENT_INT = 2.0;
@@ -50,7 +50,9 @@ static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
 static const unsigned int MAX_ORPHAN_TRANSACTIONS = MAX_BLOCK_SIZE/100;
 static const unsigned int MAX_INV_SZ = 50000;
 static const int64_t MIN_TX_FEE = 100000;
+static const int64_t MIN_TX_FEE_2 = 10000;
 static const int64_t MIN_RELAY_TX_FEE = MIN_TX_FEE;
+static const int64_t MIN_RELAY_TX_FEE_2 = MIN_TX_FEE_2;
 static const int64_t MAX_MONEY = 1000000000000 * COIN; // SolarCoin: maximum of 98.1 billion coins
 static const double PI = 3.1415926535;
 
@@ -128,6 +130,7 @@ class CBlockHeader;
 class CCoins;
 class CScriptCheck;
 
+int64_t GetMinTxFee();
 void RegisterWallet(CWallet* pwalletIn);
 void UnregisterWallet(CWallet* pwalletIn);
 void SyncWithWallets(const CTransaction& tx, const CBlock* pblock = NULL, bool fUpdate = false, bool fConnect = true);

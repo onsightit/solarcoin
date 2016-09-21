@@ -88,6 +88,16 @@ int64_t nMinimumInputValue = DUST_HARD_LIMIT;
 
 extern enum Checkpoints::CPMode CheckpointsMode;
 
+int64_t GetMinTxFee()
+{
+    int64_t nMinTxFee = (nBestHeight >= FORK_HEIGHT_2 ? MIN_TX_FEE_2 : MIN_TX_FEE);
+    if (nTransactionFee != MIN_TX_FEE) // nTransactionFee may be overridden
+        return nTransactionFee;
+    else
+        return nMinTxFee;
+}
+
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // dispatching functions
@@ -518,7 +528,7 @@ bool CTransaction::CheckTransaction() const
 int64_t CTransaction::GetMinFee(unsigned int nBlockSize, enum GetMinFee_mode mode, unsigned int nBytes, bool fAllowFree) const
 {
     // Base fee is either MIN_TX_FEE or MIN_RELAY_TX_FEE
-    int64_t nBaseFee = (mode == GMF_RELAY) ? MIN_RELAY_TX_FEE : MIN_TX_FEE;
+    int64_t nBaseFee = (mode == GMF_RELAY) ? MIN_RELAY_TX_FEE : GetMinTxFee();
 
     if (nBytes == 0)
         nBytes = ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
@@ -1133,7 +1143,7 @@ int64_t GetCurrentCoinSupply(CBlockIndex* pindexPrev)
 {
     // removed addition of 1.35 SLR / block after 835000 + 1000
     if (pindexPrev->nHeight > TWO_PERCENT_INT_HEIGHT)
-        if (pindexPrev->nHeight > BUG_FIX_HEIGHT)
+        if (pindexPrev->nHeight > FORK_HEIGHT_2)
             // Bug fix: pindexPrev->nMoneySupply is an int64_t that has overflowed and is now negative.
             // Use the real coin supply + expected growth rate since TWO_PERCENT_INT_HEIGHT from granting.
             return ((pindexPrev->nMoneySupply - (98000000000 * COIN)) / COIN) + (int64_t)((double)(pindexPrev->nHeight - TWO_PERCENT_INT_HEIGHT) * COIN_SUPPLY_GROWTH_RATE);
