@@ -39,6 +39,7 @@ private:
     WalletModel *walletModel;
 
 private slots:
+    void on_launchButton_clicked();
 
 };
 
