@@ -91,7 +91,7 @@ extern enum Checkpoints::CPMode CheckpointsMode;
 int64_t GetMinTxFee()
 {
     int64_t nMinTxFee = (nBestHeight >= FORK_HEIGHT_2 ? MIN_TX_FEE_2 : MIN_TX_FEE);
-    if (nTransactionFee != MIN_TX_FEE) // nTransactionFee may be overridden
+    if (nTransactionFee > nMinTxFee) // nTransactionFee may be overridden
         return nTransactionFee;
     else
         return nMinTxFee;

@@ -251,6 +251,8 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         break;
         case Fee:
             nTransactionFee = value.toLongLong();
+            if (nTransactionFee < MIN_TX_FEE)
+                nTransactionFee = MIN_TX_FEE;
             settings.setValue("nTransactionFee", (qint64) nTransactionFee);
             emit transactionFeeChanged(nTransactionFee);
             break;
