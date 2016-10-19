@@ -5,7 +5,6 @@
 #include "guiutil.h"
 #include "util.h"
 #include "askpassphrasedialog.h"
-
 #include "init.h" // for pwalletMain
 
 #include <boost/date_time/posix_time/posix_time.hpp>

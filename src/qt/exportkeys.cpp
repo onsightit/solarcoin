@@ -6,14 +6,7 @@
 #include "util.h"
 #include "addressbookpage.h"
 #include "askpassphrasedialog.h"
-
-//#include <iostream>
-//#include <fstream>
-
 #include "init.h" // for pwalletMain
-//#include "bitcoinrpc.h"
-//#include "ui_interface.h"
-//#include "base58.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/variant/get.hpp>
@@ -175,7 +168,7 @@ void ExportKeys::startRequest(QString a)
         requestAborted = true;
     }
 
-    string strAddress = a.toStdString().c_str();
+    std::string strAddress = a.toStdString().c_str();
     CBitcoinAddress address;
     if (!address.SetString(strAddress))
     {
