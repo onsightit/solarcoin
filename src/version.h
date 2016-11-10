@@ -36,7 +36,7 @@ static const int PROTOCOL_VERSION_POW =  70002;
 static const int INIT_PROTO_VERSION = 209;
 
 // earlier versions not supported and are disconnected
-static const int MIN_PROTO_VERSION = 70005;
+static const int MIN_PROTO_VERSION = 60001;
 
 // nTime field added to CAddress, starting with this version;
 // if possible, avoid requesting addresses nodes older than this

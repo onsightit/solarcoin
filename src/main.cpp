@@ -80,7 +80,7 @@ CScript COINBASE_FLAGS;
 const string strMessageMagic = "SolarCoin Signed Message:\n";
 
 // Settings
-int64_t nTransactionFee = MIN_TX_FEE;
+int64_t nTransactionFee = 0;
 int64_t nReserveBalance = 0;
 int64_t nMinimumInputValue = DUST_HARD_LIMIT;
 
@@ -526,7 +526,11 @@ bool CTransaction::CheckTransaction() const
 int64_t CTransaction::GetMinFee(unsigned int nBlockSize, enum GetMinFee_mode mode, unsigned int nBytes, bool fAllowFree) const
 {
     // Base fee is either MIN_TX_FEE or MIN_RELAY_TX_FEE
-    int64_t nBaseFee = (mode == GMF_RELAY) ? MIN_RELAY_TX_FEE : GetMinTxFee();
+    int64_t nBaseFee;
+    if (nBestHeight >= FORK_HEIGHT_2)
+        int64_t nBaseFee = (mode == GMF_RELAY) ? MIN_RELAY_TX_FEE_2 : GetMinTxFee();
+    else
+        int64_t nBaseFee = (mode == GMF_RELAY) ? MIN_RELAY_TX_FEE : GetMinTxFee();
 
     if (nBytes == 0)
         nBytes = ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
@@ -681,7 +685,7 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
         // Continuously rate-limit free transactions
         // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
         // be annoying or make others' transactions take longer to confirm.
-        if (nFees < MIN_RELAY_TX_FEE)
+        if (nFees < (nBestHeight >= FORK_HEIGHT_2 ? MIN_RELAY_TX_FEE_2 : MIN_RELAY_TX_FEE))
         {
             static CCriticalSection cs;
             static double dFreeCount;
@@ -1141,7 +1145,7 @@ int64_t GetCurrentCoinSupply(CBlockIndex* pindexPrev)
 {
     // removed addition of 1.35 SLR / block after 835000 + 1000
     if (pindexPrev->nHeight > TWO_PERCENT_INT_HEIGHT)
-        if (pindexPrev->nHeight > FORK_HEIGHT_2)
+        if (pindexPrev->nHeight >= FORK_HEIGHT_2)
             // Bug fix: pindexPrev->nMoneySupply is an int64_t that has overflowed and is now negative.
             // Use the real coin supply + expected growth rate since TWO_PERCENT_INT_HEIGHT from granting.
             return ((pindexPrev->nMoneySupply - (98000000000 * COIN)) / COIN) + (int64_t)((double)(pindexPrev->nHeight - TWO_PERCENT_INT_HEIGHT) * COIN_SUPPLY_GROWTH_RATE);
@@ -3860,7 +3864,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         if (pfrom->nVersion <= PROTOCOL_VERSION_POW)
             pfrom->ssSend.nType |= SER_LEGACYPROTOCOL;
 
-        if (pfrom->nVersion < MIN_PROTO_VERSION || pfrom->nVersion > PROTOCOL_VERSION)
+        if (pfrom->nVersion < MIN_PROTO_VERSION || (pfrom->nVersion < PROTOCOL_VERSION && nBestHeight >= FORK_HEIGHT_2) || pfrom->nVersion > PROTOCOL_VERSION)
         {
             // disconnect from peers older than this proto version
             printf("partner %s using obsolete version %i; disconnecting\n", pfrom->addr.ToString().c_str(), pfrom->nVersion);

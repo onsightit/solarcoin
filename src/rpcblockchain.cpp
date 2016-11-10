@@ -83,7 +83,7 @@ double GetPoSKernelPS(CBlockIndex* pindexPrev)
         if (pindexPrev->IsProofOfStake())
         {
             dStakeKernelsTriedAvg += GetDifficulty(pindexPrev) * 4294967296.0;
-            if (pindexPrev->nHeight > FORK_HEIGHT_2)
+            if (pindexPrev->nHeight >= FORK_HEIGHT_2)
                 nStakesTime += max((int)(pindexPrevStake ? (pindexPrevStake->nTime - pindexPrev->nTime) : 0), 0); // Bug fix: Prevent negative stake weight
             else
                 nStakesTime += pindexPrevStake ? (pindexPrevStake->nTime - pindexPrev->nTime) : 0;
