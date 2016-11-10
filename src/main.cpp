@@ -526,11 +526,11 @@ bool CTransaction::CheckTransaction() const
 int64_t CTransaction::GetMinFee(unsigned int nBlockSize, enum GetMinFee_mode mode, unsigned int nBytes, bool fAllowFree) const
 {
     // Base fee is either MIN_TX_FEE or MIN_RELAY_TX_FEE
-    int64_t nBaseFee;
+    int64_t nBaseFee = 0;
     if (nBestHeight >= FORK_HEIGHT_2)
-        int64_t nBaseFee = (mode == GMF_RELAY) ? MIN_RELAY_TX_FEE_2 : GetMinTxFee();
+        nBaseFee = (mode == GMF_RELAY) ? MIN_RELAY_TX_FEE_2 : GetMinTxFee();
     else
-        int64_t nBaseFee = (mode == GMF_RELAY) ? MIN_RELAY_TX_FEE : GetMinTxFee();
+        nBaseFee = (mode == GMF_RELAY) ? MIN_RELAY_TX_FEE : GetMinTxFee();
 
     if (nBytes == 0)
         nBytes = ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
