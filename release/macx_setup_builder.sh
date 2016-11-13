@@ -2,7 +2,7 @@
 
 # Note: The structure of this package depends on the -rpath,./lib to be set at compile/link time.
 
-version="2.1.3"
+version="2.1.8"
 arch=`uname -m`
 
 if [ "${arch}" = "x86_64" ]; then
