@@ -80,20 +80,11 @@ CScript COINBASE_FLAGS;
 const string strMessageMagic = "SolarCoin Signed Message:\n";
 
 // Settings
-int64_t nTransactionFee = 0;
+int64_t nTransactionFee = MIN_TX_FEE;
 int64_t nReserveBalance = 0;
 int64_t nMinimumInputValue = DUST_HARD_LIMIT;
 
 extern enum Checkpoints::CPMode CheckpointsMode;
-
-int64_t GetMinTxFee()
-{
-    int64_t nMinTxFee = (nBestHeight >= FORK_HEIGHT_2 ? MIN_TX_FEE_2 : MIN_TX_FEE);
-    if (nTransactionFee > nMinTxFee) // nTransactionFee may be overridden
-        return nTransactionFee;
-    else
-        return nMinTxFee;
-}
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -526,11 +517,7 @@ bool CTransaction::CheckTransaction() const
 int64_t CTransaction::GetMinFee(unsigned int nBlockSize, enum GetMinFee_mode mode, unsigned int nBytes, bool fAllowFree) const
 {
     // Base fee is either MIN_TX_FEE or MIN_RELAY_TX_FEE
-    int64_t nBaseFee = 0;
-    if (nBestHeight >= FORK_HEIGHT_2)
-        nBaseFee = (mode == GMF_RELAY) ? MIN_RELAY_TX_FEE_2 : GetMinTxFee();
-    else
-        nBaseFee = (mode == GMF_RELAY) ? MIN_RELAY_TX_FEE : GetMinTxFee();
+    int64_t nBaseFee = (mode == GMF_RELAY) ? MIN_RELAY_TX_FEE : MIN_TX_FEE;
 
     if (nBytes == 0)
         nBytes = ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
@@ -685,7 +672,7 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
         // Continuously rate-limit free transactions
         // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
         // be annoying or make others' transactions take longer to confirm.
-        if (nFees < (nBestHeight >= FORK_HEIGHT_2 ? MIN_RELAY_TX_FEE_2 : MIN_RELAY_TX_FEE))
+        if (nFees < MIN_RELAY_TX_FEE)
         {
             static CCriticalSection cs;
             static double dFreeCount;

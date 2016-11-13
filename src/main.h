@@ -48,10 +48,8 @@ static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/4;
 static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
 static const unsigned int MAX_ORPHAN_TRANSACTIONS = MAX_BLOCK_SIZE/100;
 static const unsigned int MAX_INV_SZ = 50000;
-static const int64_t MIN_TX_FEE = 100000;
-static const int64_t MIN_TX_FEE_2 = 10000;
+static const int64_t MIN_TX_FEE = 100000; // 0.001
 static const int64_t MIN_RELAY_TX_FEE = MIN_TX_FEE;
-static const int64_t MIN_RELAY_TX_FEE_2 = MIN_TX_FEE_2;
 static const int64_t MAX_MONEY = 1000000000000 * COIN; // SolarCoin: maximum of 98.1 billion coins
 static const double PI = 3.1415926535;
 
@@ -128,7 +126,6 @@ class CBlockHeader;
 class CCoins;
 class CScriptCheck;
 
-int64_t GetMinTxFee();
 void RegisterWallet(CWallet* pwalletIn);
 void UnregisterWallet(CWallet* pwalletIn);
 void SyncWithWallets(const CTransaction& tx, const CBlock* pblock = NULL, bool fUpdate = false, bool fConnect = true);
