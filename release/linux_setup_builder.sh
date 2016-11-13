@@ -3,7 +3,7 @@
 # This script depends on the GNU script makeself.sh found at: http://megastep.org/makeself/
 # Note: The structure of this package depends on the -rpath,./lib to be set at compile/link time.
 
-version="2.1.3"
+version="2.1.8"
 arch=`uname -i`
 
 if [ "${arch}" = "x86_64" ]; then
