@@ -5,7 +5,7 @@
 	<key>CFBundleExecutable</key>
         <string>SolarCoin-Qt</string>
 	<key>CFBundleGetInfoString</key>
-	<string>$VERSION, Copyright © 2009-$YEAR The Bitcoin developers</string>
+	<string>$VERSION, Copyright © 2009-$YEAR OnsightIT Development</string>
 	<key>CFBundleIconFile</key>
         <string>solarcoin.icns</string>
 	<key>CFBundleIdentifier</key>

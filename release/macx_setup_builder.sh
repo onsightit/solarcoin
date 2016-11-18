@@ -26,6 +26,8 @@ if [ -f SolarCoin-Qt.app/Contents/MacOS/SolarCoin-Qt ] && [ -f solarcoin.conf ] 
     macdeployqt ./SolarCoin-Qt.app -always-overwrite
     pkgbuild --analyze --root ./SolarCoin-Qt.app share/qt/SolarCoin-Qt.plist
     pkgbuild --root ./SolarCoin-Qt.app --component-plist share/qt/SolarCoin-Qt.plist --identifier org.solarcoin.SolarCoin-Qt --install-location /Applications/SolarCoin-Qt.app SolarCoin_${version}_${arch}.pkg
+    productsign --sign R5V6NFP8XB SolarCoin_${version}_${arch}.pkg SolarCoin_${version}_${arch}.pkg.signed
+    mv SolarCoin_${version}_${arch}.pkg.signed SolarCoin_${version}_${arch}.pkg
     echo "Package created in: $PWD/SolarCoin_${version}_${arch}.pkg\n"
 else
     echo "Error: Missing files!\n"
