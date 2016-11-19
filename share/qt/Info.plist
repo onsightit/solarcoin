@@ -5,7 +5,7 @@
 	<key>CFBundleExecutable</key>
         <string>SolarCoin-Qt</string>
 	<key>CFBundleGetInfoString</key>
-	<string>$VERSION, Copyright © 2009-$YEAR OnsightIT Development</string>
+	<string>@VERSION@, Copyright © 2009-@YEAR@ OnsightIT Development</string>
 	<key>CFBundleIconFile</key>
         <string>solarcoin.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>$VERSION</string>
+	<string>@VERSION@</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleURLTypes</key>
@@ -22,7 +22,7 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-                        <string>org.solarcoin.SolarCoinPayment</string>
+                        <string>com.OnsightIT.SolarCoin</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
                                 <string>solarcoin</string>
@@ -32,7 +32,9 @@
 	<key>LSAppNapIsDisabled</key>
         <string>True</string>
 	<key>CFBundleVersion</key>
-	<string>$VERSION</string>
+	<string>@VERSION@</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.OnsightIT.SolarCoin</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.finance</string>
 	<key>NSHighResolutionCapable</key>
