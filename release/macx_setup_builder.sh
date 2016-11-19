@@ -18,8 +18,8 @@ if [ -f SolarCoin-Qt.app/Contents/MacOS/SolarCoin-Qt ] && [ -f solarcoin.conf ] 
     cp README SolarCoin-Qt.app/Contents/MacOS/
     cp doc/SolarCoinEula.* SolarCoin-Qt.app/Contents/MacOS/
     cp share/qt/Info.plist SolarCoin-Qt.app/Contents/
-    sed -i -e "s/@VERSION@/$version/g" SolarCoin-Qt.app/Contents/Info.plist
-    sed -i -e "s/@YEAR@/$year/g" SolarCoin-Qt.app/Contents/Info.plist
+    sed -ie "s/@VERSION@/$version/g" SolarCoin-Qt.app/Contents/Info.plist
+    sed -ie "s/@YEAR@/$year/g" SolarCoin-Qt.app/Contents/Info.plist
 
     # Remove the old archive
     if [ -f SolarCoin_${version}_${arch}.pkg ]; then
@@ -38,7 +38,7 @@ if [ -f SolarCoin-Qt.app/Contents/MacOS/SolarCoin-Qt ] && [ -f solarcoin.conf ] 
     pkgbuild --root ./SolarCoin-Qt.app --component-plist share/qt/SolarCoin-Qt.plist --identifier org.solarcoin.SolarCoin-Qt --install-location /Applications/SolarCoin-Qt.app SolarCoin_${version}_${arch}.pkg
     # Sign the app with the Installer Cert.
     productsign --sign R5V6NFP8XB SolarCoin_${version}_${arch}.pkg SolarCoin_${version}_${arch}.signed.pkg
-    #mv SolarCoin_${version}_${arch}.signed.pkg SolarCoin_${version}_${arch}.pkg
+    mv SolarCoin_${version}_${arch}.signed.pkg SolarCoin_${version}_${arch}.pkg
     echo "Package created in: $PWD/SolarCoin_${version}_${arch}.pkg\n"
 else
     echo "Error: Missing files!\n"
