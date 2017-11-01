@@ -15,10 +15,10 @@ static const int PROTOCOL_VERSION = 70015;
 static const int INIT_PROTO_VERSION = 209;
 
 //! In this version, 'getheaders' was introduced.
-static const int GETHEADERS_VERSION = 70002;
+static const int GETHEADERS_VERSION = 70002; // SDW: Not used
 
 //! disconnect from peers older than this proto version
-static const int MIN_PEER_PROTO_VERSION = GETHEADERS_VERSION;
+static const int MIN_PEER_PROTO_VERSION = 70005;
 
 //! nTime field added to CAddress, starting with this version;
 //! if possible, avoid requesting addresses nodes older than this
@@ -44,5 +44,8 @@ static const int SHORT_IDS_BLOCKS_VERSION = 70014;
 
 //! not banning for invalid compact blocks starts with this version
 static const int INVALID_CB_NO_BAN_VERSION = 70015;
+
+//! not banning for invalid compact blocks starts with this version
+static const int OLD_ALERT_VERSION = 70012;
 
 #endif // BITCOIN_VERSION_H

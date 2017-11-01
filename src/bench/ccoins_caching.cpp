@@ -6,6 +6,7 @@
 #include "coins.h"
 #include "policy/policy.h"
 #include "wallet/crypter.h"
+#include "timedata.h"
 
 #include <vector>
 
@@ -61,6 +62,7 @@ static void CCoinsCaching(benchmark::State& state)
     std::vector<CMutableTransaction> dummyTransactions = SetupDummyInputs(keystore, coins);
 
     CMutableTransaction t1;
+    t1.nTime = GetAdjustedTime();
     t1.vin.resize(3);
     t1.vin[0].prevout.hash = dummyTransactions[0].GetHash();
     t1.vin[0].prevout.n = 1;

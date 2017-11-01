@@ -396,6 +396,8 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
 
     CMutableTransaction rawTx;
 
+    rawTx.nTime = GetAdjustedTime();
+
     if (request.params.size() > 2 && !request.params[2].isNull()) {
         int64_t nLockTime = request.params[2].get_int64();
         if (nLockTime < 0 || nLockTime > std::numeric_limits<uint32_t>::max())

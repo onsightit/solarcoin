@@ -2397,6 +2397,8 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
     wtxNew.BindWallet(this);
     CMutableTransaction txNew;
 
+    txNew.nTime = GetAdjustedTime();
+
     // Discourage fee sniping.
     //
     // For a large miner the value of the transactions in the best block and

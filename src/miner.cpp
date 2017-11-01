@@ -183,6 +183,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     // Create coinbase transaction.
     CMutableTransaction coinbaseTx;
+    coinbaseTx.nTime = GetAdjustedTime();
     coinbaseTx.vin.resize(1);
     coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vout.resize(1);

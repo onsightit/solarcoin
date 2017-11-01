@@ -5,13 +5,14 @@
 #include "bench.h"
 #include "policy/policy.h"
 #include "txmempool.h"
+#include "timedata.h"
 
 #include <list>
 #include <vector>
 
 static void AddTx(const CTransaction& tx, const CAmount& nFee, CTxMemPool& pool)
 {
-    int64_t nTime = 0;
+    int64_t nTime = GetAdjustedTime();
     double dPriority = 10.0;
     unsigned int nHeight = 1;
     bool spendsCoinbase = false;

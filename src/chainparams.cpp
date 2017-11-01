@@ -20,14 +20,14 @@
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
     CMutableTransaction txNew;
-    txNew.nVersion = LEGACY_VERSION_2;
+    txNew.nVersion   = nVersion;
+    txNew.nTime      = nTime;
     txNew.vin.resize(1);
     txNew.vout.resize(1);
     txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
     txNew.vout[0].nValue = genesisReward;
     txNew.vout[0].scriptPubKey = genesisOutputScript;
     txNew.strTxComment = "text:SolarCoin genesis block";
-    txNew.nTime      = nTime;
 
     CBlock genesis;
     genesis.nTime    = nTime;
@@ -126,7 +126,7 @@ public:
         pchMessageStart[1] = 0xf1;
         pchMessageStart[2] = 0x04;
         pchMessageStart[3] = 0xfd;
-        nDefaultPort = 18181;
+        nDefaultPort = 18188;
         nPruneAfterHeight = 100000;
 
 // static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)

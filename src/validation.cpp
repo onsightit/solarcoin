@@ -616,46 +616,46 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
     // Check for conflicts with in-memory transactions
     std::set<uint256> setConflicts;
     {
-    LOCK(pool.cs); // protect pool.mapNextTx
-    BOOST_FOREACH(const CTxIn &txin, tx.vin)
-    {
-        auto itConflicting = pool.mapNextTx.find(txin.prevout);
-        if (itConflicting != pool.mapNextTx.end())
+        LOCK(pool.cs); // protect pool.mapNextTx
+        BOOST_FOREACH(const CTxIn &txin, tx.vin)
         {
-            const CTransaction *ptxConflicting = itConflicting->second;
-            if (!setConflicts.count(ptxConflicting->GetHash()))
+            auto itConflicting = pool.mapNextTx.find(txin.prevout);
+            if (itConflicting != pool.mapNextTx.end())
             {
-                // Allow opt-out of transaction replacement by setting
-                // nSequence >= maxint-1 on all inputs.
-                //
-                // maxint-1 is picked to still allow use of nLockTime by
-                // non-replaceable transactions. All inputs rather than just one
-                // is for the sake of multi-party protocols, where we don't
-                // want a single party to be able to disable replacement.
-                //
-                // The opt-out ignores descendants as anyone relying on
-                // first-seen mempool behavior should be checking all
-                // unconfirmed ancestors anyway; doing otherwise is hopelessly
-                // insecure.
-                bool fReplacementOptOut = true;
-                if (fEnableReplacement)
+                const CTransaction *ptxConflicting = itConflicting->second;
+                if (!setConflicts.count(ptxConflicting->GetHash()))
                 {
-                    BOOST_FOREACH(const CTxIn &_txin, ptxConflicting->vin)
+                    // Allow opt-out of transaction replacement by setting
+                    // nSequence >= maxint-1 on all inputs.
+                    //
+                    // maxint-1 is picked to still allow use of nLockTime by
+                    // non-replaceable transactions. All inputs rather than just one
+                    // is for the sake of multi-party protocols, where we don't
+                    // want a single party to be able to disable replacement.
+                    //
+                    // The opt-out ignores descendants as anyone relying on
+                    // first-seen mempool behavior should be checking all
+                    // unconfirmed ancestors anyway; doing otherwise is hopelessly
+                    // insecure.
+                    bool fReplacementOptOut = true;
+                    if (fEnableReplacement)
                     {
-                        if (_txin.nSequence < std::numeric_limits<unsigned int>::max()-1)
+                        BOOST_FOREACH(const CTxIn &_txin, ptxConflicting->vin)
                         {
-                            fReplacementOptOut = false;
-                            break;
+                            if (_txin.nSequence < std::numeric_limits<unsigned int>::max()-1)
+                            {
+                                fReplacementOptOut = false;
+                                break;
+                            }
                         }
                     }
-                }
-                if (fReplacementOptOut)
-                    return state.Invalid(false, REJECT_CONFLICT, "txn-mempool-conflict");
+                    if (fReplacementOptOut)
+                        return state.Invalid(false, REJECT_CONFLICT, "txn-mempool-conflict");
 
-                setConflicts.insert(ptxConflicting->GetHash());
+                    setConflicts.insert(ptxConflicting->GetHash());
+                }
             }
         }
-    }
     }
 
     {

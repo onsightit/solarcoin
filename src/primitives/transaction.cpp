@@ -126,7 +126,7 @@ unsigned int CTransaction::GetTotalSize() const
 std::string CTransaction::ToString() const
 {
     std::string str;
-    str += strprintf("CTransaction(hash=%s, ver=%d, nTime=%u, vin.size=%u, vout.size=%u, nLockTime=%u, strTxComment=%s)\n",
+    str += strprintf("CTransaction(hash=%s, ver=%d, nTime=%u, vin.size=%u, vout.size=%u, nLockTime=%u, txComment=%s)\n",
         GetHash().ToString().substr(0,10),
         nVersion,
         nTime,

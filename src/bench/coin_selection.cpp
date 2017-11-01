@@ -4,6 +4,7 @@
 
 #include "bench.h"
 #include "wallet/wallet.h"
+#include "timedata.h"
 
 #include <boost/foreach.hpp>
 #include <set>
@@ -14,6 +15,7 @@ static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<CO
 
     static int nextLockTime = 0;
     CMutableTransaction tx;
+    tx.nTime = GetAdjustedTime();
     tx.nLockTime = nextLockTime++; // so all transactions get different hashes
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;

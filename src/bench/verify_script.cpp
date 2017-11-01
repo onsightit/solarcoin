@@ -10,12 +10,14 @@
 #include "script/script.h"
 #include "script/sign.h"
 #include "streams.h"
+#include "timedata.h"
 
 // FIXME: Dedup with BuildCreditingTransaction in test/script_tests.cpp.
 static CMutableTransaction BuildCreditingTransaction(const CScript& scriptPubKey)
 {
     CMutableTransaction txCredit;
     txCredit.nVersion = 1;
+    txCredit.nTime = GetAdjustedTime();
     txCredit.nLockTime = 0;
     txCredit.vin.resize(1);
     txCredit.vout.resize(1);
@@ -33,6 +35,7 @@ static CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, co
 {
     CMutableTransaction txSpend;
     txSpend.nVersion = 1;
+    txSpend.nTime = GetAdjustedTime();
     txSpend.nLockTime = 0;
     txSpend.vin.resize(1);
     txSpend.vout.resize(1);

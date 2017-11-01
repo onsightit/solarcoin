@@ -309,7 +309,9 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             if (!(CheckTransaction(wtx, state) && (wtx.GetHash() == hash) && state.IsValid()))
                 return false;
 
+            /*
             // Undo serialize changes in 31600
+            // TODO: SDW: Test this.
             if (31404 <= wtx.fTimeReceivedIsTxTime && wtx.fTimeReceivedIsTxTime <= 31703)
             {
                 if (!ssValue.empty())
@@ -328,6 +330,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 }
                 wss.vWalletUpgrade.push_back(hash);
             }
+            */
 
             if (wtx.nOrderPos == -1)
                 wss.fAnyUnordered = true;
@@ -389,6 +392,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             // using EC operations as a checksum.
             // Newer wallets store keys as "key"[pubkey] => [privkey][hash(pubkey,privkey)], which is much faster while
             // remaining backwards-compatible.
+            // TODO: SDW: Test this.
             try
             {
                 ssValue >> hash;
