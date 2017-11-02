@@ -10,14 +10,14 @@
 #include "script/script.h"
 #include "script/sign.h"
 #include "streams.h"
-#include "timedata.h"
+
+#include <array>
 
 // FIXME: Dedup with BuildCreditingTransaction in test/script_tests.cpp.
 static CMutableTransaction BuildCreditingTransaction(const CScript& scriptPubKey)
 {
     CMutableTransaction txCredit;
     txCredit.nVersion = 1;
-    txCredit.nTime = GetAdjustedTime();
     txCredit.nLockTime = 0;
     txCredit.vin.resize(1);
     txCredit.vout.resize(1);
@@ -35,7 +35,6 @@ static CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, co
 {
     CMutableTransaction txSpend;
     txSpend.nVersion = 1;
-    txSpend.nTime = GetAdjustedTime();
     txSpend.nLockTime = 0;
     txSpend.vin.resize(1);
     txSpend.vout.resize(1);
@@ -58,8 +57,12 @@ static void VerifyScriptBench(benchmark::State& state)
 
     // Keypair.
     CKey key;
-    const unsigned char vchKey[32] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
-    key.Set(vchKey, vchKey + 32, false);
+    static const std::array<unsigned char, 32> vchKey = {
+        {
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+        }
+    };
+    key.Set(vchKey.begin(), vchKey.end(), false);
     CPubKey pubkey = key.GetPubKey();
     uint160 pubkeyHash;
     CHash160().Write(pubkey.begin(), pubkey.size()).Finalize(pubkeyHash.begin());

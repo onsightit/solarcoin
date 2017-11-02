@@ -11,9 +11,22 @@
 #include "pow.h"
 #include "tinyformat.h"
 #include "uint256.h"
-#include "utilmoneystr.h"
 
 #include <vector>
+
+/**
+ * Maximum amount of time that a block timestamp is allowed to exceed the
+ * current network-adjusted time before the block will be accepted.
+ */
+static const int64_t MAX_FUTURE_BLOCK_TIME = 2 * 60 * 60;
+
+/**
+ * Timestamp window used as a grace period by code that compares external
+ * timestamps (such as timestamps passed to RPCs, or wallet key creation times)
+ * to block timestamps. This should be set at least as high as
+ * MAX_FUTURE_BLOCK_TIME.
+ */
+static const int64_t TIMESTAMP_WINDOW = MAX_FUTURE_BLOCK_TIME;
 
 class CBlockFileInfo
 {
@@ -181,9 +194,6 @@ public:
     //! (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
     arith_uint256 nChainWork;
 
-    // ppcoin: trust score of block chain
-    uint256 nChainTrust; 
-
     //! Number of transactions in this block.
     //! Note: in a potential headers-first mode, this number cannot be relied upon
     unsigned int nTx;
@@ -195,25 +205,6 @@ public:
 
     //! Verification status of this block. See enum BlockStatus
     unsigned int nStatus;
-
-    int64_t nMint;
-    int64_t nMoneySupply;
-
-    unsigned int nFlags;  // ppcoin: block index flags
-    enum  
-    {
-        BLOCK_PROOF_OF_STAKE = (1 << 0), // is proof-of-stake block
-        BLOCK_STAKE_ENTROPY  = (1 << 1), // entropy bit for stake modifier
-        BLOCK_STAKE_MODIFIER = (1 << 2), // regenerated stake modifier
-    };
-
-    uint64_t nStakeModifier; // hash modifier for proof-of-stake
-    unsigned int nStakeModifierChecksum; // checksum of index; in-memeory only
-
-    // proof-of-stake specific fields
-    COutPoint prevoutStake;
-    unsigned int nStakeTime;
-    uint256 hashProofOfStake;
 
     //! block header
     int nVersion;
@@ -230,21 +221,18 @@ public:
 
     void SetNull()
     {
-        phashBlock = NULL;
-        pprev = NULL;
-        pskip = NULL;
+        phashBlock = nullptr;
+        pprev = nullptr;
+        pskip = nullptr;
+        nHeight = 0;
         nFile = 0;
         nDataPos = 0;
-        nHeight = 0;
         nUndoPos = 0;
         nChainWork = arith_uint256();
         nTx = 0;
         nChainTx = 0;
         nStatus = 0;
         nSequenceId = 0;
-        nMint = 0;
-        nMoneySupply = 0;
-        nFlags = 0;
         nTimeMax = 0;
         nStakeModifier = 0;
         nStakeModifierChecksum = 0;
@@ -299,7 +287,6 @@ public:
         nTime          = block.nTime;
         nBits          = block.nBits;
         nNonce         = block.nNonce;
-
     }
 
     CDiskBlockPos GetBlockPos() const {
@@ -467,6 +454,9 @@ public:
 arith_uint256 GetBlockProof(const CBlockIndex& block);
 /** Return the time it would take to redo the work difference between from and to, assuming the current hashrate corresponds to the difficulty at tip, in seconds. */
 int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& from, const CBlockIndex& tip, const Consensus::Params&);
+/** Find the forking point between two chain tips. */
+const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* pb);
+
 
 /** Used to marshal pointers into hashes for db storage. */
 class CDiskBlockIndex : public CBlockIndex
@@ -486,9 +476,9 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
-        int nVersion = s.GetVersion();
+        int _nVersion = s.GetVersion();
         if (!(s.GetType() & SER_GETHASH))
-            READWRITE(VARINT(nVersion));
+            READWRITE(VARINT(_nVersion));
 
         READWRITE(VARINT(nHeight));
         READWRITE(VARINT(nStatus));
@@ -539,20 +529,20 @@ private:
     std::vector<CBlockIndex*> vChain;
 
 public:
-    /** Returns the index entry for the genesis block of this chain, or NULL if none. */
+    /** Returns the index entry for the genesis block of this chain, or nullptr if none. */
     CBlockIndex *Genesis() const {
-        return vChain.size() > 0 ? vChain[0] : NULL;
+        return vChain.size() > 0 ? vChain[0] : nullptr;
     }
 
-    /** Returns the index entry for the tip of this chain, or NULL if none. */
+    /** Returns the index entry for the tip of this chain, or nullptr if none. */
     CBlockIndex *Tip() const {
-        return vChain.size() > 0 ? vChain[vChain.size() - 1] : NULL;
+        return vChain.size() > 0 ? vChain[vChain.size() - 1] : nullptr;
     }
 
-    /** Returns the index entry at a particular height in this chain, or NULL if no such height exists. */
+    /** Returns the index entry at a particular height in this chain, or nullptr if no such height exists. */
     CBlockIndex *operator[](int nHeight) const {
         if (nHeight < 0 || nHeight >= (int)vChain.size())
-            return NULL;
+            return nullptr;
         return vChain[nHeight];
     }
 
@@ -567,12 +557,12 @@ public:
         return (*this)[pindex->nHeight] == pindex;
     }
 
-    /** Find the successor of a block in this chain, or NULL if the given index is not found or is the tip. */
+    /** Find the successor of a block in this chain, or nullptr if the given index is not found or is the tip. */
     CBlockIndex *Next(const CBlockIndex *pindex) const {
         if (Contains(pindex))
             return (*this)[pindex->nHeight + 1];
         else
-            return NULL;
+            return nullptr;
     }
 
     /** Return the maximal height in the chain. Is equal to chain.Tip() ? chain.Tip()->nHeight : -1. */
@@ -584,7 +574,7 @@ public:
     void SetTip(CBlockIndex *pindex);
 
     /** Return a CBlockLocator that refers to a block in this chain (by default the tip). */
-    CBlockLocator GetLocator(const CBlockIndex *pindex = NULL) const;
+    CBlockLocator GetLocator(const CBlockIndex *pindex = nullptr) const;
 
     /** Find the last common block between this chain and a block index entry. */
     const CBlockIndex *FindFork(const CBlockIndex *pindex) const;

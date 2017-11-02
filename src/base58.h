@@ -26,7 +26,7 @@
 
 /**
  * Encode a byte sequence as a base58-encoded string.
- * pbegin and pend cannot be NULL, unless both are.
+ * pbegin and pend cannot be nullptr, unless both are.
  */
 std::string EncodeBase58(const unsigned char* pbegin, const unsigned char* pend);
 
@@ -38,7 +38,7 @@ std::string EncodeBase58(const std::vector<unsigned char>& vch);
 /**
  * Decode a base58-encoded string (psz) into a byte vector (vchRet).
  * return true if decoding is successful.
- * psz cannot be NULL.
+ * psz cannot be nullptr.
  */
 bool DecodeBase58(const char* psz, std::vector<unsigned char>& vchRet);
 
@@ -104,8 +104,8 @@ public:
 class CBitcoinAddress : public CBase58Data {
 public:
     bool Set(const CKeyID &id);
-    bool Set(const CScriptID &id, CChainParams::Base58Type type=CChainParams::SCRIPT_ADDRESS2);
-    bool Set(const CTxDestination &dest, CChainParams::Base58Type type=CChainParams::SCRIPT_ADDRESS2);
+    bool Set(const CScriptID &id);
+    bool Set(const CTxDestination &dest);
     bool IsValid() const;
     bool IsValid(const CChainParams &params) const;
 
@@ -148,7 +148,7 @@ public:
         K ret;
         if (vchData.size() == Size) {
             // If base58 encoded data does not hold an ext key, return a !IsValid() key
-            ret.Decode(&vchData[0]);
+            ret.Decode(vchData.data());
         }
         return ret;
     }

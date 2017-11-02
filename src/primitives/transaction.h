@@ -6,14 +6,13 @@
 #ifndef BITCOIN_PRIMITIVES_TRANSACTION_H
 #define BITCOIN_PRIMITIVES_TRANSACTION_H
 
+#include <stdint.h>
 #include "amount.h"
 #include "script/script.h"
 #include "serialize.h"
 #include "uint256.h"
 
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
-
-static const int WITNESS_SCALE_FACTOR = 4;
 
 // Legacy transaction versions.
 static const int32_t LEGACY_VERSION_2=2;
@@ -26,8 +25,8 @@ public:
     uint256 hash;
     uint32_t n;
 
-    COutPoint() { SetNull(); }
-    COutPoint(uint256 hashIn, uint32_t nIn) { hash = hashIn; n = nIn; }
+    COutPoint(): n((uint32_t) -1) { }
+    COutPoint(const uint256& hashIn, uint32_t nIn): hash(hashIn), n(nIn) { }
 
     ADD_SERIALIZE_METHODS;
 
@@ -111,7 +110,7 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(prevout);
-        READWRITE(*(CScriptBase*)(&scriptSig));
+        READWRITE(scriptSig);
         READWRITE(nSequence);
     }
 
@@ -151,7 +150,7 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(nValue);
-        READWRITE(*(CScriptBase*)(&scriptPubKey));
+        READWRITE(scriptPubKey);
     }
 
     void SetNull()
@@ -163,55 +162,6 @@ public:
     bool IsNull() const
     {
         return (nValue == -1);
-    }
-
-    CAmount GetDustThreshold(const CFeeRate &minRelayTxFee) const
-    {
-        // "Dust" is defined in terms of CTransaction::minRelayTxFee,
-        // which has units satoshis-per-kilobyte.
-        // If you'd pay more than 1/3 in fees
-        // to spend something, then we consider it dust.
-        // A typical spendable non-segwit txout is 34 bytes big, and will
-        // need a CTxIn of at least 148 bytes to spend:
-        // so dust is a spendable txout less than
-        // 546*minRelayTxFee/1000 (in satoshis).
-        // A typical spendable segwit txout is 31 bytes big, and will
-        // need a CTxIn of at least 67 bytes to spend:
-        // so dust is a spendable txout less than
-        // 294*minRelayTxFee/1000 (in satoshis).
-        if (scriptPubKey.IsUnspendable())
-            return 0;
-
-        size_t nSize = GetSerializeSize(*this, SER_DISK, 0);
-        int witnessversion = 0;
-        std::vector<unsigned char> witnessprogram;
-
-        if (scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
-            // sum the sizes of the parts of a transaction input
-            // with 75% segwit discount applied to the script size.
-            nSize += (32 + 4 + 1 + (107 / WITNESS_SCALE_FACTOR) + 4);
-        } else {
-            nSize += (32 + 4 + 1 + 107 + 4); // the 148 mentioned above
-        }
-
-        return 3 * minRelayTxFee.GetFee(nSize);
-    }
-
-    bool IsDust(const CFeeRate &minRelayTxFee) const
-    {
-        return (nValue < GetDustThreshold(minRelayTxFee));
-    }
-
-    /* SolarCoin PoS functions */
-    void SetEmpty()
-    {
-        nValue = 0;
-        scriptPubKey.clear();
-    }
-
-    bool IsEmpty() const
-    {
-        return (nValue == 0 && scriptPubKey.empty());
     }
 
     friend bool operator==(const CTxOut& a, const CTxOut& b)
@@ -260,6 +210,7 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
     if (fSerializeTime) {
         s >> tx.nTime;
     }
+
     unsigned char flags = 0;
     tx.vin.clear();
     tx.vout.clear();
@@ -333,7 +284,7 @@ class CTransaction
 {
 public:
     // Default transaction version.
-    static const int32_t CURRENT_VERSION=4;  // V4 - Includes nTime in tx hash
+    static const int32_t CURRENT_VERSION=4; // V4 - Includes nTime in tx hash
 
     // Changing the default transaction version requires a two step process: first
     // adapting relay policy by bumping MAX_STANDARD_VERSION, and then later date
@@ -351,7 +302,7 @@ public:
     const std::vector<CTxIn> vin;
     const std::vector<CTxOut> vout;
     const uint32_t nLockTime;
-    std::string strTxComment;
+    const std::string strTxComment;
 
 private:
     /** Memory only. */
@@ -400,12 +351,6 @@ public:
     CAmount GetValueOut() const;
     // GetValueIn() is a method on CCoinsViewCache, because
     // inputs must be known to compute value in.
-
-    // Compute priority, given priority of inputs and (optionally) tx size
-    double ComputePriority(double dPriorityInputs, unsigned int nTxSize=0) const;
-
-    // Compute modified tx size for priority calculation (optionally given tx size)
-    unsigned int CalculateModifiedSize(unsigned int nTxSize=0) const;
 
     /**
      * Get the total transaction size in bytes, including witness data.
@@ -498,8 +443,5 @@ struct CMutableTransaction
 typedef std::shared_ptr<const CTransaction> CTransactionRef;
 static inline CTransactionRef MakeTransactionRef() { return std::make_shared<const CTransaction>(); }
 template <typename Tx> static inline CTransactionRef MakeTransactionRef(Tx&& txIn) { return std::make_shared<const CTransaction>(std::forward<Tx>(txIn)); }
-
-/** Compute the weight of a transaction, as defined by BIP 141 */
-int64_t GetTransactionWeight(const CTransaction &tx);
 
 #endif // BITCOIN_PRIMITIVES_TRANSACTION_H

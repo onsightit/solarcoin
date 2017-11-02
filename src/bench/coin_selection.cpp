@@ -4,9 +4,7 @@
 
 #include "bench.h"
 #include "wallet/wallet.h"
-#include "timedata.h"
 
-#include <boost/foreach.hpp>
 #include <set>
 
 static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<COutput>& vCoins)
@@ -15,14 +13,13 @@ static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<CO
 
     static int nextLockTime = 0;
     CMutableTransaction tx;
-    tx.nTime = GetAdjustedTime();
     tx.nLockTime = nextLockTime++; // so all transactions get different hashes
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
     CWalletTx* wtx = new CWalletTx(&wallet, MakeTransactionRef(std::move(tx)));
 
     int nAge = 6 * 24;
-    COutput output(wtx, nInput, nAge, true, true);
+    COutput output(wtx, nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
     vCoins.push_back(output);
 }
 
@@ -41,7 +38,7 @@ static void CoinSelection(benchmark::State& state)
 
     while (state.KeepRunning()) {
         // Empty wallet.
-        BOOST_FOREACH (COutput output, vCoins)
+        for (COutput output : vCoins)
             delete output.tx;
         vCoins.clear();
 
@@ -50,7 +47,7 @@ static void CoinSelection(benchmark::State& state)
             addCoin(1000 * COIN, wallet, vCoins);
         addCoin(3 * COIN, wallet, vCoins);
 
-        std::set<std::pair<const CWalletTx*, unsigned int> > setCoinsRet;
+        std::set<CInputCoin> setCoinsRet;
         CAmount nValueRet;
         bool success = wallet.SelectCoinsMinConf(1003 * COIN, 1, 6, 0, vCoins, setCoinsRet, nValueRet);
         assert(success);
