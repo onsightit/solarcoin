@@ -5,15 +5,8 @@ src/solarcoin
 src/solarcoind
 src/solarcoin-cli
 src/solarcoin-tx
-src/litecoin
-src/litecoind
-src/litecoin-cli
-src/litecoin-tx
-src/test/test_litecoin
-src/test/test_litecoin_fuzzy
 src/test/test_solarcoin
 src/test/test_solarcoin_fuzzy
-src/qt/test/test_litecoin-qt
 src/qt/test/test_solarcoin-qt
 
 # autoreconf
@@ -82,14 +75,11 @@ src/qt/test/moc*.cpp
 *.qm
 Makefile
 solarcoin-qt
-litecoin-qt
 Solarcoin-Qt.app
-Litecoin-Qt.app
 
 # Unit-tests
 Makefile.test
 solarcoin-qt_test
-litecoin-qt_test
 src/test/buildenv.py
 
 # Resources cpp
@@ -104,7 +94,6 @@ build
 *.gcda
 /*.info
 test_solarcoin.coverage/
-test_litecoin.coverage/
 total.coverage/
 coverage_percent.txt
 
