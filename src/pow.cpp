@@ -16,7 +16,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 
     // Genesis block
-    if (pindexLast == NULL)
+    if (pindexLast == nullptr)
         return nProofOfWorkLimit;
 
     // Only change once per difficulty adjustment interval
@@ -71,12 +71,12 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
         nActualTimespan = params.nPowTargetTimespan_Version1*4;
 
     // Retarget
+    const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
     arith_uint256 bnNew;
     arith_uint256 bnOld;
     bnNew.SetCompact(pindexLast->nBits);
     bnOld = bnNew;
     // Solarcoin: intermediate uint256 can overflow by 1 bit
-    const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
     bool fShift = bnNew.bits() > bnPowLimit.bits() - 1;
     if (fShift)
         bnNew >>= 1;
