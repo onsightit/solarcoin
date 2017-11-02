@@ -19,7 +19,7 @@ To Build
 
 ```bash
 ./autogen.sh
-./configure
+./configure --with-gui=qt5 --enable-cxx --disable-shared --with-pic
 make
 make install # optional
 ```

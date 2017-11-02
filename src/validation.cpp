@@ -26,6 +26,7 @@
 #include "primitives/transaction.h"
 #include "random.h"
 #include "reverse_iterator.h"
+#include "rpc/blockchain.h"
 #include "script/script.h"
 #include "script/sigcache.h"
 #include "script/standard.h"
@@ -4520,7 +4521,7 @@ int GetBlockRatePerHour(const Consensus::Params& params)
         pindex = pindex->pprev;
     }
     if (nRate < params.nPowTargetSpacing / 2)
-        printf("GetBlockRatePerHour: Warning, block rate (%d) is less than half of nPowTargetSpacing=%" PRId64 ".\n", nRate, params.nPowTargetSpacing);
+        printf("GetBlockRatePerHour: Warning, block rate (%d) is less than half of nPowTargetSpacing=%ld.\n", nRate, params.nPowTargetSpacing);
     return nRate;
 }
 
@@ -4530,7 +4531,7 @@ int64_t GetProofOfStakeTimeReward(int64_t nStakeTime, int64_t nFees, CBlockIndex
     int64_t nInterestRate = GetCurrentInterestRate(pindexPrev, params)*CENT;
     int64_t nSubsidy = nStakeTime * nInterestRate * 33 / (365 * 33 + 8);
 
-    if (fDebug && GetBoolArg("-printcreation", false))
+    if (fDebug && gArgs.GetBoolArg("-printcreation", false))
         printf("GetProofOfStakeTimeReward(): create=%s nStakeTime=%u\n", FormatMoney(nSubsidy).c_str(), nStakeTime);
 
     return nSubsidy + nFees;

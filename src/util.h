@@ -44,7 +44,7 @@ public:
     boost::signals2::signal<std::string (const char* psz)> Translate;
 };
 
-extern bool fDebug = false;
+extern bool fDebug;
 extern bool fPrintToConsole;
 extern bool fPrintToDebugLog;
 
