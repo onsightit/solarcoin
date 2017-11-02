@@ -4520,7 +4520,7 @@ int GetBlockRatePerHour(const Consensus::Params& params)
         pindex = pindex->pprev;
     }
     if (nRate < params.nPowTargetSpacing / 2)
-        printf("GetBlockRatePerHour: Warning, block rate (%d) is less than half of nPowTargetSpacing=%d.\n", nRate, params.nPowTargetSpacing);
+        printf("GetBlockRatePerHour: Warning, block rate (%d) is less than half of nPowTargetSpacing=%" PRId64 ".\n", nRate, params.nPowTargetSpacing);
     return nRate;
 }
 
