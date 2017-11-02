@@ -91,6 +91,7 @@ const char * const BITCOIN_CONF_FILENAME = "solarcoin.conf";
 const char * const BITCOIN_PID_FILENAME = "solarcoin.pid";
 
 ArgsManager gArgs;
+bool fDebug = false;
 bool fPrintToConsole = false;
 bool fPrintToDebugLog = true;
 
