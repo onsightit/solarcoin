@@ -194,6 +194,9 @@ public:
     //! (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
     arith_uint256 nChainWork;
 
+    // ppcoin: trust score of block chain
+    uint256 nChainTrust; 
+
     //! Number of transactions in this block.
     //! Note: in a potential headers-first mode, this number cannot be relied upon
     unsigned int nTx;
@@ -205,6 +208,25 @@ public:
 
     //! Verification status of this block. See enum BlockStatus
     unsigned int nStatus;
+
+    int64_t nMint;
+    int64_t nMoneySupply;
+
+    unsigned int nFlags;  // ppcoin: block index flags
+    enum  
+    {
+        BLOCK_PROOF_OF_STAKE = (1 << 0), // is proof-of-stake block
+        BLOCK_STAKE_ENTROPY  = (1 << 1), // entropy bit for stake modifier
+        BLOCK_STAKE_MODIFIER = (1 << 2), // regenerated stake modifier
+    };
+
+    uint64_t nStakeModifier; // hash modifier for proof-of-stake
+    unsigned int nStakeModifierChecksum; // checksum of index; in-memeory only
+
+    // proof-of-stake specific fields
+    COutPoint prevoutStake;
+    unsigned int nStakeTime;
+    uint256 hashProofOfStake;
 
     //! block header
     int nVersion;
@@ -234,6 +256,9 @@ public:
         nStatus = 0;
         nSequenceId = 0;
         nTimeMax = 0;
+        nMint = 0;
+        nMoneySupply = 0;
+        nFlags = 0;
         nStakeModifier = 0;
         nStakeModifierChecksum = 0;
         hashProofOfStake = uint256();
