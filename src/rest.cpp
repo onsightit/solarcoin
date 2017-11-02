@@ -560,7 +560,6 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
         UniValue utxos(UniValue::VARR);
         for (const CCoin& coin : outs) {
             UniValue utxo(UniValue::VOBJ);
-            utxo.push_back(Pair("txvers", (int32_t)coin.nTxVerDummy));
             utxo.push_back(Pair("height", (int32_t)coin.nHeight));
             utxo.push_back(Pair("value", ValueFromAmount(coin.out.nValue)));
 
