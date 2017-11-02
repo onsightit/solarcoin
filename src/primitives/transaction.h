@@ -302,7 +302,7 @@ public:
     const std::vector<CTxIn> vin;
     const std::vector<CTxOut> vout;
     const uint32_t nLockTime;
-    const std::string strTxComment;
+    std::string strTxComment;
 
 private:
     /** Memory only. */
