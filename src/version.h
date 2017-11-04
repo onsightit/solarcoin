@@ -9,13 +9,15 @@
  * network protocol versioning
  */
 
-static const int PROTOCOL_VERSION = 70015;
+//static const int PROTOCOL_VERSION = 70015; // Bitcoin
+static const int PROTOCOL_VERSION = 70005; // SolarCoin
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
 
 //! In this version, 'getheaders' was introduced.
-static const int GETHEADERS_VERSION = 70002;
+//static const int GETHEADERS_VERSION = 70002; // Bitcoin
+static const int GETHEADERS_VERSION = 70005; // SolarCoin
 
 //! disconnect from peers older than this proto version
 static const int MIN_PEER_PROTO_VERSION = GETHEADERS_VERSION;
@@ -28,18 +30,23 @@ static const int CADDR_TIME_VERSION = 31402;
 static const int BIP0031_VERSION = 60000;
 
 //! "filter*" commands are disabled without NODE_BLOOM after and including this version
-static const int NO_BLOOM_VERSION = 70011;
+//static const int NO_BLOOM_VERSION = 70011; // Bitcoin
+static const int NO_BLOOM_VERSION = 70005; // SolarCoin
 
 //! "sendheaders" command and announcing blocks with headers starts with this version
-static const int SENDHEADERS_VERSION = 70012;
+//static const int SENDHEADERS_VERSION = 70012; // Bitcoin
+static const int SENDHEADERS_VERSION = 70005; // SolarCoin
 
 //! "feefilter" tells peers to filter invs to you by fee starts with this version
-static const int FEEFILTER_VERSION = 70013;
+//static const int FEEFILTER_VERSION = 70013; // Bitcoin
+static const int FEEFILTER_VERSION = 70005; // SolarCoin
 
 //! short-id-based block download starts with this version
-static const int SHORT_IDS_BLOCKS_VERSION = 70014;
+//static const int SHORT_IDS_BLOCKS_VERSION = 70014; // Bitcoin
+static const int SHORT_IDS_BLOCKS_VERSION = 70005; // SolarCoin
 
 //! not banning for invalid compact blocks starts with this version
-static const int INVALID_CB_NO_BAN_VERSION = 70015;
+//static const int INVALID_CB_NO_BAN_VERSION = 70015; // Bitcoin
+static const int INVALID_CB_NO_BAN_VERSION = 70005; // SolarCoin
 
 #endif // BITCOIN_VERSION_H
