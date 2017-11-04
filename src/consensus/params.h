@@ -74,11 +74,12 @@ struct Params {
     static const int FORK_HEIGHT_1 = 1177000;
     static const int FORK_HEIGHT_2 = 1440000;
     static const int LAST_POW_BLOCK = 835213;
-
+    static const int LAST_V1_BLOCK = 308868;
+    static const int LAST_V2_BLOCK = LAST_POW_BLOCK;
+    
     // PoS
     static const int TWO_PERCENT_INT_HEIGHT = LAST_POW_BLOCK + 1000;
     static const int64_t INITIAL_COIN_SUPPLY = 34145512; // Used in calculating interest rate (97.990085882B are out of circulation)
-    static const int LEGACY_VERSION_3 = 3; // V4 - Includes nTime in tx hash
     static constexpr double COIN_SUPPLY_GROWTH_RATE = 1.35;
     static constexpr int TWO_PERCENT_INT = 2.0;
 

@@ -30,7 +30,7 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
     genesis.nTime    = nTime;
     genesis.nBits    = nBits;
     genesis.nNonce   = nNonce;
-    genesis.nVersion = 1;
+    genesis.nVersion = CBlockHeader::LEGACY_VERSION_1;
     genesis.vtx.push_back(MakeTransactionRef(std::move(txNew)));
     genesis.hashPrevBlock.SetNull();
     genesis.hashMerkleRoot = BlockMerkleRoot(genesis);
@@ -124,7 +124,7 @@ public:
         nDefaultPort = 18188;
         nPruneAfterHeight = 100000;
 
-        genesis = CreateGenesisBlock(1384473600, 1397766, 0x1e0ffff0, LEGACY_VERSION_2, 100 * COIN);
+        genesis = CreateGenesisBlock(1384473600, 1397766, 0x1e0ffff0, CTransaction::LEGACY_VERSION_2, 100 * COIN);
 
         consensus.hashGenesisBlock = genesis.GetHash();
         printf("consensus.hashGenesisBlock: %s \n", genesis.GetHash().ToString().c_str());
@@ -242,7 +242,7 @@ public:
         nDefaultPort = 19335;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1384473600, 1397766, 0x1e0ffff0, LEGACY_VERSION_2, 100 * COIN);        
+        genesis = CreateGenesisBlock(1384473600, 1397766, 0x1e0ffff0, CTransaction::LEGACY_VERSION_2, 100 * COIN);        
         consensus.hashGenesisBlock = genesis.GetHash();
 
         printf("hashGenesisBlock: %08x \n", consensus.hashGenesisBlock);
@@ -327,7 +327,7 @@ public:
         nDefaultPort = 19444;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1384473600, 1397766, 0x1e0ffff0, LEGACY_VERSION_2, 100 * COIN);
+        genesis = CreateGenesisBlock(1384473600, 1397766, 0x1e0ffff0, CTransaction::LEGACY_VERSION_2, 100 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0xedcf32dbfd327fe7f546d3a175d91b05e955ec1224e087961acc9a2aa8f592ee"));
         assert(genesis.hashMerkleRoot == uint256S("0x33ecdb1985425f576c65e2c85d7983edc6207038a2910fefaf86cfb4e53185a3"));

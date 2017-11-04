@@ -14,10 +14,6 @@
 
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
 
-// Legacy transaction versions.
-static const int32_t LEGACY_VERSION_2=2;
-static const int32_t LEGACY_VERSION_3=3;
-
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
 {
@@ -216,7 +212,7 @@ struct CMutableTransaction;
 template<typename Stream, typename TxType>
 inline void UnserializeTransaction(TxType& tx, Stream& s) {
     const bool fAllowWitness = !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_WITNESS);
-    const bool fSerializeTime = (!(s.GetType() & (SER_GETHASH|SER_LEGACYPROTOCOL)) || tx.nVersion > LEGACY_VERSION_3 || s.GetType() & SER_DISK);
+    const bool fSerializeTime = (!(s.GetType() & (SER_GETHASH|SER_LEGACYPROTOCOL)) || tx.nVersion > CTransaction::LEGACY_VERSION_3 || s.GetType() & SER_DISK);
 
     s >> tx.nVersion;
     if (fSerializeTime) {
@@ -257,7 +253,7 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
 template<typename Stream, typename TxType>
 inline void SerializeTransaction(const TxType& tx, Stream& s) {
     const bool fAllowWitness = !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_WITNESS);
-    const bool fSerializeTime = (!(s.GetType() & (SER_GETHASH|SER_LEGACYPROTOCOL)) || tx.nVersion > LEGACY_VERSION_3 || s.GetType() & SER_DISK);
+    const bool fSerializeTime = (!(s.GetType() & (SER_GETHASH|SER_LEGACYPROTOCOL)) || tx.nVersion > CTransaction::LEGACY_VERSION_3 || s.GetType() & SER_DISK);
 
     s << tx.nVersion;
     if (fSerializeTime) {
@@ -295,14 +291,17 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
 class CTransaction
 {
 public:
+    // Legacy transaction versions.
+    static const int32_t LEGACY_VERSION_2 = 2;
+    static const int32_t LEGACY_VERSION_3 = 3;
     // Default transaction version.
-    static const int32_t CURRENT_VERSION=4; // V4 - Includes nTime in tx hash
+    static const int32_t CURRENT_VERSION = 4; // V4 - Includes nTime in tx hash
 
     // Changing the default transaction version requires a two step process: first
     // adapting relay policy by bumping MAX_STANDARD_VERSION, and then later date
     // bumping the default CURRENT_VERSION at which point both CURRENT_VERSION and
     // MAX_STANDARD_VERSION will be equal.
-    static const int32_t MAX_STANDARD_VERSION=4;
+    static const int32_t MAX_STANDARD_VERSION = 4;
 
     // The local variables are made const to prevent unintended modification
     // without updating the cached hash value. However, CTransaction is not
