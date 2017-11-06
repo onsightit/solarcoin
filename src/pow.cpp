@@ -159,7 +159,11 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, uint64_t Ta
             break;
         }
         BlockReading = BlockReading->pprev;
+        // DEBUG:
+        printf("i=%d ", i);
     }
+    // DEBUG:
+    printf("\n");
 
     arith_uint256 bnNew(PastDifficultyAverage);
     LogPrintf("DEBUG: bnNew(PastDifficultyAverage): %08x %s\n", bnNew.GetCompact(), ArithToUint256(bnNew).ToString().c_str());
