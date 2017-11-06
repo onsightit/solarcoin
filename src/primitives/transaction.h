@@ -11,6 +11,7 @@
 #include "script/script.h"
 #include "serialize.h"
 #include "uint256.h"
+#include "util.h"
 
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
 

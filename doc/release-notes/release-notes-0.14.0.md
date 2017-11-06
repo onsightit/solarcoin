@@ -571,7 +571,7 @@ and git merge commit are mentioned.
 - #9457 `123ea73` Select more files for translation (MarcoFalke)
 - #9413 `fd7d8c7` CoinControl: Allow non-wallet owned change addresses (jonasschnelli)
 - #9461 `b250686` Improve progress display during headers-sync and peer-finding (jonasschnelli)
-- #9588 `5086452` Use nPowTargetSpacing constant (MarcoFalke)
+- #9588 `5086452` Use nTargetSpacing constant (MarcoFalke)
 - #9637 `d9e4d1d` Fix transaction details output-index to reflect vout index (jonasschnelli)
 - #9718 `36f9d3a` Qt/Intro: Various fixes (luke-jr)
 - #9735 `ec66d06` devtools: Handle Qt formatting characters edge-case in update-translations.py (laanwj)

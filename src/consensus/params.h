@@ -48,7 +48,7 @@ struct Params {
     int BIP66Height;
     /**
      * Minimum blocks including miner confirmation of the total of 2016 blocks in a retargeting period,
-     * (nPowTargetTimespan / nPowTargetSpacing) which is also used for BIP9 deployments.
+     * (nTargetTimespan / nTargetSpacing) which is also used for BIP9 deployments.
      * Examples: 1916 for 95%, 1512 for testchains.
      */
     uint32_t nRuleChangeActivationThreshold;
@@ -58,24 +58,18 @@ struct Params {
     uint256 powLimit;
     bool fPowAllowMinDifficultyBlocks;
     bool fPowNoRetargeting;
-    int64_t nPowTargetSpacing;
-    int64_t nPowTargetTimespan_Version1;
-    int64_t nPowTargetTimespan_Version2;
-    
-    int64_t nInterval_Version1;
-    int64_t nInterval_Version2;
-
-    int64_t nHeight_Version2;
+    int64_t nTargetSpacing;
+    int64_t nTargetTimespan_Version1;
     int64_t nTargetTimespan_Version2;
-    int64_t DifficultyAdjustmentInterval_V1() const { return nPowTargetTimespan_Version1 / nPowTargetSpacing; }
+    int64_t nInterval_Version2;
+    int64_t nHeight_Version2;
+    int64_t DifficultyAdjustmentInterval_V1() const { return nTargetTimespan_Version1 / nTargetSpacing; }
     int64_t DifficultyAdjustmentInterval_V2() const { return 15; }
 
     // fork params
     static const int FORK_HEIGHT_1 = 1177000;
     static const int FORK_HEIGHT_2 = 1440000;
     static const int LAST_POW_BLOCK = 835213;
-    static const int LAST_V1_BLOCK = 308868;
-    static const int LAST_V2_BLOCK = LAST_POW_BLOCK;
     
     // PoS
     static const int TWO_PERCENT_INT_HEIGHT = LAST_POW_BLOCK + 1000;

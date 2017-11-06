@@ -92,6 +92,8 @@ const char * const BITCOIN_PID_FILENAME = "solarcoin.pid";
 
 ArgsManager gArgs;
 bool fDebug = false;
+bool fPrintProofOfStake = false;
+bool fTestNet = false;
 bool fPrintToConsole = false;
 bool fPrintToDebugLog = true;
 

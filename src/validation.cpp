@@ -1024,14 +1024,51 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
-    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
-    // Force block reward to zero when right shift is undefined.
-    if (halvings >= 64)
-        return 0;
+    // Set starting subsidy
+    int64_t nSubsidy = (fTestNet ? 4943.16483 * COIN : 100 * COIN);  // testnet subsidy based on (INITIAL_COIN_SUPPLY - 9914118) / 4902 blocks
 
-    CAmount nSubsidy = 50 * COIN;
-    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
-    nSubsidy >>= halvings;
+    // Configure generation pool blocks
+    if(nHeight < 99) {nSubsidy = (fTestNet ? 1000000000 * COIN : 1000000000 * COIN);}
+
+    // Block subsidy reduction by SubCreative (Reduced by 3 every 1 day for 33 days. End result of 1)
+    if(nHeight >= 310000) {nSubsidy = 99 * COIN;}
+    if(nHeight >= 311440) {nSubsidy = 96 * COIN;}
+    if(nHeight >= 312880) {nSubsidy = 93 * COIN;}
+    if(nHeight >= 314320) {nSubsidy = 90 * COIN;}
+    if(nHeight >= 315760) {nSubsidy = 87 * COIN;}
+    if(nHeight >= 317200) {nSubsidy = 84 * COIN;}
+    if(nHeight >= 318640) {nSubsidy = 81 * COIN;}
+    if(nHeight >= 320080) {nSubsidy = 78 * COIN;}
+    if(nHeight >= 321520) {nSubsidy = 75 * COIN;}
+    if(nHeight >= 322960) {nSubsidy = 72 * COIN;}
+    if(nHeight >= 324400) {nSubsidy = 69 * COIN;}
+    if(nHeight >= 325840) {nSubsidy = 66 * COIN;}
+    if(nHeight >= 327280) {nSubsidy = 63 * COIN;}
+    if(nHeight >= 328720) {nSubsidy = 60 * COIN;}
+    if(nHeight >= 330160) {nSubsidy = 57 * COIN;}
+    if(nHeight >= 331600) {nSubsidy = 54 * COIN;}
+    if(nHeight >= 333040) {nSubsidy = 51 * COIN;}
+    if(nHeight >= 334480) {nSubsidy = 48 * COIN;}
+    if(nHeight >= 335920) {nSubsidy = 45 * COIN;}
+    if(nHeight >= 337360) {nSubsidy = 42 * COIN;}
+    if(nHeight >= 338800) {nSubsidy = 39 * COIN;}
+    if(nHeight >= 340240) {nSubsidy = 36 * COIN;}
+    if(nHeight >= 341680) {nSubsidy = 33 * COIN;}
+    if(nHeight >= 343120) {nSubsidy = 30 * COIN;}
+    if(nHeight >= 344560) {nSubsidy = 27 * COIN;}
+    if(nHeight >= 346000) {nSubsidy = 24 * COIN;}
+    if(nHeight >= 347440) {nSubsidy = 21 * COIN;}
+    if(nHeight >= 348880) {nSubsidy = 18 * COIN;}
+    if(nHeight >= 350320) {nSubsidy = 15 * COIN;}
+    if(nHeight >= 351760) {nSubsidy = 12 * COIN;}
+    if(nHeight >= 353200) {nSubsidy = 9 * COIN;}
+    if(nHeight >= 354640) {nSubsidy = 6 * COIN;}
+    if(nHeight >= 356080) {nSubsidy = 3 * COIN;}
+    if(nHeight >= 357520) {nSubsidy = 1 * COIN;}
+
+    // Subsidy is cut in half every 525600 blocks, which will occur approximately every 1 years
+    nSubsidy >>= (nHeight / 525600); // SolarCoin: 525.6K blocks in ~1 years
+
     return nSubsidy;
 }
 
@@ -2913,8 +2950,9 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
 
     // Check proof of work
     const Consensus::Params& consensusParams = params.GetConsensus();
-    if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
+    if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
+    }
 
     // Check against checkpoints
     if (fCheckpointsEnabled) {
@@ -2936,8 +2974,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
 
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
     // check for version 2, 3 and 4 upgrades
-    if((block.nVersion < CBlockHeader::LEGACY_VERSION_2 && nHeight > consensusParams.LAST_V1_BLOCK) ||
-       (block.nVersion < CBlockHeader::CURRENT_VERSION && nHeight > consensusParams.LAST_V2_BLOCK))
+    if(block.nVersion < CBlockHeader::CURRENT_VERSION && nHeight > consensusParams.LAST_POW_BLOCK)
             return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
                                  strprintf("rejected nVersion=0x%08x block", block.nVersion));
 
@@ -3043,6 +3080,7 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
                 return state.Invalid(error("%s: block %s is marked invalid", __func__, hash.ToString()), 0, "duplicate");
             return true;
         }
+        LogPrintf("DEBUG: hash: %s nVersion: %d\n", hash.ToString(), block.nVersion);
 
         if (!CheckBlockHeader(block, state, chainparams.GetConsensus()))
             return error("%s: Consensus::CheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
@@ -4519,8 +4557,8 @@ int GetBlockRatePerHour(const Consensus::Params& params)
         nRate += 1;
         pindex = pindex->pprev;
     }
-    if (nRate < params.nPowTargetSpacing / 2)
-        printf("GetBlockRatePerHour: Warning, block rate (%d) is less than half of nPowTargetSpacing=%ld.\n", nRate, params.nPowTargetSpacing);
+    if (nRate < params.nTargetSpacing / 2)
+        LogPrintf("GetBlockRatePerHour: Warning, block rate (%d) is less than half of nTargetSpacing=%ld.\n", nRate, params.nTargetSpacing);
     return nRate;
 }
 
@@ -4531,7 +4569,7 @@ int64_t GetProofOfStakeTimeReward(int64_t nStakeTime, int64_t nFees, CBlockIndex
     int64_t nSubsidy = nStakeTime * nInterestRate * 33 / (365 * 33 + 8);
 
     if (fDebug && gArgs.GetBoolArg("-printcreation", false))
-        printf("GetProofOfStakeTimeReward(): create=%s nStakeTime=%u\n", FormatMoney(nSubsidy).c_str(), nStakeTime);
+        LogPrintf("GetProofOfStakeTimeReward(): create=%s nStakeTime=%ld\n", FormatMoney(nSubsidy).c_str(), nStakeTime);
 
     return nSubsidy + nFees;
 }

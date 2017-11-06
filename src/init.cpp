@@ -941,6 +941,8 @@ bool AppInitParameterInteraction()
         }
     }
 
+    fTestNet = gArgs.GetBoolArg("-testnet", false); // legacy flag
+
     // Now remove the logging categories which were explicitly excluded
     for (const std::string& cat : gArgs.GetArgs("-debugexclude")) {
         uint32_t flag = 0;

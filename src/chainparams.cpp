@@ -14,7 +14,7 @@
 
 #include "chainparamsseeds.h"
 
-static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
+static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, unsigned int nTime, unsigned int nNonce, unsigned int nBits, int nVersion, const CAmount& genesisReward)
 {
     CMutableTransaction txNew;
     txNew.nVersion = nVersion;
@@ -48,7 +48,7 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
  *     CTxOut(nValue=50.00000000, scriptPubKey=0x5F1DF16B2B704C8A578D0B)
  *   vMerkleTree: 4a5e1e
  */
-static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
+static CBlock CreateGenesisBlock(unsigned int nTime, unsigned int nNonce, unsigned int nBits, int nVersion, const CAmount& genesisReward)
 {
     const char* pszTimestamp = "One Megawatt Hour";
     const CScript genesisOutputScript = CScript() << ParseHex("040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9") << OP_CHECKSIG;
@@ -79,19 +79,18 @@ public:
         consensus.nSubsidyHalvingInterval = 525600;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); 
         consensus.posLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // SolarCoin: proof-of-stake limit
-        consensus.nPowTargetTimespan_Version1 = 24 * 60 * 60; // 1 day 
-        consensus.nPowTargetSpacing = 1 * 60; // SolarCoin: 1 minute
-
+        consensus.nTargetSpacing = 1 * 60; // SolarCoin: 1 minute
+        consensus.nTargetTimespan_Version1 = 24 * 60 * 60; // 1 day
+        consensus.nTargetTimespan_Version2 = consensus.DifficultyAdjustmentInterval_V2() * consensus.nTargetSpacing; // 15 minutes
         consensus.nHeight_Version2 = 208440;
-        consensus.nTargetTimespan_Version2 = consensus.DifficultyAdjustmentInterval_V2() * consensus.nPowTargetSpacing; // 15 minutes
-
+        
         consensus.nPoSStakeMinAge = 8 * 60 * 60; // SolarCoin: 8 hours proof-of-stake min age
-        consensus.nPoSModifierInterval = 10 * 50; // SolarCoin: 10 minute time interval modifier 
+        consensus.nPoSModifierInterval = 10 * 60; // SolarCoin: 10 minute time interval modifier 
 
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 6048; // 75% of 8064
-        consensus.nMinerConfirmationWindow = 8064; // nPowTargetTimespan / nPowTargetSpacing * 4
+        consensus.nMinerConfirmationWindow = 8064; // nTargetTimespan / nTargetSpacing * 4
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
@@ -202,19 +201,18 @@ public:
         consensus.BIP65Height = 76; // 8075c771ed8b495ffd943980a95f702ab34fce3c8c54e379548bda33cc8c0573
         consensus.BIP66Height = 76; // 8075c771ed8b495ffd943980a95f702ab34fce3c8c54e379548bda33cc8c0573
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nPowTargetTimespan_Version1 = 24 * 60 * 60; // 3.5 days
-        consensus.nPowTargetSpacing = 2.5 * 60;
+        consensus.nTargetTimespan_Version1 = 24 * 60 * 60; // 24 hours
+        consensus.nTargetSpacing = 1 * 60; // 1 minute
 
         consensus.nHeight_Version2 = 208440;
         consensus.nInterval_Version2 = 15;
 
-        consensus.nPowTargetTimespan_Version2 = 3.5 * 24 * 60 * 60; // 3.5 days
-        consensus.nPowTargetTimespan_Version2 = consensus.nInterval_Version2 * consensus.nPowTargetSpacing; // 10 minutes
+        consensus.nTargetTimespan_Version2 = consensus.nInterval_Version2 * consensus.nTargetSpacing; // 15 minutes
 
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
-        consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
+        consensus.nMinerConfirmationWindow = 2016; // nTargetTimespan / nTargetSpacing
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
@@ -245,7 +243,7 @@ public:
         genesis = CreateGenesisBlock(1384473600, 1397766, 0x1e0ffff0, CTransaction::LEGACY_VERSION_2, 100 * COIN);        
         consensus.hashGenesisBlock = genesis.GetHash();
 
-        printf("hashGenesisBlock: %08x \n", consensus.hashGenesisBlock);
+        printf("TestNet: hashGenesisBlock: %08x \n", consensus.hashGenesisBlock);
         assert(consensus.hashGenesisBlock == uint256S("0xedcf32dbfd327fe7f546d3a175d91b05e955ec1224e087961acc9a2aa8f592ee"));
         assert(genesis.hashMerkleRoot == uint256S("0x33ecdb1985425f576c65e2c85d7983edc6207038a2910fefaf86cfb4e53185a3"));
 
@@ -298,8 +296,8 @@ public:
         consensus.BIP65Height = 1351; // BIP65 activated on regtest (Used in rpc activation tests)
         consensus.BIP66Height = 1251; // BIP66 activated on regtest (Used in rpc activation tests)
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nPowTargetTimespan_Version1 = 3.5 * 24 * 60 * 60; // two weeks
-        consensus.nPowTargetSpacing = 2.5 * 60;
+        consensus.nTargetTimespan_Version1 = 3.5 * 24 * 60 * 60; // two weeks
+        consensus.nTargetSpacing = 2.5 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
         consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains

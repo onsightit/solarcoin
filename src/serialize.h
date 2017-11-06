@@ -147,7 +147,7 @@ enum
     SER_DISK            = (1 << 1),
     SER_GETHASH         = (1 << 2),
     // modifiers
-    SER_LEGACYPROTOCOL  = (1 << 18),
+    SER_LEGACYPROTOCOL  = (1 << 18), // SolarCoin: This is no longer used for node protocols > 70002
 };
 
 #define READWRITE(obj)      (::SerReadWrite(s, (obj), ser_action))

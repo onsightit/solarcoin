@@ -9,6 +9,7 @@
 #include "primitives/transaction.h"
 #include "serialize.h"
 #include "uint256.h"
+#include "util.h"
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
@@ -24,12 +25,12 @@ public:
     static const int LEGACY_VERSION_1 = 1;
     static const int LEGACY_VERSION_2 = 2;
     static const int CURRENT_VERSION = 3;
-    int32_t nVersion;
+    int nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
-    uint32_t nTime;
-    uint32_t nBits;
-    uint32_t nNonce;
+    unsigned int nTime;
+    unsigned int nBits;
+    unsigned int nNonce;
 
     CBlockHeader()
     {
@@ -129,8 +130,8 @@ public:
     {
         // Take last bit of block hash as entropy bit
         unsigned int nEntropyBit = ((GetHash().GetUint64(0)) & 1llu);
-        //if (fDebug && GetBoolArg("-printstakemodifier"))
-        //    printf("GetStakeEntropyBit: nTime=%u hashBlock=%s nEntropyBit=%u\n", nTime, GetHash().ToString().c_str(), nEntropyBit);
+        if (gArgs.GetBoolArg("-printstakemodifier", false))
+            LogPrintf("GetStakeEntropyBit: nTime=%u hashBlock=%s nEntropyBit=%u\n", nTime, GetHash().ToString().c_str(), nEntropyBit);
         return nEntropyBit;
     }
 

@@ -45,6 +45,8 @@ public:
 };
 
 extern bool fDebug;
+extern bool fPrintProofOfStake;
+extern bool fTestNet;
 extern bool fPrintToConsole;
 extern bool fPrintToDebugLog;
 
