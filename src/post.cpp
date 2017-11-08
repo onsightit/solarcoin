@@ -3,8 +3,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "post.h"
 #include "chain.h"
+#include "chainparams.h"
+#include "validation.h"
+
+#include "post.h"
 #include "kernel.h"
 #include "timedata.h"
 #include "util.h"
@@ -32,9 +35,7 @@ double GetCurrentInterestRate(CBlockIndex* pindexPrev, const Consensus::Params& 
     if (pindexPrev->nHeight > twoPercentIntHeight)
     {
         interestRate = twoPercentInt;
-    }
-    else
-    {
+    } else {
         double nAverageWeight = GetAverageStakeWeight(pindexPrev);
         double inflationRate = GetCurrentInflationRate(nAverageWeight) / 100;
         // Bug fix: Should be "GetCurrentCoinSupply(pindexPrev) * COIN", but this code is no longer executed.
@@ -285,11 +286,11 @@ unsigned int static GetNextWorkRequired_V1(const CBlockIndex* pindexLast, const 
 {
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
     bool fTestNet = false; // TODO: params.fTestNet;
-    
+
     // Genesis block
     if (pindexLast == nullptr)
         return nProofOfWorkLimit;
-    
+
     unsigned int nInterval;
     unsigned int nTargetTimespan;
 
@@ -331,7 +332,7 @@ unsigned int static GetNextWorkRequired_V1(const CBlockIndex* pindexLast, const 
     // Litecoin: This fixes an issue where a 51% attack can change difficulty at will.
     // Go back the full period unless it's the first retarget after genesis. Code courtesy of Art Forz
     int blockstogoback = nInterval-1;
-    if ((pindexLast->nHeight+1) != nInterval)
+    if ((unsigned int)(pindexLast->nHeight+1) != nInterval)
         blockstogoback = nInterval;
 
     // Go back by what we want to be 14 days worth of blocks

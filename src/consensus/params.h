@@ -57,41 +57,37 @@ struct Params {
     uint32_t nRuleChangeActivationThreshold;
     uint32_t nMinerConfirmationWindow;
     BIP9Deployment vDeployments[MAX_VERSION_BITS_DEPLOYMENTS];
-    /** Proof of work parameters */
-    uint256 powLimit;
+
+    /** PoW/PoSt parameters */
     bool fAllowMinDifficultyBlocks;
     bool fPowNoRetargeting;
-    unsigned int nTargetSpacing;
+    uint256 powLimit; 
+    uint256 posLimit;
+    int64_t nTargetSpacing;
     int64_t nTargetTimespan_Version1;
     int64_t nTargetTimespan_Version2;
     int64_t nInterval_Version2;
     int64_t nHeight_Version2;
     int64_t DifficultyAdjustmentInterval_V1() const { return nTargetTimespan_Version1 / nTargetSpacing; }
     int64_t DifficultyAdjustmentInterval_V2() const { return 15; }
+    unsigned int nStakeMinAge;
+    unsigned int nModifierInterval;
 
-    // fork params
+    // Fork params
     static const int FORK_HEIGHT_1 = 1177000;
     static const int FORK_HEIGHT_2 = 1440000;
     static const int LAST_POW_BLOCK = 835213;
-    
-    // PoS
+
+    // PoS params
     static const int TWO_PERCENT_INT_HEIGHT = LAST_POW_BLOCK + 1000;
     static const int64_t INITIAL_COIN_SUPPLY = 34145512; // Used in calculating interest rate (97.990085882B are out of circulation)
     static constexpr double COIN_SUPPLY_GROWTH_RATE = 1.35;
     static constexpr int TWO_PERCENT_INT = 2.0;
 
-    /** Proof of stake parameters */
-    uint256 posLimit; // SolarCoin: proof-of-stake limit
-    unsigned int nStakeMinAge = 8 * 60 * 60; // SolarCoin: 8 hours proof-of-stake min age
-    unsigned int nModifierInterval = 10 * 50; // SolarCoin: 10 minute time interval modifier 
-    constexpr static const double PI = 3.1415926535;
-    int nAverageStakeWeightHeightCached = 0;
-    double dAverageStakeWeightCached = 0;
-    CBlockIndex* pIndexBest = nullptr;
-    int nBestHeight = -1;
-    
     uint256 nMinimumChainWork;
     uint256 defaultAssumeValid;
+
+    constexpr static const double PI = 3.1415926535;
 };
 } // namespace Consensus
 
