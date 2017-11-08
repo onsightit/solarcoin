@@ -46,6 +46,9 @@ bool fWalletRbf = DEFAULT_WALLET_RBF;
 const char * DEFAULT_WALLET_DAT = "wallet.dat";
 const uint32_t BIP32_HARDENED_KEY_LIMIT = 0x80000000;
 
+extern CBlockIndex* pIndexBest;
+extern int nBestHeight;
+
 /**
  * Fees smaller than this (in satoshi) are considered zero fee (for transaction creation)
  * Override with -mintxfee
@@ -419,6 +422,9 @@ void CWallet::SetBestChain(const CBlockLocator& loc)
 {
     CWalletDB walletdb(*dbw);
     walletdb.WriteBestBlock(loc);
+
+    pIndexBest = chainActive.Tip();
+    nBestHeight = pIndexBest->nHeight;
 }
 
 bool CWallet::SetMinVersion(enum WalletFeature nVersion, CWalletDB* pwalletdbIn, bool fExplicit)

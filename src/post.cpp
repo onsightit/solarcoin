@@ -3,50 +3,129 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "pow.h"
+#include "post.h"
 #include "chain.h"
-#include "primitives/block.h"
+#include "kernel.h"
+#include "timedata.h"
 #include "util.h"
 
-/// Used in tests
-unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
+/*
+* SolarCoin: PoW / PoST
+*/
+
+// get current inflation rate using average stake weight ~1.5-2.5% (measure of liquidity) PoST
+double GetCurrentInflationRate(double nAverageWeight)
 {
-    if (params.fPowNoRetargeting)
-        return pindexLast->nBits;
+    double inflationRate = (17*(log(nAverageWeight/20)))/100;
 
-    // Limit adjustment step
-    int64_t nActualTimespan = pindexLast->GetBlockTime() - nFirstBlockTime;
-    if (nActualTimespan < params.nTargetTimespan_Version1/4)
-        nActualTimespan = params.nTargetTimespan_Version1/4;
-    if (nActualTimespan > params.nTargetTimespan_Version1*4)
-        nActualTimespan = params.nTargetTimespan_Version1*4;
+    return inflationRate;
+}
 
-    // Retarget
-    const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
+// get current interest rate by targeting for network stake dependent inflation rate PoST
+double GetCurrentInterestRate(CBlockIndex* pindexPrev, const Consensus::Params& params)
+{
+    double interestRate = 0;
+    int twoPercentIntHeight = params.TWO_PERCENT_INT_HEIGHT;
+    int twoPercentInt = params.TWO_PERCENT_INT;
+
+    // Fixed interest rate after PoW + 1000
+    if (pindexPrev->nHeight > twoPercentIntHeight)
+    {
+        interestRate = twoPercentInt;
+    }
+    else
+    {
+        double nAverageWeight = GetAverageStakeWeight(pindexPrev);
+        double inflationRate = GetCurrentInflationRate(nAverageWeight) / 100;
+        // Bug fix: Should be "GetCurrentCoinSupply(pindexPrev) * COIN", but this code is no longer executed.
+        interestRate = ((inflationRate * GetCurrentCoinSupply(pindexPrev, params)) / nAverageWeight) * 100;
+
+        // Cap interest rate (must use the 2.0.2 interest rate value)
+        if (interestRate > 10.0)
+            interestRate = 10.0;
+    }
+
+    return interestRate;
+}
+
+// Get the current coin supply / COIN
+int64_t GetCurrentCoinSupply(CBlockIndex* pindexPrev, const Consensus::Params& params)
+{
+    // removed addition of 1.35 SLR / block after 835000 + 1000
+    if (pindexPrev->nHeight > params.TWO_PERCENT_INT_HEIGHT)
+        if (pindexPrev->nHeight >= params.FORK_HEIGHT_2)
+            // Bug fix: pindexPrev->nMoneySupply is an int64_t that has overflowed and is now negative.
+            // Use the real coin supply + expected growth rate since twoPercentIntHeight from granting.
+            return ((pindexPrev->nMoneySupply - (98000000000 * COIN)) / COIN) + (int64_t)((double)(pindexPrev->nHeight - params.TWO_PERCENT_INT_HEIGHT) * params.COIN_SUPPLY_GROWTH_RATE);
+        else
+            return params.INITIAL_COIN_SUPPLY;
+    else
+        return (params.INITIAL_COIN_SUPPLY + ((pindexPrev->nHeight - params.LAST_POW_BLOCK) * params.COIN_SUPPLY_GROWTH_RATE));
+}
+
+// Get the block rate for one hour
+int GetBlockRatePerHour(const Consensus::Params& params)
+{
+    int nRate = 0;
+    CBlockIndex* pindex = chainActive.Tip();
+    int64_t nTargetTime = GetAdjustedTime() - 3600;
+
+    while (pindex && pindex->pprev && pindex->nTime > nTargetTime) {
+        nRate += 1;
+        pindex = pindex->pprev;
+    }
+    if (nRate < params.nTargetSpacing / 2)
+        LogPrintf("GetBlockRatePerHour: Warning, block rate (%d) is less than half of nTargetSpacing=%ld.\n", nRate, params.nTargetSpacing);
+    return nRate;
+}
+
+// Stakers coin reward based on coin stake time factor and targeted inflation rate PoST
+int64_t GetProofOfStakeTimeReward(int64_t nStakeTime, int64_t nFees, CBlockIndex* pindexPrev, const Consensus::Params& params)
+{
+    int64_t nInterestRate = GetCurrentInterestRate(pindexPrev, params)*CENT;
+    int64_t nSubsidy = nStakeTime * nInterestRate * 33 / (365 * 33 + 8);
+
+    if (fDebug && gArgs.GetBoolArg("-printcreation", false))
+        LogPrintf("GetProofOfStakeTimeReward(): create=%s nStakeTime=%ld\n", FormatMoney(nSubsidy).c_str(), nStakeTime);
+
+    return nSubsidy + nFees;
+}
+
+// Target adjustment V2
+static unsigned int GetNextTargetRequiredV1(const CBlockIndex* pindexLast, bool fProofOfStake, const Consensus::Params& params)
+{
+    arith_uint256 bnTargetLimit = fProofOfStake ? UintToArith256(params.posLimit) : UintToArith256(params.powLimit);
+    
+    if (pindexLast == nullptr)
+        return bnTargetLimit.GetCompact(); // genesis block
+
+    const CBlockIndex* pindexPrev = GetLastBlockIndex(pindexLast, fProofOfStake);
+    if (pindexPrev->pprev == nullptr)
+        return bnTargetLimit.GetCompact(); // first block
+    const CBlockIndex* pindexPrevPrev = GetLastBlockIndex(pindexPrev->pprev, fProofOfStake);
+    if (pindexPrevPrev->pprev == nullptr)
+        return bnTargetLimit.GetCompact(); // second block
+
+    int64_t nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
+
+    // ppcoin: target change every block
+    // ppcoin: retarget with exponential moving toward target spacing
     arith_uint256 bnNew;
-    arith_uint256 bnOld;
-    bnNew.SetCompact(pindexLast->nBits);
-    bnOld = bnNew;
-    // Solarcoin: intermediate uint256 can overflow by 1 bit
-    bool fShift = bnNew.bits() > bnPowLimit.bits() - 1;
-    if (fShift)
-        bnNew >>= 1;
-    bnNew *= nActualTimespan;
-    bnNew /= params.nTargetTimespan_Version1;
-    if (fShift)
-        bnNew <<= 1;
+    bnNew.SetCompact(pindexPrev->nBits);
+    int64_t nInterval = params.DifficultyAdjustmentInterval_V1();
+    bnNew *= ((nInterval - 1) * params.nTargetSpacing + nActualSpacing + nActualSpacing);
+    bnNew /= ((nInterval + 1) * params.nTargetSpacing);
 
-    if (bnNew > bnPowLimit)
-        bnNew = bnPowLimit;
+    if (bnNew > bnTargetLimit)
+        bnNew = bnTargetLimit;
 
     return bnNew.GetCompact();
 }
 
-// PoST Target adjustment
-/* TODO: Convert this code
-static unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake, const Consensus::Params& params)
+// Target adjustment V2
+unsigned int GetNextTargetRequiredV2(const CBlockIndex* pindexLast, bool fProofOfStake, const Consensus::Params& params)
 {
-    arith_uint256 bnTargetLimit = UintToArith256(params.posLimit);
+    arith_uint256 bnTargetLimit = fProofOfStake ? UintToArith256(params.posLimit) : UintToArith256(params.powLimit);
     
     if (pindexLast == nullptr)
         return bnTargetLimit.GetCompact(); // genesis block
@@ -60,23 +139,36 @@ static unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fP
 
     int64_t nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
     if (nActualSpacing < 0)
-        nActualSpacing = nTargetSpacing;
+        nActualSpacing = params.nTargetSpacing;
 
     // ppcoin: target change every block
     // ppcoin: retarget with exponential moving toward target spacing
     arith_uint256 bnNew;
     bnNew.SetCompact(pindexPrev->nBits);
-    int64_t nInterval = nTargetTimespan / nTargetSpacing;
-    bnNew *= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
-    bnNew /= ((nInterval + 1) * nTargetSpacing);
+    int64_t nInterval = params.DifficultyAdjustmentInterval_V2();
+    bnNew *= ((nInterval - 1) * params.nTargetSpacing + nActualSpacing + nActualSpacing);
+    bnNew /= ((nInterval + 1) * params.nTargetSpacing);
 
     if (bnNew <= 0 || bnNew > bnTargetLimit)
         bnNew = bnTargetLimit;
 
     return bnNew.GetCompact();
 }
-*/
 
+// PoST Target adjustment
+unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake, const Consensus::Params& params)
+{
+    int DiffMode = (pindexLast->nHeight+1 >= 310000 || fTestNet ? 2 : 1);
+
+    LogPrintf("DEBUG: DiffMode = %d\n", DiffMode);
+    if (DiffMode == 1) {
+        return GetNextTargetRequiredV1(pindexLast, fProofOfStake, params);
+    } else {
+        return GetNextTargetRequiredV2(pindexLast, fProofOfStake, params);
+    }
+}
+
+// PoW Difficulty adjustment
 unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, uint64_t TargetBlocksSpacingSeconds, uint64_t PastBlocksMin, uint64_t PastBlocksMax, const Consensus::Params& params) {
 
     arith_uint256 bnProofOfWorkLimit = UintToArith256(params.powLimit);
@@ -294,7 +386,7 @@ unsigned int static GetNextWorkRequired_V2(const CBlockIndex* pindexLast, const 
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
-    int DiffMode = (pindexLast->nHeight+1 >= 310000 ? 2 : 1);
+    int DiffMode = (pindexLast->nHeight+1 >= 310000 || fTestNet ? 2 : 1);
 
     LogPrintf("DEBUG: DiffMode = %d\n", DiffMode);
     if (DiffMode == 1) {
@@ -324,4 +416,46 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
         return false;
 
     return true;
+}
+
+// ppcoin: find last block index up to pindex
+const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfStake)
+{
+    while (pindex && pindex->pprev && (pindex->IsProofOfStake() != fProofOfStake))
+        pindex = pindex->pprev;
+    return pindex;
+}
+
+/// Used in tests
+unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
+{
+    if (params.fPowNoRetargeting)
+        return pindexLast->nBits;
+
+    // Limit adjustment step
+    int64_t nActualTimespan = pindexLast->GetBlockTime() - nFirstBlockTime;
+    if (nActualTimespan < params.nTargetTimespan_Version1/4)
+        nActualTimespan = params.nTargetTimespan_Version1/4;
+    if (nActualTimespan > params.nTargetTimespan_Version1*4)
+        nActualTimespan = params.nTargetTimespan_Version1*4;
+
+    // Retarget
+    const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
+    arith_uint256 bnNew;
+    arith_uint256 bnOld;
+    bnNew.SetCompact(pindexLast->nBits);
+    bnOld = bnNew;
+    // Solarcoin: intermediate uint256 can overflow by 1 bit
+    bool fShift = bnNew.bits() > bnPowLimit.bits() - 1;
+    if (fShift)
+        bnNew >>= 1;
+    bnNew *= nActualTimespan;
+    bnNew /= params.nTargetTimespan_Version1;
+    if (fShift)
+        bnNew <<= 1;
+
+    if (bnNew > bnPowLimit)
+        bnNew = bnPowLimit;
+
+    return bnNew.GetCompact();
 }

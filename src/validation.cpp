@@ -21,7 +21,7 @@
 #include "policy/fees.h"
 #include "policy/policy.h"
 #include "policy/rbf.h"
-#include "pow.h"
+#include "post.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "random.h"
@@ -79,9 +79,6 @@ size_t nCoinCacheUsage = 5000 * 300;
 uint64_t nPruneTarget = 0;
 int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 bool fEnableReplacement = DEFAULT_ENABLE_REPLACEMENT;
-int nBestHeight = -1;
-int nAverageStakeWeightHeightCached = 0;
-double dAverageStakeWeightCached = 0;
 
 uint256 hashAssumeValid;
 
@@ -92,7 +89,6 @@ CBlockPolicyEstimator feeEstimator;
 CTxMemPool mempool(&feeEstimator);
 
 static void CheckBlockIndex(const Consensus::Params& consensusParams);
-double GetPoSKernelPS(CBlockIndex* pindexPrev, const Consensus::Params& params);
 
 /** Constant stuff for coinbase transactions we create: */
 CScript COINBASE_FLAGS;
@@ -4446,159 +4442,3 @@ public:
         mapBlockIndex.clear();
     }
 } instance_of_cmaincleanup;
-
-// SOLARCOIN
-// get stake time factored weight for reward and hash PoST
-int64_t GetStakeTimeFactoredWeight(int64_t timeWeight, int64_t bnCoinDayWeight, CBlockIndex* pindexPrev, const Consensus::Params& params)
-{
-
-    int64_t factoredTimeWeight;
-    double weightFraction = (bnCoinDayWeight+1) / (GetAverageStakeWeight(pindexPrev, params));
-    if (weightFraction > 0.45)
-    {
-        factoredTimeWeight = params.nPoSStakeMinAge+1;
-    }
-    else
-    {
-        double stakeTimeFactor = pow(cos((params.PI*weightFraction)),2.0);
-        factoredTimeWeight = stakeTimeFactor*timeWeight;
-    }
-    return factoredTimeWeight;
-}
-
-// get average stake weight of last 60 blocks PoST
-double GetAverageStakeWeight(CBlockIndex* pindexPrev, const Consensus::Params& params)
-{
-    double weightSum = 0.0, weightAve = 0.0;
-    if (nBestHeight < 1)
-        return weightAve;
-
-    // Use cached weight if it's still valid
-    if (pindexPrev->nHeight == nAverageStakeWeightHeightCached)
-    {
-        return dAverageStakeWeightCached;
-    }
-    nAverageStakeWeightHeightCached = pindexPrev->nHeight;
-
-    int i;
-    CBlockIndex* currentBlockIndex = pindexPrev;
-    for (i = 0; currentBlockIndex && i < 60; i++)
-    {
-        double tempWeight = GetPoSKernelPS(currentBlockIndex, params);
-        weightSum += tempWeight;
-        currentBlockIndex = currentBlockIndex->pprev;
-    }
-    weightAve = (weightSum/i)+21;
-
-    // Cache the stake weight value
-    dAverageStakeWeightCached = weightAve;
-
-    return weightAve;
-}
-
-// get current inflation rate using average stake weight ~1.5-2.5% (measure of liquidity) PoST
-double GetCurrentInflationRate(double nAverageWeight)
-{
-    double inflationRate = (17*(log(nAverageWeight/20)))/100;
-
-    return inflationRate;
-}
-
-// get current interest rate by targeting for network stake dependent inflation rate PoST
-double GetCurrentInterestRate(CBlockIndex* pindexPrev, const Consensus::Params& params)
-{
-    double interestRate = 0;
-    int twoPercentIntHeight = params.TWO_PERCENT_INT_HEIGHT;
-    int twoPercentInt = params.TWO_PERCENT_INT;
-
-    // Fixed interest rate after PoW + 1000
-    if (pindexPrev->nHeight > twoPercentIntHeight)
-    {
-        interestRate = twoPercentInt;
-    }
-    else
-    {
-        double nAverageWeight = GetAverageStakeWeight(pindexPrev, params);
-        double inflationRate = GetCurrentInflationRate(nAverageWeight) / 100;
-        // Bug fix: Should be "GetCurrentCoinSupply(pindexPrev) * COIN", but this code is no longer executed.
-        interestRate = ((inflationRate * GetCurrentCoinSupply(pindexPrev, params)) / nAverageWeight) * 100;
-
-        // Cap interest rate (must use the 2.0.2 interest rate value)
-        if (interestRate > 10.0)
-            interestRate = 10.0;
-    }
-
-    return interestRate;
-}
-
-// Get the current coin supply / COIN
-int64_t GetCurrentCoinSupply(CBlockIndex* pindexPrev, const Consensus::Params& params)
-{
-    // removed addition of 1.35 SLR / block after 835000 + 1000
-    if (pindexPrev->nHeight > params.TWO_PERCENT_INT_HEIGHT)
-        if (pindexPrev->nHeight >= params.FORK_HEIGHT_2)
-            // Bug fix: pindexPrev->nMoneySupply is an int64_t that has overflowed and is now negative.
-            // Use the real coin supply + expected growth rate since twoPercentIntHeight from granting.
-            return ((pindexPrev->nMoneySupply - (98000000000 * COIN)) / COIN) + (int64_t)((double)(pindexPrev->nHeight - params.TWO_PERCENT_INT_HEIGHT) * params.COIN_SUPPLY_GROWTH_RATE);
-        else
-            return params.INITIAL_COIN_SUPPLY;
-    else
-        return (params.INITIAL_COIN_SUPPLY + ((pindexPrev->nHeight - params.LAST_POW_BLOCK) * params.COIN_SUPPLY_GROWTH_RATE));
-}
-
-// Get the block rate for one hour
-int GetBlockRatePerHour(const Consensus::Params& params)
-{
-    int nRate = 0;
-    CBlockIndex* pindex = chainActive.Tip();
-    int64_t nTargetTime = GetAdjustedTime() - 3600;
-
-    while (pindex && pindex->pprev && pindex->nTime > nTargetTime) {
-        nRate += 1;
-        pindex = pindex->pprev;
-    }
-    if (nRate < params.nTargetSpacing / 2)
-        LogPrintf("GetBlockRatePerHour: Warning, block rate (%d) is less than half of nTargetSpacing=%ld.\n", nRate, params.nTargetSpacing);
-    return nRate;
-}
-
-// Stakers coin reward based on coin stake time factor and targeted inflation rate PoST
-int64_t GetProofOfStakeTimeReward(int64_t nStakeTime, int64_t nFees, CBlockIndex* pindexPrev, const Consensus::Params& params)
-{
-    int64_t nInterestRate = GetCurrentInterestRate(pindexPrev, params)*CENT;
-    int64_t nSubsidy = nStakeTime * nInterestRate * 33 / (365 * 33 + 8);
-
-    if (fDebug && gArgs.GetBoolArg("-printcreation", false))
-        LogPrintf("GetProofOfStakeTimeReward(): create=%s nStakeTime=%ld\n", FormatMoney(nSubsidy).c_str(), nStakeTime);
-
-    return nSubsidy + nFees;
-}
-
-
-
-double GetPoSKernelPS(CBlockIndex* pindexPrev, const Consensus::Params& params)
-{
-    int nPoSInterval = 72;
-    double dStakeKernelsTriedAvg = 0;
-    int nStakesHandled = 0, nStakesTime = 0;
-
-    CBlockIndex* pindexPrevStake = NULL;
-
-    while (pindexPrev && nStakesHandled < nPoSInterval)
-    {
-        if (pindexPrev->IsProofOfStake())
-        {
-            dStakeKernelsTriedAvg += GetDifficulty(pindexPrev) * 4294967296.0;
-            if (pindexPrev->nHeight >= params.FORK_HEIGHT_2)
-                nStakesTime += std::max((int)(pindexPrevStake ? (pindexPrevStake->nTime - pindexPrev->nTime) : 0), 0); // Bug fix: Prevent negative stake weight
-            else
-                nStakesTime += pindexPrevStake ? (pindexPrevStake->nTime - pindexPrev->nTime) : 0;
-            pindexPrevStake = pindexPrev;
-            nStakesHandled++;
-        }
-        pindexPrev = pindexPrev->pprev;
-    }
-
-   return nStakesTime ? dStakeKernelsTriedAvg / nStakesTime : 0;
-}
-

@@ -16,7 +16,7 @@
 #include "miner.h"
 #include "net.h"
 #include "policy/fees.h"
-#include "pow.h"
+#include "post.h"
 #include "rpc/blockchain.h"
 #include "rpc/mining.h"
 #include "rpc/server.h"
@@ -513,7 +513,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
         // Clear pindexPrev so future calls make a new block, despite any failures from here on
         pindexPrev = nullptr;
 
-        // Store the pindexBest used before CreateNewBlock, to avoid races
+        // Store the pIndexBest used before CreateNewBlock, to avoid races
         nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
         CBlockIndex* pindexPrevNew = chainActive.Tip();
         nStart = GetTime();

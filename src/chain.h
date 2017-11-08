@@ -8,7 +8,7 @@
 
 #include "arith_uint256.h"
 #include "primitives/block.h"
-#include "pow.h"
+#include "post.h"
 #include "tinyformat.h"
 #include "uint256.h"
 #include "utilmoneystr.h"

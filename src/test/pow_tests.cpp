@@ -4,7 +4,7 @@
 
 #include "chain.h"
 #include "chainparams.h"
-#include "pow.h"
+#include "post.h"
 #include "random.h"
 #include "util.h"
 #include "test/test_bitcoin.h"

@@ -84,10 +84,10 @@ public:
         consensus.nTargetTimespan_Version2 = consensus.DifficultyAdjustmentInterval_V2() * consensus.nTargetSpacing; // 15 minutes
         consensus.nHeight_Version2 = 208440;
         
-        consensus.nPoSStakeMinAge = 8 * 60 * 60; // SolarCoin: 8 hours proof-of-stake min age
-        consensus.nPoSModifierInterval = 10 * 60; // SolarCoin: 10 minute time interval modifier 
+        consensus.nStakeMinAge = 8 * 60 * 60; // SolarCoin: 8 hours proof-of-stake min age
+        consensus.nModifierInterval = 10 * 60; // SolarCoin: 10 minute time interval modifier 
 
-        consensus.fPowAllowMinDifficultyBlocks = false;
+        consensus.fAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 6048; // 75% of 8064
         consensus.nMinerConfirmationWindow = 8064; // nTargetTimespan / nTargetSpacing * 4
@@ -209,7 +209,7 @@ public:
 
         consensus.nTargetTimespan_Version2 = consensus.nInterval_Version2 * consensus.nTargetSpacing; // 15 minutes
 
-        consensus.fPowAllowMinDifficultyBlocks = true;
+        consensus.fAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
         consensus.nMinerConfirmationWindow = 2016; // nTargetTimespan / nTargetSpacing
@@ -298,7 +298,7 @@ public:
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nTargetTimespan_Version1 = 3.5 * 24 * 60 * 60; // two weeks
         consensus.nTargetSpacing = 2.5 * 60;
-        consensus.fPowAllowMinDifficultyBlocks = true;
+        consensus.fAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
         consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
         consensus.nMinerConfirmationWindow = 144; // Faster than normal for regtest (144 instead of 2016)

@@ -8,7 +8,7 @@
 #include "chainparams.h"
 #include "hash.h"
 #include "random.h"
-#include "pow.h"
+#include "post.h"
 #include "uint256.h"
 #include "util.h"
 #include "ui_interface.h"

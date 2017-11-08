@@ -9,6 +9,9 @@
 #include "uint256.h"
 #include <map>
 #include <string>
+#include "primitives/block.h"
+
+class CBlockIndex;
 
 namespace Consensus {
 
@@ -56,9 +59,9 @@ struct Params {
     BIP9Deployment vDeployments[MAX_VERSION_BITS_DEPLOYMENTS];
     /** Proof of work parameters */
     uint256 powLimit;
-    bool fPowAllowMinDifficultyBlocks;
+    bool fAllowMinDifficultyBlocks;
     bool fPowNoRetargeting;
-    int64_t nTargetSpacing;
+    unsigned int nTargetSpacing;
     int64_t nTargetTimespan_Version1;
     int64_t nTargetTimespan_Version2;
     int64_t nInterval_Version2;
@@ -79,10 +82,14 @@ struct Params {
 
     /** Proof of stake parameters */
     uint256 posLimit; // SolarCoin: proof-of-stake limit
-    unsigned int nPoSStakeMinAge = 8 * 60 * 60; // SolarCoin: 8 hours proof-of-stake min age
-    unsigned int nPoSModifierInterval = 10 * 50; // SolarCoin: 10 minute time interval modifier 
+    unsigned int nStakeMinAge = 8 * 60 * 60; // SolarCoin: 8 hours proof-of-stake min age
+    unsigned int nModifierInterval = 10 * 50; // SolarCoin: 10 minute time interval modifier 
     constexpr static const double PI = 3.1415926535;
-
+    int nAverageStakeWeightHeightCached = 0;
+    double dAverageStakeWeightCached = 0;
+    CBlockIndex* pIndexBest = nullptr;
+    int nBestHeight = -1;
+    
     uint256 nMinimumChainWork;
     uint256 defaultAssumeValid;
 };
