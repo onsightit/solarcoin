@@ -161,7 +161,7 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
 {
     int DiffMode = (pindexLast->nHeight+1 >= 310000 || fTestNet ? 2 : 1);
 
-    LogPrintf("DEBUG: DiffMode = %d\n", DiffMode);
+    //LogPrintf("DEBUG: DiffMode = %d\n", DiffMode);
     if (DiffMode == 1) {
         return GetNextTargetRequiredV1(pindexLast, fProofOfStake, params);
     } else {
@@ -176,18 +176,17 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, uint64_t Ta
     arith_uint256 bnStartDiff        = (bnProofOfWorkLimit >> 6);
 
     if (pindexLast->nHeight+1 == 160 && !fTestNet) {
-        LogPrintf("DEBUG: Height 160: %08x %s\n", bnStartDiff.GetCompact(), ArithToUint256(bnStartDiff).ToString().c_str());
+        //LogPrintf("DEBUG: Height 160: %08x %s\n", bnStartDiff.GetCompact(), ArithToUint256(bnStartDiff).ToString().c_str());
         return bnStartDiff.GetCompact();
     }
 
     const CBlockIndex *BlockLastSolved  = pindexLast;
     const CBlockIndex *BlockReading = pindexLast;
+    arith_uint256 PastDifficultyAverage = arith_uint256().SetCompact(0);
     uint64_t  PastBlocksMass  = 0;
     int64_t   PastRateActualSeconds   = 0;
     int64_t   PastRateTargetSeconds   = 0;
     double  PastRateAdjustmentRatio = double(1);
-    arith_uint256 PastDifficultyAverage;
-    arith_uint256 PastDifficultyAveragePrev;
     double  EventHorizonDeviation;
     double  EventHorizonDeviationFast;
     double  EventHorizonDeviationSlow;
@@ -204,13 +203,8 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, uint64_t Ta
         }
         PastBlocksMass++;
 
-        if (i == 1) {
-            PastDifficultyAverage.SetCompact(BlockReading->nBits);
-        } else {
-            PastDifficultyAverage = ((arith_uint256().SetCompact(BlockReading->nBits) - PastDifficultyAveragePrev) / i) + PastDifficultyAveragePrev;
-        }
+        PastDifficultyAverage += arith_uint256().SetCompact(BlockReading->nBits);
 
-        PastDifficultyAveragePrev = PastDifficultyAverage;
         PastRateActualSeconds   = BlockLastSolved->GetBlockTime() - BlockReading->GetBlockTime();
 
         if (LatestBlockTime < BlockReading->GetBlockTime()) {
@@ -247,30 +241,28 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, uint64_t Ta
                 break;
             }
         }
-        if (BlockReading->pprev == NULL) {
+        if (BlockReading->pprev == nullptr) {
             assert(BlockReading);
             break;
         }
         BlockReading = BlockReading->pprev;
-        // DEBUG:
-        printf("i=%d ", i);
     }
-    // DEBUG:
-    printf("\n");
 
-    arith_uint256 bnNew(PastDifficultyAverage);
-    LogPrintf("DEBUG: bnNew(PastDifficultyAverage): %08x %s\n", bnNew.GetCompact(), ArithToUint256(bnNew).ToString().c_str());
+    if (PastBlocksMass > 0) {
+        PastDifficultyAverage = PastDifficultyAverage / PastBlocksMass;
+    } else {
+        PastDifficultyAverage = bnProofOfWorkLimit;
+    }
+
+    arith_uint256 bnNew = PastDifficultyAverage;
+    //LogPrintf("DEBUG: bnNew=%08x %s\n", bnNew.GetCompact(), ArithToUint256(bnNew).ToString().c_str());
     if (PastRateActualSeconds != 0 && PastRateTargetSeconds != 0) {
         bnNew *= PastRateActualSeconds;
-        LogPrintf("DEBUG: bnNew *= PastRateActualSeconds: %08x PastRateActualSeconds: %lu\n", bnNew.GetCompact(), PastRateActualSeconds);
         bnNew /= PastRateTargetSeconds;
-        LogPrintf("DEBUG: bnNew /= PastRateTargetSeconds: %08x PastRateTargetSeconds: %lu\n", bnNew.GetCompact(), PastRateTargetSeconds);
     }
     // TODO: bnNew should NOT be greater than bnPoWLimit
     if (bnNew > bnProofOfWorkLimit) {
-        LogPrintf("DEBUG: %08x %s\n", bnNew.GetCompact(), ArithToUint256(bnNew).ToString().c_str());
         bnNew = bnProofOfWorkLimit;
-        LogPrintf("DEBUG: bnNew set to bnProofOfWorkLimit.\n");
     }
 
     /// debug print
@@ -324,8 +316,6 @@ unsigned int static GetNextWorkRequired_V1(const CBlockIndex* pindexLast, const 
                 return pindex->nBits;
             }
         }
-
-        LogPrintf("DEBUG: nTargetTimespan = %lu    nInterval = %ld\n", nTargetTimespan, nInterval);
         return pindexLast->nBits;
     }
 
@@ -389,7 +379,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 {
     int DiffMode = (pindexLast->nHeight+1 >= 310000 || fTestNet ? 2 : 1);
 
-    LogPrintf("DEBUG: DiffMode = %d\n", DiffMode);
+    //LogPrintf("DEBUG: DiffMode = %d\n", DiffMode);
     if (DiffMode == 1) {
         return GetNextWorkRequired_V1(pindexLast, pblock, params); // nHeight_Version2 = 208440 (less than 310000)
     } else {
@@ -405,10 +395,9 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
 
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
 
-    // DEBUG
-    LogPrintf("DEBUG: CheckProofOfWork: nBits=%08x bnTarget=%s\n", nBits, bnTarget.ToString().c_str());
-    
-        // Check range
+    //LogPrintf("DEBUG: CheckProofOfWork: nBits=%08x bnTarget=%s\n", nBits, bnTarget.ToString().c_str());
+
+    // Check range
     if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(params.powLimit))
         return false;
 

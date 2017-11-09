@@ -3076,7 +3076,6 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
                 return state.Invalid(error("%s: block %s is marked invalid", __func__, hash.ToString()), 0, "duplicate");
             return true;
         }
-        LogPrintf("DEBUG: hash: %s nVersion: %d\n", hash.ToString(), block.nVersion);
 
         if (!CheckBlockHeader(block, state, chainparams.GetConsensus()))
             return error("%s: Consensus::CheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
@@ -3097,6 +3096,9 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
 
     if (ppindex)
         *ppindex = pindex;
+
+    if (fDebug)
+        LogPrintf("AcceptBlockHeader(): hash: %s nHeight: %d nVersion: %d\n", hash.ToString(), pindex->nHeight, block.nVersion);
 
     CheckBlockIndex(chainparams.GetConsensus());
 
