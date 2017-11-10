@@ -180,11 +180,11 @@ public:
     //! pointer to the index of some further predecessor of this block
     CBlockIndex* pskip;
 
-    //! height of the entry in the chain. The genesis block has height 0
-    int nHeight;
-
     //! Which # file this block is stored in (blk?????.dat)
     int nFile;
+    
+    //! height of the entry in the chain. The genesis block has height 0
+    int nHeight;
 
     //! Byte offset within blk?????.dat where this block's data is stored
     unsigned int nDataPos;
@@ -231,6 +231,7 @@ public:
 
     //! block header
     int nVersion;
+    uint256 hashPrev;
     uint256 hashMerkleRoot;
     unsigned int nTime;
     unsigned int nBits;
@@ -247,11 +248,12 @@ public:
         phashBlock = nullptr;
         pprev = nullptr;
         pskip = nullptr;
-        nHeight = 0;
         nFile = 0;
+        nHeight = 0;
         nDataPos = 0;
         nUndoPos = 0;
         nChainWork = arith_uint256();
+        nChainTrust = uint256();
         nTx = 0;
         nChainTx = 0;
         nStatus = 0;
@@ -267,6 +269,7 @@ public:
         nStakeTime = 0;
 
         nVersion       = 0;
+        hashPrev       = uint256();
         hashMerkleRoot = uint256();
         nTime          = 0;
         nBits          = 0;
@@ -297,6 +300,7 @@ public:
         }
 
         nVersion       = block.nVersion;
+        hashPrev       = block.hashPrevBlock;
         hashMerkleRoot = block.hashMerkleRoot;
         nTime          = block.nTime;
         nBits          = block.nBits;
@@ -309,6 +313,7 @@ public:
         SetNull();
 
         nVersion       = block.nVersion;
+        hashPrev       = block.hashPrevBlock;
         hashMerkleRoot = block.hashMerkleRoot;
         nTime          = block.nTime;
         nBits          = block.nBits;
@@ -434,9 +439,8 @@ public:
 
     std::string ToVerboseString() const
     {
-        return strprintf("CBlockIndex(nprev=%p, nFile=%u, nHeight=%d, nMint=%s, nMoneySupply=%s, nFlags=(%s)(%d)(%s), nStakeModifierChecksum=%08x, hashProofOfStake=%s, prevoutStake=(%s), nStakeTime=%d merkle=%s, hashBlock=%s)",
-        //return strprintf("CBlockIndex(nprev=%p, pnext=%p, nFile=%u, nBlockPos=%-6d nHeight=%d, nMint=%s, nMoneySupply=%s, nFlags=(%s)(%d)(%s), nStakeModifier=%016"PRIx64", nStakeModifierChecksum=%08x, hashProofOfStake=%s, prevoutStake=(%s), nStakeTime=%d merkle=%s, hashBlock=%s)",
-            pprev, nFile, nHeight,
+        return strprintf("CBlockIndex(nprev=%p, pskip=%p, nFile=%u, nBlockPos=%-6d nHeight=%d, nMint=%s, nMoneySupply=%s, nFlags=(%s)(%d)(%s), nStakeModifier=%016x, nStakeModifierChecksum=%08x, hashProofOfStake=%s, prevoutStake=(%s), nStakeTime=%d merkle=%s, hashBlock=%s)",
+            pprev, pskip, nFile, nDataPos, nHeight,
             FormatMoney(nMint).c_str(), FormatMoney(nMoneySupply).c_str(),
             GeneratedStakeModifier() ? "MOD" : "-", GetStakeEntropyBit(), IsProofOfStake()? "PoS" : "PoW",
             nStakeModifier, nStakeModifierChecksum,
@@ -487,15 +491,22 @@ const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* 
 /** Used to marshal pointers into hashes for db storage. */
 class CDiskBlockIndex : public CBlockIndex
 {
+private:
+    uint256 blockHash;
+
 public:
     uint256 hashPrev;
+    uint256 hashNext;
 
     CDiskBlockIndex() {
         hashPrev = uint256();
+        hashNext = uint256();
+        blockHash = uint256();
     }
 
     explicit CDiskBlockIndex(const CBlockIndex* pindex) : CBlockIndex(*pindex) {
         hashPrev = (pprev ? pprev->GetBlockHash() : uint256());
+        hashNext = (pskip ? pskip->GetBlockHash() : uint256());
     }
 
     ADD_SERIALIZE_METHODS;
@@ -506,15 +517,33 @@ public:
         if (!(s.GetType() & SER_GETHASH))
             READWRITE(VARINT(_nVersion));
 
-        READWRITE(VARINT(nHeight));
-        READWRITE(VARINT(nStatus));
-        READWRITE(VARINT(nTx));
+        READWRITE(hashNext);
         if (nStatus & (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO))
             READWRITE(VARINT(nFile));
         if (nStatus & BLOCK_HAVE_DATA)
             READWRITE(VARINT(nDataPos));
         if (nStatus & BLOCK_HAVE_UNDO)
             READWRITE(VARINT(nUndoPos));
+
+        READWRITE(VARINT(nHeight));
+        READWRITE(VARINT(nMint));
+        READWRITE(VARINT(nMoneySupply));
+        READWRITE(VARINT(nFlags));
+        READWRITE(VARINT(nStakeModifier));
+        if (IsProofOfStake()) {
+            READWRITE(prevoutStake);
+            READWRITE(nStakeTime);
+            READWRITE(hashProofOfStake);
+        } else {
+            if (ser_action.ForRead()) {
+                const_cast<CDiskBlockIndex*>(this)->prevoutStake.SetNull();
+                const_cast<CDiskBlockIndex*>(this)->nStakeTime = 0;
+                const_cast<CDiskBlockIndex*>(this)->hashProofOfStake = uint256();
+            }
+        }
+
+        READWRITE(VARINT(nStatus));
+        READWRITE(VARINT(nTx));
 
         // block header
         READWRITE(this->nVersion);
@@ -523,6 +552,7 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+        READWRITE(blockHash);
     }
 
     uint256 GetBlockHash() const

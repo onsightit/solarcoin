@@ -1049,18 +1049,18 @@ static UniValue SoftForkMajorityDesc(int version, CBlockIndex* pindex, const Con
 {
     UniValue rv(UniValue::VOBJ);
     bool activated = false;
-    switch(version)
-    {
-        case 2:
-            activated = pindex->nHeight >= consensusParams.BIP34Height;
-            break;
-        case 3:
-            activated = pindex->nHeight >= consensusParams.BIP66Height;
-            break;
-        case 4:
-            activated = pindex->nHeight >= consensusParams.BIP65Height;
-            break;
-    }
+    //switch(version)
+    //{
+    //    case 2:
+    //        activated = pindex->nHeight >= consensusParams.BIP34Height;
+    //        break;
+    //    case 3:
+    //        activated = pindex->nHeight >= consensusParams.BIP66Height;
+    //        break;
+    //    case 4:
+    //        activated = pindex->nHeight >= consensusParams.BIP65Height;
+    //        break;
+    //}
     rv.push_back(Pair("status", activated));
     return rv;
 }
@@ -1177,17 +1177,17 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     obj.push_back(Pair("chainwork",             chainActive.Tip()->nChainWork.GetHex()));
     obj.push_back(Pair("pruned",                fPruneMode));
 
-    const Consensus::Params& consensusParams = Params().GetConsensus();
-    CBlockIndex* tip = chainActive.Tip();
-    UniValue softforks(UniValue::VARR);
-    UniValue bip9_softforks(UniValue::VOBJ);
-    softforks.push_back(SoftForkDesc("bip34", 2, tip, consensusParams));
-    softforks.push_back(SoftForkDesc("bip66", 3, tip, consensusParams));
-    softforks.push_back(SoftForkDesc("bip65", 4, tip, consensusParams));
-    BIP9SoftForkDescPushBack(bip9_softforks, "csv", consensusParams, Consensus::DEPLOYMENT_CSV);
-    BIP9SoftForkDescPushBack(bip9_softforks, "segwit", consensusParams, Consensus::DEPLOYMENT_SEGWIT);
-    obj.push_back(Pair("softforks",             softforks));
-    obj.push_back(Pair("bip9_softforks", bip9_softforks));
+    //const Consensus::Params& consensusParams = Params().GetConsensus();
+    //CBlockIndex* tip = chainActive.Tip();
+    //UniValue softforks(UniValue::VARR);
+    //UniValue bip9_softforks(UniValue::VOBJ);
+    //softforks.push_back(SoftForkDesc("bip34", 2, tip, consensusParams));
+    //softforks.push_back(SoftForkDesc("bip66", 3, tip, consensusParams));
+    //softforks.push_back(SoftForkDesc("bip65", 4, tip, consensusParams));
+    //BIP9SoftForkDescPushBack(bip9_softforks, "csv", consensusParams, Consensus::DEPLOYMENT_CSV);
+    //BIP9SoftForkDescPushBack(bip9_softforks, "segwit", consensusParams, Consensus::DEPLOYMENT_SEGWIT);
+    //obj.push_back(Pair("softforks",             softforks));
+    //obj.push_back(Pair("bip9_softforks", bip9_softforks));
 
     if (fPruneMode)
     {

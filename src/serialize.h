@@ -147,6 +147,7 @@ enum
     SER_DISK            = (1 << 1),
     SER_GETHASH         = (1 << 2),
     // modifiers
+    SER_BLOCKHEADERONLY = (1 << 17),
     SER_LEGACYPROTOCOL  = (1 << 18), // SolarCoin: This is no longer used for node protocols > 70002
 };
 
@@ -266,9 +267,13 @@ uint64_t ReadCompactSize(Stream& is)
     }
     else
     {
+        // DEBUG
+        char buffer[80];
         nSizeRet = ser_readdata64(is);
+        sprintf(buffer, "DEBUG: nSizeRet=%lu", nSizeRet);
         if (nSizeRet < 0x100000000ULL)
-            throw std::ios_base::failure("non-canonical ReadCompactSize()");
+            //throw std::ios_base::failure("non-canonical ReadCompactSize()");
+            throw std::ios_base::failure(buffer);
     }
     if (nSizeRet > (uint64_t)MAX_SIZE)
         throw std::ios_base::failure("ReadCompactSize(): size too large");

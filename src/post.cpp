@@ -87,13 +87,13 @@ int64_t GetProofOfStakeTimeReward(int64_t nStakeTime, int64_t nFees, CBlockIndex
     int64_t nSubsidy = nStakeTime * nInterestRate * 33 / (365 * 33 + 8);
 
     if (fDebug && gArgs.GetBoolArg("-printcreation", false))
-        LogPrintf("GetProofOfStakeTimeReward(): create=%s nStakeTime=%ld\n", FormatMoney(nSubsidy).c_str(), nStakeTime);
+        LogPrintf("%s(): create=%s nStakeTime=%ld\n", __func__, FormatMoney(nSubsidy).c_str(), nStakeTime);
 
     return nSubsidy + nFees;
 }
 
 // Target adjustment V2
-static unsigned int GetNextTargetRequiredV1(const CBlockIndex* pindexLast, bool fProofOfStake, const Consensus::Params& params)
+unsigned int GetNextTargetRequiredV1(const CBlockIndex* pindexLast, bool fProofOfStake, const Consensus::Params& params)
 {
     arith_uint256 bnTargetLimit = fProofOfStake ? UintToArith256(params.posLimit) : UintToArith256(params.powLimit);
     
@@ -161,7 +161,7 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
 {
     int DiffMode = (pindexLast->nHeight+1 >= 310000 || fTestNet ? 2 : 1);
 
-    //LogPrintf("DEBUG: DiffMode = %d\n", DiffMode);
+    LogPrintf("DEBUG: GetNextTargetRequired(): DiffMode = %d\n", DiffMode);
     if (DiffMode == 1) {
         return GetNextTargetRequiredV1(pindexLast, fProofOfStake, params);
     } else {
@@ -176,7 +176,7 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, uint64_t Ta
     arith_uint256 bnStartDiff        = (bnProofOfWorkLimit >> 6);
 
     if (pindexLast->nHeight+1 == 160 && !fTestNet) {
-        //LogPrintf("DEBUG: Height 160: %08x %s\n", bnStartDiff.GetCompact(), ArithToUint256(bnStartDiff).ToString().c_str());
+        LogPrintf("DEBUG: Height 160: %08x %s\n", bnStartDiff.GetCompact(), ArithToUint256(bnStartDiff).ToString().c_str());
         return bnStartDiff.GetCompact();
     }
 
@@ -266,7 +266,7 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, uint64_t Ta
     }
 
     /// debug print
-    LogPrintf("Difficulty Retarget - Gravity Well\n");
+    LogPrintf("%s(): RETARGET (Gravity Well)\n", __func__);
     LogPrintf("PastRateAdjustmentRatio = %g\n", PastRateAdjustmentRatio);
     LogPrintf("Before: %08x %s\n", BlockLastSolved->nBits, ArithToUint256(arith_uint256().SetCompact(BlockLastSolved->nBits)).ToString().c_str());
     LogPrintf("After: %08x %s\n", bnNew.GetCompact(), ArithToUint256(bnNew).ToString().c_str());
@@ -333,7 +333,7 @@ unsigned int static GetNextWorkRequired_V1(const CBlockIndex* pindexLast, const 
 
     // Limit adjustment step
     int64_t nActualTimespan = pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
-    LogPrintf("  nActualTimespan = %ld  before bounds\n", nActualTimespan);
+    LogPrintf("%s(): nActualTimespan = %ld  before bounds\n", __func__, nActualTimespan);
     if (nActualTimespan < nTargetTimespan/4)
         nActualTimespan = nTargetTimespan/4;
     if (nActualTimespan > nTargetTimespan*4)
@@ -351,7 +351,7 @@ unsigned int static GetNextWorkRequired_V1(const CBlockIndex* pindexLast, const 
         bnNew = bnProofOfWorkLimit;
 
     /// debug print
-    LogPrintf("GetNextWorkRequired RETARGET\n");
+    LogPrintf("%s(): RETARGET\n", __func__);
     LogPrintf("nTargetTimespan = %ld    nActualTimespan = %ld\n", nTargetTimespan, nActualTimespan);
     LogPrintf("Before: %08x  %s\n", pindexLast->nBits, ArithToUint256(arith_uint256().SetCompact(pindexLast->nBits)).ToString().c_str());
     LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), ArithToUint256(bnNew).ToString().c_str());
@@ -379,7 +379,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 {
     int DiffMode = (pindexLast->nHeight+1 >= 310000 || fTestNet ? 2 : 1);
 
-    //LogPrintf("DEBUG: DiffMode = %d\n", DiffMode);
+    LogPrintf("DEBUG: GetNextWorkRequired(): DiffMode = %d\n", DiffMode);
     if (DiffMode == 1) {
         return GetNextWorkRequired_V1(pindexLast, pblock, params); // nHeight_Version2 = 208440 (less than 310000)
     } else {

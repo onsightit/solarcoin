@@ -76,7 +76,13 @@ class CMainParams : public CChainParams {
 public:
     CMainParams() {
         strNetworkID = "main";
-        consensus.nSubsidyHalvingInterval = 525600;
+        // N/A to SolarCoin
+        consensus.BIP34Height = 0;
+        consensus.BIP34Hash = uint256S("0");
+        consensus.BIP65Height = 0;
+        consensus.BIP66Height = 0;
+        consensus.nSubsidyHalvingInterval = 0;
+
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); 
         consensus.posLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // SolarCoin: proof-of-stake limit
         consensus.nTargetSpacing = 1 * 60; // SolarCoin: 1 minute

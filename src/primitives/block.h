@@ -81,6 +81,9 @@ public:
     // network and disk
     std::vector<CTransactionRef> vtx;
 
+    // ppcoin: block signature - signed by one of the coin base txout[N]'s owner
+    std::vector<unsigned char> vchBlockSig;
+    
     // memory only
     mutable bool fChecked;
 
@@ -100,7 +103,20 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(*(CBlockHeader*)this);
-        READWRITE(vtx);
+        //READWRITE(vtx);
+        // PoST: ConnectBlock depends on vtx following header to generate CDiskTxPos
+        if (!(s.GetType() & (SER_GETHASH|SER_BLOCKHEADERONLY))) {
+            READWRITE(vtx);
+            if (this->nVersion >= CBlockHeader::CURRENT_VERSION) {
+                READWRITE(vchBlockSig);
+            }
+        } else {
+            if (ser_action.ForRead())
+            {
+                const_cast<CBlock*>(this)->vtx.clear();
+                const_cast<CBlock*>(this)->vchBlockSig.clear();
+            }
+        }
     }
 
     void SetNull()
