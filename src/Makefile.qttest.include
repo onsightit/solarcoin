@@ -25,12 +25,10 @@ TEST_QT_H = \
   qt/test/wallettests.h
 
 TEST_BITCOIN_CPP = \
-  test/test_bitcoin.cpp \
-  test/testutil.cpp
+  test/test_bitcoin.cpp
 
 TEST_BITCOIN_H = \
-  test/test_bitcoin.h \
-  test/testutil.h
+  test/test_bitcoin.h
 
 qt_test_test_solarcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
   $(QT_INCLUDES) $(QT_TEST_INCLUDES) $(PROTOBUF_CFLAGS)
@@ -70,10 +68,10 @@ CLEAN_BITCOIN_QT_TEST = $(TEST_QT_MOC_CPP) qt/test/*.gcda qt/test/*.gcno
 
 CLEANFILES += $(CLEAN_BITCOIN_QT_TEST)
 
-test_bitcoin_qt : qt/test/test_solarcoin-qt$(EXEEXT)
+test_solarcoin_qt : qt/test/test_solarcoin-qt$(EXEEXT)
 
-test_bitcoin_qt_check : qt/test/test_solarcoin-qt$(EXEEXT) FORCE
+test_solarcoin_qt_check : qt/test/test_solarcoin-qt$(EXEEXT) FORCE
 	$(MAKE) check-TESTS TESTS=$^
 
-test_bitcoin_qt_clean: FORCE
-	rm -f $(CLEAN_BITCOIN_QT_TEST) $(qt_test_test_bitcoin_qt_OBJECTS)
+test_solarcoin_qt_clean: FORCE
+	rm -f $(CLEAN_BITCOIN_QT_TEST) $(qt_test_test_solarcoin_qt_OBJECTS)

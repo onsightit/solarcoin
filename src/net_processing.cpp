@@ -1266,6 +1266,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 // These bits have been used as a flag to indicate that a node is running incompatible
                 // consensus rules instead of changing the network magic, so we're stuck disconnecting
                 // based on these service bits, at least for a while.
+                LogPrint(BCLog::NET, "peer=%d using service bits 6 or 8; disconnecting\n", pfrom->GetId());
                 pfrom->fDisconnect = true;
                 return false;
             }
@@ -1339,8 +1340,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         // Potentially mark this peer as a preferred download peer.
         {
-        LOCK(cs_main);
-        UpdatePreferredDownload(pfrom, State(pfrom->GetId()));
+            LOCK(cs_main);
+            UpdatePreferredDownload(pfrom, State(pfrom->GetId()));
         }
 
         if (!pfrom->fInbound)
@@ -2239,7 +2240,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     {
         std::vector<CBlockHeader> headers;
 
-        LogPrintf("DEBUG: pfrom=%s\n", pfrom->addr.ToString().c_str());
+        LogPrintf("DEBUG: Processing HEADERS pfrom=%s\n", pfrom->addr.ToString().c_str());
 
         // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
         unsigned int nCount = ReadCompactSize(vRecv);
@@ -2699,14 +2700,6 @@ bool ProcessMessages(CNode* pfrom, CConnman& connman, const std::atomic<bool>& i
         fMoreWork = !pfrom->vProcessMsg.empty();
     }
     CNetMessage& msg(msgs.front());
-    // DEBUG:
-    char pch[2048];
-    memset(&pch[0], char(0), 2048);
-    msg.readHeader((const char*)&pch[0], 2048);
-    LogPrintf("DEBUG: msg.header=%s\n", (char *)&pch[0]);
-    memset(&pch[0], char(0), 2048);
-    msg.readData((const char*)&pch[0], 2048);
-    LogPrintf("DEBUG: msg.date=%s\n", (char *)&pch[0]);
 
     msg.SetVersion(pfrom->GetRecvVersion());
     // Scan for message start
@@ -2738,6 +2731,16 @@ bool ProcessMessages(CNode* pfrom, CConnman& connman, const std::atomic<bool>& i
            HexStr(hash.begin(), hash.begin()+CMessageHeader::CHECKSUM_SIZE),
            HexStr(hdr.pchChecksum, hdr.pchChecksum+CMessageHeader::CHECKSUM_SIZE));
         return fMoreWork;
+    }
+
+    // DEBUG: Remove later
+    if (strCommand == NetMsgType::HEADERS && (nMessageSize > 162003))
+    {
+        LogPrintf("DEBUG: Large Message Size %s(%s, %u bytes)\n", __func__,
+           SanitizeString(strCommand), nMessageSize);
+    //    LogPrintf("DEBUG: %s(%s, %u bytes): %s\n", __func__,
+    //       SanitizeString(strCommand), nMessageSize,
+    //       HexStr(vRecv.begin(), vRecv.end()));
     }
 
     // Process message

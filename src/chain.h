@@ -229,7 +229,7 @@ public:
     unsigned int nStakeTime;
     uint256 hashProofOfStake;
 
-    //! block header
+    // block header
     int nVersion;
     uint256 hashPrev;
     uint256 hashMerkleRoot;

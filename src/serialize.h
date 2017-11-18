@@ -268,12 +268,12 @@ uint64_t ReadCompactSize(Stream& is)
     else
     {
         // DEBUG
-        char buffer[80];
+        //char buffer[80];
         nSizeRet = ser_readdata64(is);
-        sprintf(buffer, "DEBUG: nSizeRet=%lu", nSizeRet);
-        if (nSizeRet < 0x100000000ULL)
-            //throw std::ios_base::failure("non-canonical ReadCompactSize()");
-            throw std::ios_base::failure(buffer);
+        //sprintf(buffer, "DEBUG: nSizeRet=%lu  MAX_SIZE=%lu", (unsigned long)nSizeRet, (unsigned long)MAX_SIZE);
+        //if (nSizeRet < 0x100000000ULL)
+        //    //throw std::ios_base::failure("non-canonical ReadCompactSize()");
+        //    throw std::ios_base::failure(buffer);
     }
     if (nSizeRet > (uint64_t)MAX_SIZE)
         throw std::ios_base::failure("ReadCompactSize(): size too large");
