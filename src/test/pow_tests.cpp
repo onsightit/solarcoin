@@ -2,12 +2,12 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "chain.h"
-#include "chainparams.h"
-#include "post.h"
-#include "random.h"
-#include "util.h"
-#include "test/test_bitcoin.h"
+#include <chain.h>
+#include <chainparams.h>
+#include <post.h>
+#include <random.h>
+#include <util.h>
+#include <test/test_bitcoin.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -19,10 +19,10 @@ BOOST_AUTO_TEST_CASE(get_next_work)
     const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);
     int64_t nLastRetargetTime = 1261130161; // Block #30240
     CBlockIndex pindexLast;
-    pindexLast.nHeight = 280223;
-    pindexLast.nTime = 1358378777;  // Block #280223
-    pindexLast.nBits = 0x1c0ac141;
-    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), 0x1c093f8d);
+    pindexLast.nHeight = 32255;
+    pindexLast.nTime = 1262152739;  // Block #32255
+    pindexLast.nBits = 0x1d00ffff;
+    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), 0x1d00d86a);
 }
 
 /* Test the constraint on the upper bound for next work */

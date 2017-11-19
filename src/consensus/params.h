@@ -10,7 +10,7 @@
 #include <limits>
 #include <map>
 #include <string>
-#include "primitives/block.h"
+#include <primitives/block.h>
 
 class CBlockIndex;
 

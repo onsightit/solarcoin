@@ -2,15 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "wallet/wallet.h"
+#include <wallet/wallet.h>
 
-#include "wallet/test/wallet_test_fixture.h"
+#include <wallet/test/wallet_test_fixture.h>
 
 #include <stdint.h>
 
 #include <boost/test/unit_test.hpp>
 
-extern CWallet* pwalletMain;
+extern std::unique_ptr<CWallet> pwalletMain;
 
 BOOST_FIXTURE_TEST_SUITE(accounting_tests, WalletTestingSetup)
 
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
 
     wtx.mapValue["comment"] = "y";
     {
-        CMutableTransaction tx(wtx);
+        CMutableTransaction tx(*wtx.tx);
         --tx.nLockTime;  // Just to change the hash :)
         wtx.SetTx(MakeTransactionRef(std::move(tx)));
     }
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
 
     wtx.mapValue["comment"] = "x";
     {
-        CMutableTransaction tx(wtx);
+        CMutableTransaction tx(*wtx.tx);
         --tx.nLockTime;  // Just to change the hash :)
         wtx.SetTx(MakeTransactionRef(std::move(tx)));
     }
