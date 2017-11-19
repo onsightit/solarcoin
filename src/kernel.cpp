@@ -2,16 +2,16 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "chain.h"
-#include "chainparams.h"
-#include "validation.h"
+#include <chain.h>
+#include <chainparams.h>
+#include <validation.h>
 
 #include <boost/assign/list_of.hpp>
-#include "rpc/blockchain.h"
-#include "txdb.h"
-#include "timedata.h"
-#include "kernel.h"
-#include "post.h"
+#include <rpc/blockchain.h>
+#include <txdb.h>
+#include <timedata.h>
+#include <kernel.h>
+#include <post.h>
 
 using namespace std;
 
@@ -486,7 +486,7 @@ double GetAverageStakeWeight(CBlockIndex* pindexPrev, const Consensus::Params& p
     return weightAve;
 }
 
-double GetPoSKernelPS(CBlockIndex* pindexPrev)
+double GetPoSKernelPS(CBlockIndex* pindexPrev, const Consensus::Params& params)
 {
     int nPoSInterval = 72;
     double dStakeKernelsTriedAvg = 0;
@@ -499,8 +499,9 @@ double GetPoSKernelPS(CBlockIndex* pindexPrev)
         if (pindexPrev->IsProofOfStake())
         {
             dStakeKernelsTriedAvg += GetDifficulty(pindexPrev) * 4294967296.0;
-            if (pindexPrev->nHeight >= Consensus::Params::FORK_HEIGHT_2)
-                nStakesTime += std::max((int)(pindexPrevStake ? (pindexPrevStake->nTime - pindexPrev->nTime) : 0), 0); // Bug fix: Prevent negative stake weight
+            if (pindexPrev->nHeight >= params.FORK_HEIGHT_2)
+                // Bug fix: Prevent negative stake weight
+                nStakesTime += std::max((int)(pindexPrevStake ? (pindexPrevStake->nTime - pindexPrev->nTime) : 0), 0);
             else
                 nStakesTime += pindexPrevStake ? (pindexPrevStake->nTime - pindexPrev->nTime) : 0;
             pindexPrevStake = pindexPrev;

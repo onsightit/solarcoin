@@ -5,7 +5,7 @@
 
 #include <chain.h>
 #include <chainparams.h>
-#include <validation.h"
+#include <validation.h>
 
 #include <post.h>
 #include <kernel.h>

@@ -4,8 +4,8 @@
 #ifndef PPCOIN_KERNEL_H
 #define PPCOIN_KERNEL_H
 
-#include "consensus/params.h"
-#include "primitives/block.h"
+#include <consensus/params.h>
+#include <primitives/block.h>
 
 // MODIFIER_INTERVAL_RATIO:
 // ratio of group interval length between the last group and the first group
@@ -22,7 +22,7 @@ double GetAverageStakeWeight(CBlockIndex* pindexPrev, const Consensus::Params& p
 int64_t GetStakeModifierSelectionIntervalSection(int nSection, const Consensus::Params& params);
 int64_t GetStakeModifierSelectionInterval(const Consensus::Params& params);
 int64_t GetStakeTimeFactoredWeight(int64_t timeWeight, int64_t bnCoinDayWeight, CBlockIndex* pindexPrev, const Consensus::Params& params);
-double GetPoSKernelPS(CBlockIndex* pindexPrev);
+double GetPoSKernelPS(CBlockIndex* pindexPrev, const Consensus::Params& params);
 
 // This is needed because the foreach macro can't get over the comma in pair<t1, t2>
 #define PAIRTYPE(t1, t2)    std::pair<t1, t2>
