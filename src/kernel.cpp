@@ -443,7 +443,7 @@ bool CheckStakeModifierCheckpoints(int nHeight, unsigned int nStakeModifierCheck
 int64_t GetStakeTimeFactoredWeight(int64_t timeWeight, int64_t bnCoinDayWeight, CBlockIndex* pindexPrev, const Consensus::Params& params)
 {
     int64_t factoredTimeWeight;
-    double weightFraction = (bnCoinDayWeight+1) / GetAverageStakeWeight(pindexPrev);
+    double weightFraction = (bnCoinDayWeight+1) / GetAverageStakeWeight(pindexPrev, params);
     if (weightFraction > 0.45)
     {
         factoredTimeWeight = params.nStakeMinAge+1;
@@ -457,7 +457,7 @@ int64_t GetStakeTimeFactoredWeight(int64_t timeWeight, int64_t bnCoinDayWeight, 
 }
 
 // get average stake weight of last 60 blocks PoST
-double GetAverageStakeWeight(CBlockIndex* pindexPrev)
+double GetAverageStakeWeight(CBlockIndex* pindexPrev, const Consensus::Params& params)
 {
     double weightSum = 0.0, weightAve = 0.0;
     if (chainActive.Height() < 1)
@@ -474,7 +474,7 @@ double GetAverageStakeWeight(CBlockIndex* pindexPrev)
     CBlockIndex* currentBlockIndex = pindexPrev;
     for (i = 0; currentBlockIndex && i < 60; i++)
     {
-        double tempWeight = GetPoSKernelPS(currentBlockIndex);
+        double tempWeight = GetPoSKernelPS(currentBlockIndex, params);
         weightSum += tempWeight;
         currentBlockIndex = currentBlockIndex->pprev;
     }

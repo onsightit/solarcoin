@@ -6,8 +6,8 @@
 #ifndef BITCOIN_POW_H
 #define BITCOIN_POW_H
 
-#include "consensus/params.h"
-#include "primitives/block.h"
+#include <consensus/params.h>
+#include <primitives/block.h>
 
 #include <stdint.h>
 

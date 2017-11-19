@@ -3,14 +3,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "chain.h"
-#include "chainparams.h"
-#include "validation.h"
+#include <chain.h>
+#include <chainparams.h>
+#include <validation.h"
 
-#include "post.h"
-#include "kernel.h"
-#include "timedata.h"
-#include "util.h"
+#include <post.h>
+#include <kernel.h>
+#include <timedata.h>
+#include <util.h>
 
 /*
 * SolarCoin: PoW / PoST
@@ -36,7 +36,7 @@ double GetCurrentInterestRate(CBlockIndex* pindexPrev, const Consensus::Params& 
     {
         interestRate = twoPercentInt;
     } else {
-        double nAverageWeight = GetAverageStakeWeight(pindexPrev);
+        double nAverageWeight = GetAverageStakeWeight(pindexPrev, params);
         double inflationRate = GetCurrentInflationRate(nAverageWeight) / 100;
         // Bug fix: Should be "GetCurrentCoinSupply(pindexPrev) * COIN", but this code is no longer executed.
         interestRate = ((inflationRate * GetCurrentCoinSupply(pindexPrev, params)) / nAverageWeight) * 100;

@@ -18,7 +18,7 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
 bool CheckCoinStakeTimestamp(int64_t nTimeBlock, int64_t nTimeTx);
 unsigned int GetStakeModifierChecksum(const CBlockIndex* pindex);
 bool CheckStakeModifierCheckpoints(int nHeight, unsigned int nStakeModifierChecksum);
-double GetAverageStakeWeight(CBlockIndex* pindexPrev);
+double GetAverageStakeWeight(CBlockIndex* pindexPrev, const Consensus::Params& params);
 int64_t GetStakeModifierSelectionIntervalSection(int nSection, const Consensus::Params& params);
 int64_t GetStakeModifierSelectionInterval(const Consensus::Params& params);
 int64_t GetStakeTimeFactoredWeight(int64_t timeWeight, int64_t bnCoinDayWeight, CBlockIndex* pindexPrev, const Consensus::Params& params);
