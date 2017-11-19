@@ -68,6 +68,13 @@ public:
         return (nBits == 0);
     }
 
+    uint256 GetPoWHash() const
+    {
+        uint256 thash;
+        scrypt_1024_1_1_256(BEGIN(nVersion), BEGIN(thash));
+        return thash;
+    }
+
     uint256 GetHash() const
     {
         //return SerializeHash(*this);
@@ -147,12 +154,6 @@ public:
     std::string ToString() const;
 
     /* SolarCoin methods */
-    uint256 GetPoWHash() const
-    {
-        uint256 thash;
-        scrypt_1024_1_1_256(BEGIN(nVersion), BEGIN(thash));
-        return thash;
-    }
 
     // ppcoin: entropy bit for stake modifier if chosen by modifier
     unsigned int GetStakeEntropyBit(unsigned int nTime) const
