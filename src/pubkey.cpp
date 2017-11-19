@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "pubkey.h"
+#include <pubkey.h>
 
 #include <secp256k1.h>
 #include <secp256k1_recovery.h>
@@ -126,7 +126,6 @@ static int ecdsa_signature_parse_der_lax(const secp256k1_context* ctx, secp256k1
         return 0;
     }
     spos = pos;
-    pos += slen;
 
     /* Ignore leading zeroes in R */
     while (rlen > 0 && input[rpos] == 0) {

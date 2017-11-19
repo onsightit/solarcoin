@@ -6,9 +6,9 @@
 #ifndef BITCOIN_PUBKEY_H
 #define BITCOIN_PUBKEY_H
 
-#include "hash.h"
-#include "serialize.h"
-#include "uint256.h"
+#include <hash.h>
+#include <serialize.h>
+#include <uint256.h>
 
 #include <stdexcept>
 #include <vector>
@@ -30,7 +30,7 @@ class CKeyID : public uint160
 {
 public:
     CKeyID() : uint160() {}
-    CKeyID(const uint160& in) : uint160(in) {}
+    explicit CKeyID(const uint160& in) : uint160(in) {}
 };
 
 typedef uint256 ChainCode;
@@ -88,7 +88,7 @@ public:
     }
 
     //! Construct a public key from a byte vector.
-    CPubKey(const std::vector<unsigned char>& _vch)
+    explicit CPubKey(const std::vector<unsigned char>& _vch)
     {
         Set(_vch.begin(), _vch.end());
     }
