@@ -226,7 +226,7 @@ public:
     uint256 hashProofOfStake;
 
     // block header
-    int nVersion;
+    int32_t nVersion;
     uint256 hashPrev;
     uint256 hashMerkleRoot;
     uint32_t nTime;
