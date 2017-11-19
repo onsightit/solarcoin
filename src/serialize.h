@@ -6,7 +6,7 @@
 #ifndef BITCOIN_SERIALIZE_H
 #define BITCOIN_SERIALIZE_H
 
-#include "compat/endian.h"
+#include <compat/endian.h>
 
 #include <algorithm>
 #include <assert.h>
@@ -21,7 +21,7 @@
 #include <utility>
 #include <vector>
 
-#include "prevector.h"
+#include <prevector.h>
 
 static const unsigned int MAX_SIZE = 0x02000000;
 
@@ -267,13 +267,9 @@ uint64_t ReadCompactSize(Stream& is)
     }
     else
     {
-        // DEBUG
-        //char buffer[80];
         nSizeRet = ser_readdata64(is);
-        //sprintf(buffer, "DEBUG: nSizeRet=%lu  MAX_SIZE=%lu", (unsigned long)nSizeRet, (unsigned long)MAX_SIZE);
-        //if (nSizeRet < 0x100000000ULL)
-        //    //throw std::ios_base::failure("non-canonical ReadCompactSize()");
-        //    throw std::ios_base::failure(buffer);
+        if (nSizeRet < 0x100000000ULL)
+            throw std::ios_base::failure("non-canonical ReadCompactSize()");
     }
     if (nSizeRet > (uint64_t)MAX_SIZE)
         throw std::ios_base::failure("ReadCompactSize(): size too large");
@@ -409,7 +405,7 @@ class CVarInt
 protected:
     I &n;
 public:
-    CVarInt(I& nIn) : n(nIn) { }
+    explicit CVarInt(I& nIn) : n(nIn) { }
 
     template<typename Stream>
     void Serialize(Stream &s) const {
@@ -427,7 +423,7 @@ class CCompactSize
 protected:
     uint64_t &n;
 public:
-    CCompactSize(uint64_t& nIn) : n(nIn) { }
+    explicit CCompactSize(uint64_t& nIn) : n(nIn) { }
 
     template<typename Stream>
     void Serialize(Stream &s) const {
@@ -446,7 +442,7 @@ class LimitedString
 protected:
     std::string& string;
 public:
-    LimitedString(std::string& _string) : string(_string) {}
+    explicit LimitedString(std::string& _string) : string(_string) {}
 
     template<typename Stream>
     void Unserialize(Stream& s)

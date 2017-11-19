@@ -3,9 +3,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpc/client.h"
-#include "rpc/protocol.h"
-#include "util.h"
+#include <rpc/client.h>
+#include <rpc/protocol.h>
+#include <util.h>
 
 #include <set>
 #include <stdint.h>
@@ -115,8 +115,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "keypoolrefill", 0, "newsize" },
     { "getrawmempool", 0, "verbose" },
     { "estimatefee", 0, "nblocks" },
-    { "estimatesmartfee", 0, "nblocks" },
-    { "estimaterawfee", 0, "nblocks" },
+    { "estimatesmartfee", 0, "conf_target" },
+    { "estimaterawfee", 0, "conf_target" },
     { "estimaterawfee", 1, "threshold" },
     { "prioritisetransaction", 1, "dummy" },
     { "prioritisetransaction", 2, "fee_delta" },
@@ -129,6 +129,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "logging", 0, "include" },
     { "logging", 1, "exclude" },
     { "disconnectnode", 1, "nodeid" },
+    { "addwitnessaddress", 1, "p2sh" },
     // Echo with conversion (For testing only)
     { "echojson", 0, "arg0" },
     { "echojson", 1, "arg1" },
@@ -140,6 +141,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "echojson", 7, "arg7" },
     { "echojson", 8, "arg8" },
     { "echojson", 9, "arg9" },
+    { "rescanblockchain", 0, "start_height"},
+    { "rescanblockchain", 1, "stop_height"},
 };
 
 class CRPCConvertTable

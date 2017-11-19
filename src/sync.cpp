@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "sync.h"
+#include <sync.h>
 
-#include "util.h"
-#include "utilstrencodings.h"
+#include <util.h>
+#include <utilstrencodings.h>
 
 #include <stdio.h>
 
@@ -98,7 +98,7 @@ static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch,
     assert(false);
 }
 
-static void push_lock(void* c, const CLockLocation& locklocation, bool fTry)
+static void push_lock(void* c, const CLockLocation& locklocation)
 {
     if (lockstack.get() == nullptr)
         lockstack.reset(new LockStack);
@@ -130,7 +130,7 @@ static void pop_lock()
 
 void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry)
 {
-    push_lock(cs, CLockLocation(pszName, pszFile, nLine, fTry), fTry);
+    push_lock(cs, CLockLocation(pszName, pszFile, nLine, fTry));
 }
 
 void LeaveCritical()
@@ -155,6 +155,16 @@ void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine,
     abort();
 }
 
+void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs)
+{
+    for (const std::pair<void*, CLockLocation>& i : *lockstack) {
+        if (i.first == cs) {
+            fprintf(stderr, "Assertion failed: lock %s held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld().c_str());
+            abort();
+        }
+    }
+}
+
 void DeleteLock(void* cs)
 {
     if (!lockdata.available) {
@@ -162,7 +172,7 @@ void DeleteLock(void* cs)
         return;
     }
     boost::unique_lock<boost::mutex> lock(lockdata.dd_mutex);
-    std::pair<void*, void*> item = std::make_pair(cs, (void*)0);
+    std::pair<void*, void*> item = std::make_pair(cs, nullptr);
     LockOrders::iterator it = lockdata.lockorders.lower_bound(item);
     while (it != lockdata.lockorders.end() && it->first.first == cs) {
         std::pair<void*, void*> invitem = std::make_pair(it->first.second, it->first.first);
