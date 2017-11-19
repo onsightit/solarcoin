@@ -3,11 +3,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "keystore.h"
+#include <keystore.h>
 
-#include "key.h"
-#include "pubkey.h"
-#include "util.h"
+#include <key.h>
+#include <pubkey.h>
+#include <util.h>
 
 bool CKeyStore::AddKey(const CKey &key) {
     return AddKeyPubKey(key, key.GetPubKey());
@@ -34,6 +34,33 @@ bool CBasicKeyStore::AddKeyPubKey(const CKey& key, const CPubKey &pubkey)
     LOCK(cs_KeyStore);
     mapKeys[pubkey.GetID()] = key;
     return true;
+}
+
+bool CBasicKeyStore::HaveKey(const CKeyID &address) const
+{
+    LOCK(cs_KeyStore);
+    return mapKeys.count(address) > 0;
+}
+
+std::set<CKeyID> CBasicKeyStore::GetKeys() const
+{
+    LOCK(cs_KeyStore);
+    std::set<CKeyID> set_address;
+    for (const auto& mi : mapKeys) {
+        set_address.insert(mi.first);
+    }
+    return set_address;
+}
+
+bool CBasicKeyStore::GetKey(const CKeyID &address, CKey &keyOut) const
+{
+    LOCK(cs_KeyStore);
+    KeyMap::const_iterator mi = mapKeys.find(address);
+    if (mi != mapKeys.end()) {
+        keyOut = mi->second;
+        return true;
+    }
+    return false;
 }
 
 bool CBasicKeyStore::AddCScript(const CScript& redeemScript)

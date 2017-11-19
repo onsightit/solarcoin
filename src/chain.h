@@ -6,12 +6,11 @@
 #ifndef BITCOIN_CHAIN_H
 #define BITCOIN_CHAIN_H
 
-#include "arith_uint256.h"
-#include "primitives/block.h"
-#include "post.h"
-#include "tinyformat.h"
-#include "uint256.h"
-#include "utilmoneystr.h"
+#include <arith_uint256.h>
+#include <primitives/block.h>
+#include <post.h>
+#include <tinyformat.h>
+#include <uint256.h>
 
 #include <vector>
 
@@ -180,11 +179,11 @@ public:
     //! pointer to the index of some further predecessor of this block
     CBlockIndex* pskip;
 
-    //! Which # file this block is stored in (blk?????.dat)
-    int nFile;
-    
     //! height of the entry in the chain. The genesis block has height 0
     int nHeight;
+
+    //! Which # file this block is stored in (blk?????.dat)
+    int nFile;
 
     //! Byte offset within blk?????.dat where this block's data is stored
     unsigned int nDataPos;
@@ -194,9 +193,6 @@ public:
 
     //! (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
     arith_uint256 nChainWork;
-
-    // ppcoin: trust score of block chain
-    uint256 nChainTrust; 
 
     //! Number of transactions in this block.
     //! Note: in a potential headers-first mode, this number cannot be relied upon
@@ -208,7 +204,7 @@ public:
     unsigned int nChainTx;
 
     //! Verification status of this block. See enum BlockStatus
-    unsigned int nStatus;
+    uint32_t nStatus;
 
     int64_t nMint;
     int64_t nMoneySupply;
@@ -233,14 +229,14 @@ public:
     int nVersion;
     uint256 hashPrev;
     uint256 hashMerkleRoot;
-    unsigned int nTime;
-    unsigned int nBits;
-    unsigned int nNonce;
+    uint32_t nTime;
+    uint32_t nBits;
+    uint32_t nNonce;
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     int32_t nSequenceId;
 
-    //! (memory only) Maximum nTime in the chain upto and including this block.
+    //! (memory only) Maximum nTime in the chain up to and including this block.
     unsigned int nTimeMax;
 
     void SetNull()
@@ -248,12 +244,11 @@ public:
         phashBlock = nullptr;
         pprev = nullptr;
         pskip = nullptr;
-        nFile = 0;
         nHeight = 0;
+        nFile = 0;
         nDataPos = 0;
         nUndoPos = 0;
         nChainWork = arith_uint256();
-        nChainTrust = uint256();
         nTx = 0;
         nChainTx = 0;
         nStatus = 0;
@@ -281,7 +276,7 @@ public:
         SetNull();
     }
 
-    CBlockIndex(const CBlock& block)
+    explicit CBlockIndex(const CBlockHeader& block)
     {
         SetNull();
 
@@ -371,7 +366,7 @@ public:
         return (int64_t)nTimeMax;
     }
 
-    enum { nMedianTimeSpan=11 };
+    static constexpr int nMedianTimeSpan = 11;
 
     int64_t GetMedianTimePast() const
     {
@@ -499,12 +494,13 @@ public:
     uint256 hashNext;
 
     CDiskBlockIndex() {
+        blockHash = uint256();
         hashPrev = uint256();
         hashNext = uint256();
-        blockHash = uint256();
     }
 
     explicit CDiskBlockIndex(const CBlockIndex* pindex) : CBlockIndex(*pindex) {
+        blockHash = this->GetBlockHash();
         hashPrev = (pprev ? pprev->GetBlockHash() : uint256());
         hashNext = (pskip ? pskip->GetBlockHash() : uint256());
     }
@@ -517,7 +513,11 @@ public:
         if (!(s.GetType() & SER_GETHASH))
             READWRITE(VARINT(_nVersion));
 
+        READWRITE(blockHash);
         READWRITE(hashNext);
+        READWRITE(VARINT(nHeight));
+        READWRITE(VARINT(nStatus));
+        READWRITE(VARINT(nTx));
         if (nStatus & (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO))
             READWRITE(VARINT(nFile));
         if (nStatus & BLOCK_HAVE_DATA)
@@ -525,7 +525,6 @@ public:
         if (nStatus & BLOCK_HAVE_UNDO)
             READWRITE(VARINT(nUndoPos));
 
-        READWRITE(VARINT(nHeight));
         READWRITE(VARINT(nMint));
         READWRITE(VARINT(nMoneySupply));
         READWRITE(VARINT(nFlags));
@@ -542,9 +541,6 @@ public:
             }
         }
 
-        READWRITE(VARINT(nStatus));
-        READWRITE(VARINT(nTx));
-
         // block header
         READWRITE(this->nVersion);
         READWRITE(hashPrev);
@@ -552,7 +548,6 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
-        READWRITE(blockHash);
     }
 
     uint256 GetBlockHash() const
