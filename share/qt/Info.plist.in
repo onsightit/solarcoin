@@ -29,16 +29,16 @@
   <string>????</string>
 
   <key>CFBundleExecutable</key>
-  <string>Solarcoin-Qt</string>
+  <string>SolarCoin-Qt</string>
   
   <key>CFBundleName</key>
-  <string>Solarcoin-Qt</string>
+  <string>SolarCoin-Qt</string>
 
   <key>LSHasLocalizedDisplayName</key>
   <true/>
 
   <key>CFBundleIdentifier</key>
-  <string>org.solarcoin.Solarcoin-Qt</string>
+  <string>org.solarcoin.SolarCoin-Qt</string>
 
   <key>CFBundleURLTypes</key>
   <array>
@@ -60,7 +60,7 @@
       <key>UTTypeIdentifier</key>
       <string>org.solarcoin.paymentrequest</string>
       <key>UTTypeDescription</key>
-      <string>Solarcoin payment request</string>
+      <string>SolarCoin payment request</string>
       <key>UTTypeConformsTo</key>
       <array>
         <string>public.data</string>

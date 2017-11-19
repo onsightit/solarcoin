@@ -24,7 +24,7 @@ In case you want to build the disk image with `make deploy` (.dmg / optional), y
 
 NOTE: Building with Qt4 is still supported, however, could result in a broken UI. Building with Qt5 is recommended.
 
-Build Solarcoin Core
+Build SolarCoin Core
 ------------------------
 
 1. Clone the solarcoin source code and cd into `solarcoin`
@@ -53,19 +53,19 @@ Build Solarcoin Core
 Running
 -------
 
-Solarcoin Core is now available at `./src/solarcoind`
+SolarCoin Core is now available at `./src/solarcoind`
 
 Before running, it's recommended you create an RPC configuration file.
 
-    echo -e "rpcuser=solarcoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Solarcoin/solarcoin.conf"
+    echo -e "rpcuser=solarcoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/SolarCoin/solarcoin.conf"
 
-    chmod 600 "/Users/${USER}/Library/Application Support/Solarcoin/solarcoin.conf"
+    chmod 600 "/Users/${USER}/Library/Application Support/SolarCoin/solarcoin.conf"
 
 The first time you run solarcoind, it will start downloading the blockchain. This process could take several hours.
 
 You can monitor the download process by looking at the debug.log file:
 
-    tail -f $HOME/Library/Application\ Support/Solarcoin/debug.log
+    tail -f $HOME/Library/Application\ Support/SolarCoin/debug.log
 
 Other commands:
 -------

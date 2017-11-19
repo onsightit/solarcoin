@@ -48,9 +48,9 @@ static const int MAX_URI_LENGTH = 255;
 /* Number of frames in spinner animation */
 #define SPINNER_FRAMES 36
 
-#define QAPP_ORG_NAME "Solarcoin"
+#define QAPP_ORG_NAME "SolarCoin"
 #define QAPP_ORG_DOMAIN "solarcoin.org"
-#define QAPP_APP_NAME_DEFAULT "Solarcoin-Qt"
-#define QAPP_APP_NAME_TESTNET "Solarcoin-Qt-testnet"
+#define QAPP_APP_NAME_DEFAULT "SolarCoin-Qt"
+#define QAPP_APP_NAME_TESTNET "SolarCoin-Qt-testnet"
 
 #endif // BITCOIN_QT_GUICONSTANTS_H

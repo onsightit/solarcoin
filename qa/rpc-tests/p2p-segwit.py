@@ -1042,7 +1042,7 @@ class SegWitTest(BitcoinTestFramework):
         assert(self.test_node.last_getdata.inv[0].type == blocktype)
         self.test_node.test_witness_block(block1, True)
 
-        # Solarcoin: Blocks with nVersion < VB_TOP_BITS are rejected
+        # SolarCoin: Blocks with nVersion < VB_TOP_BITS are rejected
 
         # block2 = self.build_next_block(nVersion=4)
         # block2.solve()
@@ -1102,7 +1102,7 @@ class SegWitTest(BitcoinTestFramework):
             assert_equal(rpc_details["weight"], weight)
 
             # Upgraded node should not ask for blocks from unupgraded
-            # Solarcoin: Blocks with nVersion < VB_TOP_BITS are rejected
+            # SolarCoin: Blocks with nVersion < VB_TOP_BITS are rejected
             block4 = self.build_next_block(nVersion=(VB_TOP_BITS | (1<<15)))
             block4.solve()
             self.old_node.getdataset = set()

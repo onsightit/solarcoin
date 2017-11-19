@@ -1648,7 +1648,7 @@ class NodeConn(asyncore.dispatcher):
             vt.addrFrom.port = 0
             self.send_message(vt, True)
 
-        print('MiniNode: Connecting to Solarcoin Node IP # ' + dstaddr + ':' \
+        print('MiniNode: Connecting to SolarCoin Node IP # ' + dstaddr + ':' \
             + str(dstport))
 
         try:

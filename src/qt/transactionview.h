@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_TRANSACTIONVIEW_H
 #define BITCOIN_QT_TRANSACTIONVIEW_H
 
-#include "guiutil.h"
+#include <qt/guiutil.h>
 
 #include <QWidget>
 #include <QKeyEvent>
@@ -112,8 +112,8 @@ public Q_SLOTS:
     void chooseDate(int idx);
     void chooseType(int idx);
     void chooseWatchonly(int idx);
-    void changedPrefix(const QString &prefix);
-    void changedAmount(const QString &amount);
+    void changedAmount();
+    void changedPrefix();
     void exportClicked();
     void focusTransaction(const QModelIndex&);
 

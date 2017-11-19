@@ -19,8 +19,8 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
-            VALUE "CompanyName",        "Solarcoin"
-            VALUE "FileDescription",    PACKAGE_NAME " (GUI node for Solarcoin)"
+            VALUE "CompanyName",        "SolarCoin"
+            VALUE "FileDescription",    PACKAGE_NAME " (GUI node for SolarCoin)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
             VALUE "InternalName",       "solarcoin-qt"
             VALUE "LegalCopyright",     COPYRIGHT_STR

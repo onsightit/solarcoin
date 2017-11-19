@@ -1,15 +1,15 @@
-Solarcoin Core 0.14.2
+SolarCoin Core 0.14.2
 =====================
 
 Setup
 ---------------------
-Solarcoin Core is the original Solarcoin client and it builds the backbone of the network. However, it downloads and stores the entire history of Solarcoin transactions (which is currently several GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
+SolarCoin Core is the original SolarCoin client and it builds the backbone of the network. However, it downloads and stores the entire history of SolarCoin transactions (which is currently several GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
 
-To download Solarcoin Core, visit [solarcoin.org](https://solarcoin.org).
+To download SolarCoin Core, visit [solarcoin.org](https://solarcoin.org).
 
 Running
 ---------------------
-The following are some helpful notes on how to run Solarcoin on your native platform.
+The following are some helpful notes on how to run SolarCoin on your native platform.
 
 ### Unix
 
@@ -24,18 +24,18 @@ Unpack the files into a directory, and then run solarcoin-qt.exe.
 
 ### OS X
 
-Drag Solarcoin-Core to your applications folder, and then run Solarcoin-Core.
+Drag SolarCoin-Core to your applications folder, and then run SolarCoin-Core.
 
 ### Need Help?
 
-* See the documentation at the [Solarcoin Wiki](https://solarcoin.info/)
+* See the documentation at the [SolarCoin Wiki](https://solarcoin.info/)
 for help and more information.
 * Ask for help on [#solarcoin](http://webchat.freenode.net?channels=solarcoin) on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net?channels=solarcoin).
 * Ask for help on the [SolarcoinTalk](https://solarcointalk.io/) forums.
 
 Building
 ---------------------
-The following are developer notes on how to build Solarcoin on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
+The following are developer notes on how to build SolarCoin on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
 
 - [OS X Build Notes](build-osx.md)
 - [Unix Build Notes](build-unix.md)
@@ -45,7 +45,7 @@ The following are developer notes on how to build Solarcoin on your native platf
 
 Development
 ---------------------
-The Solarcoin repo's [root README](/README.md) contains relevant information on the development process and automated testing.
+The SolarCoin repo's [root README](/README.md) contains relevant information on the development process and automated testing.
 
 - [Developer Notes](developer-notes.md)
 - [Release Notes](release-notes.md)
@@ -62,7 +62,7 @@ The Solarcoin repo's [root README](/README.md) contains relevant information on 
 
 ### Resources
 * Discuss on the [SolarcoinTalk](https://solarcointalk.io/) forums.
-* Discuss general Solarcoin development on #solarcoin-dev on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=solarcoin-dev).
+* Discuss general SolarCoin development on #solarcoin-dev on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=solarcoin-dev).
 
 ### Miscellaneous
 - [Assets Attribution](assets-attribution.md)

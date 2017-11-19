@@ -50,7 +50,7 @@
 #include <boost/thread.hpp>
 
 #if defined(NDEBUG)
-# error "Solarcoin cannot be compiled without assertions."
+# error "SolarCoin cannot be compiled without assertions."
 #endif
 
 #define MICRO 0.000001
@@ -96,7 +96,7 @@ static void CheckBlockIndex(const Consensus::Params& consensusParams);
 /** Constant stuff for coinbase transactions we create: */
 CScript COINBASE_FLAGS;
 
-const std::string strMessageMagic = "Solarcoin Signed Message:\n";
+const std::string strMessageMagic = "SolarCoin Signed Message:\n";
 
 // Internal stuff
 namespace {

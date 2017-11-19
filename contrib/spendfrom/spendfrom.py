@@ -38,9 +38,9 @@ def check_json_precision():
 def determine_db_dir():
     """Return the default location of the solarcoin data directory"""
     if platform.system() == "Darwin":
-        return os.path.expanduser("~/Library/Application Support/Solarcoin/")
+        return os.path.expanduser("~/Library/Application Support/SolarCoin/")
     elif platform.system() == "Windows":
-        return os.path.join(os.environ['APPDATA'], "Solarcoin")
+        return os.path.join(os.environ['APPDATA'], "SolarCoin")
     return os.path.expanduser("~/.solarcoin")
 
 def read_bitcoin_config(dbdir):

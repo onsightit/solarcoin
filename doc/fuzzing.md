@@ -1,4 +1,4 @@
-Fuzz-testing Solarcoin Core
+Fuzz-testing SolarCoin Core
 ==========================
 
 A special test harness `test_solarcoin_fuzzy` is provided to provide an easy
@@ -20,7 +20,7 @@ export AFLPATH=$PWD
 Instrumentation
 ----------------
 
-To build Solarcoin Core using AFL instrumentation (this assumes that the
+To build SolarCoin Core using AFL instrumentation (this assumes that the
 `AFLPATH` was set as above):
 ```
 ./configure --disable-ccache --disable-shared --enable-tests CC=${AFLPATH}/afl-gcc CXX=${AFLPATH}/afl-g++
