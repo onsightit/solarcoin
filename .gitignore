@@ -76,7 +76,7 @@ src/qt/test/moc*.cpp
 *.qm
 Makefile
 solarcoin-qt
-Solarcoin-Qt.app
+SolarCoin-Qt.app
 
 # Unit-tests
 Makefile.test

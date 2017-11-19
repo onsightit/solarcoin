@@ -4,7 +4,7 @@ This issue tracker is only for technical issues related to solarcoin-core.
 
 General solarcoin questions and/or support requests and are best directed to the [solarcointalk.io forums](https://solarcointalk.io/).
 
-For reporting security issues, please contact the Solarcoin developers on the #solarcoin-dev Freenode IRC channel or alternatively you can email us at contact@solarcoin.org.
+For reporting security issues, please contact the SolarCoin developers on the #solarcoin-dev Freenode IRC channel or alternatively you can email us at contact@solarcoin.org.
 
 ### Describe the issue
 

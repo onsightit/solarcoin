@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copier l'adresse surlignée dans votre presse-papiers</translation>
+        <translation>Copier l'adresse sélectionnée dans le presse-papiers</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -42,8 +42,24 @@
         <translation>&amp;Supprimer</translation>
     </message>
     <message>
+        <source>Choose the address to send coins to</source>
+        <translation>Choisissez une adresse où envoyer les bitcoins</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>Choisissez une adresse où recevoir les bitcoins</translation>
+    </message>
+    <message>
         <source>C&amp;hoose</source>
-        <translation>C&amp;oisir</translation>
+        <translation>C&amp;hoisir</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>Adresses d'envoi</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>Adresses de réception</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -112,8 +128,12 @@
         <translation>Décrypter le porte-monnaie</translation>
     </message>
     <message>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <translation>Attention : Si vous chiffrez votre portefeuille et que vous perdez votre mot de passe vous &lt;b&gt; PERDREZ TOUS VOS BITCOINS&lt;/b&gt; !</translation>
+    </message>
+    <message>
         <source>Wallet encrypted</source>
-        <translation>Porte-monnaie chiffré</translation>
+        <translation>Portefeuille chiffré</translation>
     </message>
     </context>
 <context>
@@ -131,7 +151,7 @@
     <name>BitcoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
-        <translation>Signer &amp;message...</translation>
+        <translation>Signer un &amp;message...</translation>
     </message>
     <message>
         <source>Synchronizing with network...</source>
@@ -218,8 +238,8 @@
         <translation>Réindexer les blocs sur le disque...</translation>
     </message>
     <message>
-        <source>Send coins to a Solarcoin address</source>
-        <translation>Envoyer des pièces à une adresse Solarcoin</translation>
+        <source>Send coins to a Bitcoin address</source>
+        <translation>Envoyer des pièces à une adresse Bitcoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -242,8 +262,8 @@
         <translation>&amp;Vérification du message</translation>
     </message>
     <message>
-        <source>Solarcoin</source>
-        <translation>Solarcoin</translation>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -270,8 +290,8 @@
         <translation>Crypter les clé privées qui appartiennent votre portefeuille</translation>
     </message>
     <message>
-        <source>Sign messages with your Solarcoin addresses to prove you own them</source>
-        <translation>Signer vos messages avec vos adresses Solarcoin pour prouver que vous les détenez</translation>
+        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <translation>Signer vos messages avec vos adresses Bitcoin pour prouver que vous les détenez</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -290,24 +310,24 @@
         <translation>Barre d'outils des onglets</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and solarcoin: URIs)</source>
-        <translation>Demander des paiements (générer QR codes et solarcoin: URIs)</translation>
+        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <translation>Demander des paiements (générer QR codes et bitcoin: URIs)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Montrer la liste des adresses d'envois utilisées et les étiquettes</translation>
     </message>
     <message>
-        <source>Open a solarcoin: URI or payment request</source>
-        <translation>Ouvrir un solarcoin: URI ou demande de paiement</translation>
+        <source>Open a bitcoin: URI or payment request</source>
+        <translation>Ouvrir un bitcoin: URI ou demande de paiement</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
         <translation>&amp;Options de ligne de commande</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Solarcoin network</source>
-        <translation><numerusform>%n connexion active au réseau Solarcoin</numerusform><numerusform>%n connexions actives au réseau Solarcoin</numerusform></translation>
+        <source>%n active connection(s) to Bitcoin network</source>
+        <translation><numerusform>%n connexion active au réseau Bitcoin</numerusform><numerusform>%n connexions actives au réseau Bitcoin</numerusform></translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
@@ -416,7 +436,7 @@
     </message>
     <message>
         <source>Fee:</source>
-        <translation>Frais:</translation>
+        <translation>Frais :</translation>
     </message>
     <message>
         <source>Dust:</source>
@@ -477,6 +497,14 @@
     <message>
         <source>Copy amount</source>
         <translation>Copier le montant</translation>
+    </message>
+    <message>
+        <source>Copy transaction ID</source>
+        <translation>Copier l'ID de transaction</translation>
+    </message>
+    <message>
+        <source>Copy quantity</source>
+        <translation>Copier la quantité</translation>
     </message>
     <message>
         <source>Copy fee</source>
@@ -684,8 +712,8 @@
         <translation>Expert</translation>
     </message>
     <message>
-        <source>Automatically open the Solarcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Ouvrir le port du client Solarcoin automatiquement sur le routeur. Cela ne fonctionne que si votre routeur supporte l'UPnP et si la fonctionnalité est activée.</translation>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Ouvrir le port du client Bitcoin automatiquement sur le routeur. Cela ne fonctionne que si votre routeur supporte l'UPnP et si la fonctionnalité est activée.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -844,8 +872,8 @@
         <translation>Montant</translation>
     </message>
     <message>
-        <source>Enter a Solarcoin address (e.g. %1)</source>
-        <translation>Entrer une adresse Solarcoin (e.g. %1)</translation>
+        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <translation>Entrer une adresse Bitcoin (e.g. %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1179,8 +1207,16 @@
         <translation>&amp;Sauvegarder image</translation>
     </message>
     <message>
+        <source>URI</source>
+        <translation>URI</translation>
+    </message>
+    <message>
         <source>Address</source>
         <translation>Adresse</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Montant</translation>
     </message>
     <message>
         <source>Label</source>
@@ -1313,6 +1349,10 @@
         <translation>E&amp;voyer</translation>
     </message>
     <message>
+        <source>Copy quantity</source>
+        <translation>Copier la quantité</translation>
+    </message>
+    <message>
         <source>Copy amount</source>
         <translation>Copier le montant</translation>
     </message>
@@ -1327,6 +1367,10 @@
     <message>
         <source>Copy bytes</source>
         <translation>Copier les octets</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>ou</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1386,7 +1430,11 @@
     </context>
 <context>
     <name>SendConfirmationDialog</name>
-    </context>
+    <message>
+        <source>Yes</source>
+        <translation>Oui</translation>
+    </message>
+</context>
 <context>
     <name>ShutdownWindow</name>
     </context>
@@ -1526,6 +1574,10 @@
         <translation>Commentaire </translation>
     </message>
     <message>
+        <source>Amount</source>
+        <translation>Montant</translation>
+    </message>
+    <message>
         <source>true</source>
         <translation>vrai</translation>
     </message>
@@ -1546,6 +1598,10 @@
     <message>
         <source>Date</source>
         <translation>Date</translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <translation>Type</translation>
     </message>
     <message>
         <source>Label</source>
@@ -1603,12 +1659,20 @@
         <translation>Copier le montant</translation>
     </message>
     <message>
+        <source>Copy transaction ID</source>
+        <translation>Copier l'ID de transaction</translation>
+    </message>
+    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Valeurs séparées par des virgules (*.csv)</translation>
     </message>
     <message>
         <source>Date</source>
         <translation>Date</translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <translation>Type</translation>
     </message>
     <message>
         <source>Label</source>
@@ -1619,10 +1683,18 @@
         <translation>Adresse</translation>
     </message>
     <message>
+        <source>ID</source>
+        <translation>ID</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation>Échec de l'export</translation>
     </message>
-    </context>
+    <message>
+        <source>to</source>
+        <translation>à</translation>
+    </message>
+</context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     </context>
@@ -1662,8 +1734,8 @@
         <translation>Impossible de démarrer le serveur HTTP. Voir le journal de débogage pour plus de détails.</translation>
     </message>
     <message>
-        <source>Solarcoin Core</source>
-        <translation>Solarcoin Core</translation>
+        <source>Bitcoin Core</source>
+        <translation>Bitcoin Core</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>

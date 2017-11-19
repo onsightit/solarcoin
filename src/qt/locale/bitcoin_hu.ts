@@ -41,9 +41,17 @@
         <source>&amp;Delete</source>
         <translation>&amp;Törlés</translation>
     </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Cím másolása</translation>
+    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>Címke</translation>
+    </message>
     </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -62,6 +70,10 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>Új jelszó újra</translation>
+    </message>
+    <message>
+        <source>Decrypt wallet</source>
+        <translation>Tárca dekódolása</translation>
     </message>
     </context>
 <context>
@@ -158,8 +170,8 @@
         <translation>Lemezen lévő blokkok újraindexelése...</translation>
     </message>
     <message>
-        <source>Send coins to a Solarcoin address</source>
-        <translation>Solarcoin küldése megadott címre</translation>
+        <source>Send coins to a Bitcoin address</source>
+        <translation>Bitcoin küldése megadott címre</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -182,8 +194,8 @@
         <translation>Üzenet &amp;valódiságának ellenőrzése</translation>
     </message>
     <message>
-        <source>Solarcoin</source>
-        <translation>Solarcoin</translation>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -210,12 +222,12 @@
         <translation>A tárcádhoz tartozó privát kulcsok titkosítása</translation>
     </message>
     <message>
-        <source>Sign messages with your Solarcoin addresses to prove you own them</source>
-        <translation>Üzenetek aláírása a Solarcoin-címmeiddel, amivel bizonyítod, hogy a cím a sajátod</translation>
+        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <translation>Üzenetek aláírása a Bitcoin-címmeiddel, amivel bizonyítod, hogy a cím a sajátod</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Solarcoin addresses</source>
-        <translation>Üzenetek ellenőrzése, hogy valóban a megjelölt Solarcoin-címekkel vannak-e aláírva</translation>
+        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <translation>Üzenetek ellenőrzése, hogy valóban a megjelölt Bitcoin-címekkel vannak-e aláírva</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -234,8 +246,8 @@
         <translation>Fül eszköztár</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and solarcoin: URIs)</source>
-        <translation>Fizetési kérelem (QR-kódot és "solarcoin:" URI azonosítót hoz létre)</translation>
+        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <translation>Fizetési kérelem (QR-kódot és "bitcoin:" URI azonosítót hoz létre)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -246,16 +258,16 @@
         <translation>A használt fogadó címek és címkék megtekintése</translation>
     </message>
     <message>
-        <source>Open a solarcoin: URI or payment request</source>
-        <translation>"solarcoin:" URI azonosító vagy fizetési kérelem megnyitása</translation>
+        <source>Open a bitcoin: URI or payment request</source>
+        <translation>"bitcoin:" URI azonosító vagy fizetési kérelem megnyitása</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
         <translation>Paran&amp;cssor kapcsolók</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Solarcoin network</source>
-        <translation><numerusform>%n aktív kapcsolat a Solarcoin hálózathoz</numerusform><numerusform>%n aktív kapcsolat a Solarcoin hálózathoz</numerusform></translation>
+        <source>%n active connection(s) to Bitcoin network</source>
+        <translation><numerusform>%n aktív kapcsolat a Bitcoin hálózathoz</numerusform><numerusform>%n aktív kapcsolat a Bitcoin hálózathoz</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
@@ -592,16 +604,16 @@
         <translation>Szakértő</translation>
     </message>
     <message>
-        <source>Automatically open the Solarcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>A Solarcoin-kliens portjának automatikus megnyitása a routeren. Ez csak akkor működik, ha a routered támogatja az UPnP-t és az engedélyezve is van rajta.</translation>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>A Bitcoin-kliens portjának automatikus megnyitása a routeren. Ez csak akkor működik, ha a routered támogatja az UPnP-t és az engedélyezve is van rajta.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>&amp;UPnP port-feltérképezés</translation>
     </message>
     <message>
-        <source>Connect to the Solarcoin network through a SOCKS5 proxy.</source>
-        <translation>Csatlakozás a Solarcoin hálózatához SOCKS5 proxyn keresztül</translation>
+        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
+        <translation>Csatlakozás a Bitcoin hálózatához SOCKS5 proxyn keresztül</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -695,8 +707,8 @@
         <translation>Űrlap</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Solarcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>A kijelzett információ lehet, hogy elavult. A pénztárcája automatikusan szinkronizálja magát a Solarcoin hálózattal miután a kapcsolat létrejön, de ez e folyamat még nem fejeződött be.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
+        <translation>A kijelzett információ lehet, hogy elavult. A pénztárcája automatikusan szinkronizálja magát a Bitcoin hálózattal miután a kapcsolat létrejön, de ez e folyamat még nem fejeződött be.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -764,8 +776,8 @@
         <translation>Összeg</translation>
     </message>
     <message>
-        <source>Enter a Solarcoin address (e.g. %1)</source>
-        <translation>Ad meg egy Solarcoin címet (pl: %1)</translation>
+        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <translation>Ad meg egy Bitcoin címet (pl: %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1078,9 +1090,17 @@
         <source>&amp;Save Image...</source>
         <translation>&amp;Kép mentése</translation>
     </message>
+    <message>
+        <source>Label</source>
+        <translation>Címke</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>Címke</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -1285,7 +1305,7 @@
         <translation>A jelenleg kiválasztott aláírás másolása a rendszer-vágólapra</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Solarcoin address</source>
+        <source>Sign the message to prove you own this Bitcoin address</source>
         <translation>Üzenet </translation>
     </message>
     <message>
@@ -1331,9 +1351,17 @@
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>Címke</translation>
+    </message>
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Label</source>
+        <translation>Címke</translation>
+    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
@@ -1378,8 +1406,8 @@
 </translation>
     </message>
     <message>
-        <source>Solarcoin Core</source>
-        <translation>Solarcoin Core</translation>
+        <source>Bitcoin Core</source>
+        <translation>Bitcoin Core</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
@@ -1533,7 +1561,7 @@
     </message>
     <message>
         <source>Insufficient funds</source>
-        <translation>Nincs elég solarcoinod.</translation>
+        <translation>Nincs elég bitcoinod.</translation>
     </message>
     <message>
         <source>Loading block index...</source>

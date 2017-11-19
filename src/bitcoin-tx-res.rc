@@ -16,8 +16,8 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
-            VALUE "CompanyName",        "Solarcoin"
-            VALUE "FileDescription",    "solarcoin-tx (CLI Solarcoin transaction editor utility)"
+            VALUE "CompanyName",        "SolarCoin"
+            VALUE "FileDescription",    "solarcoin-tx (CLI SolarCoin transaction editor utility)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
             VALUE "InternalName",       "solarcoin-tx"
             VALUE "LegalCopyright",     COPYRIGHT_STR

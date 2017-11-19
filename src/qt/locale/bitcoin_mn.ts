@@ -126,8 +126,8 @@
         <translation>Оношилгоо ба засварын консолыг онгойлго</translation>
     </message>
     <message>
-        <source>Solarcoin</source>
-        <translation>Solarcoin</translation>
+        <source>Bitcoin</source>
+        <translation>Биткойн</translation>
     </message>
     <message>
         <source>Wallet</source>

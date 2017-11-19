@@ -142,8 +142,8 @@
         <translation>Deschide &amp;URI...</translation>
     </message>
     <message>
-        <source>Send coins to a Solarcoin address</source>
-        <translation>Trimite monedele către o adresă Solarcoin</translation>
+        <source>Send coins to a Bitcoin address</source>
+        <translation>Trimite monedele către o adresă Bitcoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -166,8 +166,8 @@
         <translation>&amp;Verifică mesajul...</translation>
     </message>
     <message>
-        <source>Solarcoin</source>
-        <translation>Solarcoin</translation>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -194,12 +194,12 @@
         <translation>Criptează cheile private care aparțin portofelului tău.</translation>
     </message>
     <message>
-        <source>Sign messages with your Solarcoin addresses to prove you own them</source>
-        <translation>Semnează mesajele cu adresa ta de Solarcoin pentru a face dovada că îți aparțin.</translation>
+        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <translation>Semnează mesajele cu adresa ta de Bitcoin pentru a face dovada că îți aparțin.</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Solarcoin addresses</source>
-        <translation>Verifică mesajele cu scopul de a asigura faptul că au fost semnate cu adresa de Solarcoin specificată.</translation>
+        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <translation>Verifică mesajele cu scopul de a asigura faptul că au fost semnate cu adresa de Bitcoin specificată.</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -214,12 +214,12 @@
         <translation>&amp;Ajutor</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and solarcoin: URIs)</source>
-        <translation>Cerere plată (generează coduri QR și solarcoin: URIs)</translation>
+        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <translation>Cerere plată (generează coduri QR și bitcoin: URIs)</translation>
     </message>
     <message>
-        <source>Open a solarcoin: URI or payment request</source>
-        <translation>Deschide un solarcoin: URI sau cerere de plată</translation>
+        <source>Open a bitcoin: URI or payment request</source>
+        <translation>Deschide un bitcoin: URI sau cerere de plată</translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -748,8 +748,8 @@
 <context>
     <name>bitcoin-core</name>
     <message>
-        <source>Solarcoin Core</source>
-        <translation>Solarcoin Core</translation>
+        <source>Bitcoin Core</source>
+        <translation>Bitcoin Core</translation>
     </message>
     <message>
         <source>Information</source>

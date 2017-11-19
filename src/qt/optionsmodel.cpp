@@ -3,25 +3,25 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include <config/bitcoin-config.h>
 #endif
 
-#include "optionsmodel.h"
+#include <qt/optionsmodel.h>
 
-#include "bitcoinunits.h"
-#include "guiutil.h"
+#include <qt/bitcoinunits.h>
+#include <qt/guiutil.h>
 
-#include "amount.h"
-#include "init.h"
-#include "validation.h" // For DEFAULT_SCRIPTCHECK_THREADS
-#include "net.h"
-#include "netbase.h"
-#include "txdb.h" // for -dbcache defaults
-#include "intro.h" 
+#include <amount.h>
+#include <init.h>
+#include <validation.h> // For DEFAULT_SCRIPTCHECK_THREADS
+#include <net.h>
+#include <netbase.h>
+#include <txdb.h> // for -dbcache defaults
+#include <qt/intro.h>
 
 #ifdef ENABLE_WALLET
-#include "wallet/wallet.h"
-#include "wallet/walletdb.h"
+#include <wallet/wallet.h>
+#include <wallet/walletdb.h>
 #endif
 
 #include <QNetworkProxy>
@@ -124,7 +124,7 @@ void OptionsModel::Init(bool resetSettings)
 
     if (!settings.contains("fUseProxy"))
         settings.setValue("fUseProxy", false);
-    if (!settings.contains("addrProxy"))
+    if (!settings.contains("addrProxy") || !settings.value("addrProxy").toString().contains(':'))
         settings.setValue("addrProxy", "127.0.0.1:9050");
     // Only try to set -proxy, if user has enabled fUseProxy
     if (settings.value("fUseProxy").toBool() && !gArgs.SoftSetArg("-proxy", settings.value("addrProxy").toString().toStdString()))
@@ -134,7 +134,7 @@ void OptionsModel::Init(bool resetSettings)
 
     if (!settings.contains("fUseSeparateProxyTor"))
         settings.setValue("fUseSeparateProxyTor", false);
-    if (!settings.contains("addrSeparateProxyTor"))
+    if (!settings.contains("addrSeparateProxyTor") || !settings.value("addrSeparateProxyTor").toString().contains(':'))
         settings.setValue("addrSeparateProxyTor", "127.0.0.1:9050");
     // Only try to set -onion, if user has enabled fUseSeparateProxyTor
     if (settings.value("fUseSeparateProxyTor").toBool() && !gArgs.SoftSetArg("-onion", settings.value("addrSeparateProxyTor").toString().toStdString()))
@@ -151,9 +151,31 @@ void OptionsModel::Init(bool resetSettings)
     language = settings.value("language").toString();
 }
 
+/** Helper function to copy contents from one QSettings to another.
+ * By using allKeys this also covers nested settings in a hierarchy.
+ */
+static void CopySettings(QSettings& dst, const QSettings& src)
+{
+    for (const QString& key : src.allKeys()) {
+        dst.setValue(key, src.value(key));
+    }
+}
+
+/** Back up a QSettings to an ini-formatted file. */
+static void BackupSettings(const fs::path& filename, const QSettings& src)
+{
+    qWarning() << "Backing up GUI settings to" << GUIUtil::boostPathToQString(filename);
+    QSettings dst(GUIUtil::boostPathToQString(filename), QSettings::IniFormat);
+    dst.clear();
+    CopySettings(dst, src);
+}
+
 void OptionsModel::Reset()
 {
     QSettings settings;
+
+    // Backup old settings to chain-specific datadir for troubleshooting
+    BackupSettings(GetDataDir(true) / "guisettings.ini.bak", settings);
 
     // Save the strDataDir setting
     QString dataDir = Intro::getDefaultDataDirectory();
@@ -441,7 +463,7 @@ void OptionsModel::setRestartRequired(bool fRequired)
     return settings.setValue("fRestartRequired", fRequired);
 }
 
-bool OptionsModel::isRestartRequired()
+bool OptionsModel::isRestartRequired() const
 {
     QSettings settings;
     return settings.value("fRestartRequired", false).toBool();
