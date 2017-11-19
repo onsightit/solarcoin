@@ -11,6 +11,7 @@
 #include <post.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <utilmoneystr.h>
 
 #include <vector>
 
@@ -177,7 +178,7 @@ public:
     CBlockIndex* pprev;
 
     //! pointer to the index of some further predecessor of this block
-    CBlockIndex* pskip;
+    CBlockIndex* pnext;
 
     //! height of the entry in the chain. The genesis block has height 0
     int nHeight;
@@ -243,32 +244,33 @@ public:
     {
         phashBlock = nullptr;
         pprev = nullptr;
-        pskip = nullptr;
-        nHeight = 0;
+        pnext = nullptr;
         nFile = 0;
         nDataPos = 0;
         nUndoPos = 0;
-        nChainWork = arith_uint256();
-        nTx = 0;
-        nChainTx = 0;
         nStatus = 0;
-        nSequenceId = 0;
-        nTimeMax = 0;
+        nTx = 0;
+        nHeight = 0;
         nMint = 0;
         nMoneySupply = 0;
         nFlags = 0;
         nStakeModifier = 0;
-        nStakeModifierChecksum = 0;
-        hashProofOfStake = uint256();
         prevoutStake.SetNull();
         nStakeTime = 0;
-
+        hashProofOfStake = uint256();
         nVersion       = 0;
         hashPrev       = uint256();
         hashMerkleRoot = uint256();
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
+
+        nChainWork = arith_uint256();
+        nChainTx = 0;
+        nSequenceId = 0;
+        nTimeMax = 0;
+        nStakeModifierChecksum = 0;
+
     }
 
     CBlockIndex()
@@ -276,7 +278,7 @@ public:
         SetNull();
     }
 
-    explicit CBlockIndex(const CBlockHeader& block)
+    CBlockIndex(const CBlock& block)
     {
         SetNull();
 
@@ -303,7 +305,7 @@ public:
     }
 
 
-    CBlockIndex(const CBlockHeader& block)
+    explicit CBlockIndex(const CBlockHeader& block)
     {
         SetNull();
 
@@ -434,8 +436,8 @@ public:
 
     std::string ToVerboseString() const
     {
-        return strprintf("CBlockIndex(nprev=%p, pskip=%p, nFile=%u, nBlockPos=%-6d nHeight=%d, nMint=%s, nMoneySupply=%s, nFlags=(%s)(%d)(%s), nStakeModifier=%016x, nStakeModifierChecksum=%08x, hashProofOfStake=%s, prevoutStake=(%s), nStakeTime=%d merkle=%s, hashBlock=%s)",
-            pprev, pskip, nFile, nDataPos, nHeight,
+        return strprintf("CBlockIndex(nprev=%p, pnext=%p, nFile=%u, nBlockPos=%-6d nHeight=%d, nMint=%s, nMoneySupply=%s, nFlags=(%s)(%d)(%s), nStakeModifier=%016x, nStakeModifierChecksum=%08x, hashProofOfStake=%s, prevoutStake=(%s), nStakeTime=%d merkle=%s, hashBlock=%s)",
+            pprev, pnext, nFile, nDataPos, nHeight,
             FormatMoney(nMint).c_str(), FormatMoney(nMoneySupply).c_str(),
             GeneratedStakeModifier() ? "MOD" : "-", GetStakeEntropyBit(), IsProofOfStake()? "PoS" : "PoW",
             nStakeModifier, nStakeModifierChecksum,
@@ -500,9 +502,8 @@ public:
     }
 
     explicit CDiskBlockIndex(const CBlockIndex* pindex) : CBlockIndex(*pindex) {
-        blockHash = this->GetBlockHash();
         hashPrev = (pprev ? pprev->GetBlockHash() : uint256());
-        hashNext = (pskip ? pskip->GetBlockHash() : uint256());
+        hashNext = (pnext ? pnext->GetBlockHash() : uint256());
     }
 
     ADD_SERIALIZE_METHODS;
@@ -513,11 +514,8 @@ public:
         if (!(s.GetType() & SER_GETHASH))
             READWRITE(VARINT(_nVersion));
 
-        READWRITE(blockHash);
         READWRITE(hashNext);
         READWRITE(VARINT(nHeight));
-        READWRITE(VARINT(nStatus));
-        READWRITE(VARINT(nTx));
         if (nStatus & (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO))
             READWRITE(VARINT(nFile));
         if (nStatus & BLOCK_HAVE_DATA)
@@ -548,6 +546,10 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+        READWRITE(blockHash);
+
+        READWRITE(VARINT(nStatus));
+        READWRITE(VARINT(nTx));
     }
 
     uint256 GetBlockHash() const

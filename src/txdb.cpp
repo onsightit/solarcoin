@@ -275,25 +275,25 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                 // Construct block index object
                 CBlockIndex* pindexNew      = insertBlockIndex(diskindex.GetBlockHash());
                 pindexNew->pprev            = insertBlockIndex(diskindex.hashPrev);
-                pindexNew->pskip            = insertBlockIndex(diskindex.hashNext);
-                pindexNew->nFile            = diskindex.nFile;
-                pindexNew->nDataPos         = diskindex.nDataPos;
-                pindexNew->nUndoPos         = diskindex.nUndoPos;
-                pindexNew->nStatus          = diskindex.nStatus;
-                pindexNew->nTx              = diskindex.nTx;
+                pindexNew->pnext            = insertBlockIndex(diskindex.hashNext); // SolarCoin:
                 pindexNew->nHeight          = diskindex.nHeight;
-                pindexNew->nMint            = diskindex.nMint;
-                pindexNew->nMoneySupply     = diskindex.nMoneySupply;
-                pindexNew->nFlags           = diskindex.nFlags;
-                pindexNew->nStakeModifier   = diskindex.nStakeModifier;
-                pindexNew->prevoutStake     = diskindex.prevoutStake;
-                pindexNew->nStakeTime       = diskindex.nStakeTime;
-                pindexNew->hashProofOfStake = diskindex.hashProofOfStake;
+                pindexNew->nFile            = diskindex.nFile;
+                pindexNew->nDataPos         = diskindex.nDataPos; // SolarCoin: was nBlockPos
+                pindexNew->nUndoPos         = diskindex.nUndoPos;
                 pindexNew->nVersion         = diskindex.nVersion;
                 pindexNew->hashMerkleRoot   = diskindex.hashMerkleRoot;
                 pindexNew->nTime            = diskindex.nTime;
                 pindexNew->nBits            = diskindex.nBits;
                 pindexNew->nNonce           = diskindex.nNonce;
+                pindexNew->nMint            = diskindex.nMint; // SolarCoin:
+                pindexNew->nMoneySupply     = diskindex.nMoneySupply; // SolarCoin:
+                pindexNew->nFlags           = diskindex.nFlags; // SolarCoin:
+                pindexNew->nStakeModifier   = diskindex.nStakeModifier; // SolarCoin:
+                pindexNew->prevoutStake     = diskindex.prevoutStake; // SolarCoin:
+                pindexNew->nStakeTime       = diskindex.nStakeTime; // SolarCoin:
+                pindexNew->hashProofOfStake = diskindex.hashProofOfStake; // SolarCoin:
+                pindexNew->nStatus          = diskindex.nStatus;
+                pindexNew->nTx              = diskindex.nTx;
 
                 // Solarcoin: Disable PoW Sanity check while loading block index from disk.
                 // We use the sha256 hash for the block index for performance reasons, which is recorded for later use.

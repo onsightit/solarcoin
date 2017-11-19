@@ -69,7 +69,7 @@ CBlockIndex* CChain::FindEarliestAtLeast(int64_t nTime) const
 /** Turn the lowest '1' bit in the binary representation of a number into a '0'. */
 int static inline InvertLowestOne(int n) { return n & (n - 1); }
 
-/** Compute what height to jump back to with the CBlockIndex::pskip pointer. */
+/** Compute what height to jump back to with the CBlockIndex::pnext pointer. */
 int static inline GetSkipHeight(int height) {
     if (height < 2)
         return 0;
@@ -90,12 +90,12 @@ CBlockIndex* CBlockIndex::GetAncestor(int height)
     while (heightWalk > height) {
         int heightSkip = GetSkipHeight(heightWalk);
         int heightSkipPrev = GetSkipHeight(heightWalk - 1);
-        if (pindexWalk->pskip != nullptr &&
+        if (pindexWalk->pnext != nullptr &&
             (heightSkip == height ||
              (heightSkip > height && !(heightSkipPrev < heightSkip - 2 &&
                                        heightSkipPrev >= height)))) {
-            // Only follow pskip if pprev->pskip isn't better than pskip->pprev.
-            pindexWalk = pindexWalk->pskip;
+            // Only follow pnext if pprev->pnext isn't better than pnext->pprev.
+            pindexWalk = pindexWalk->pnext;
             heightWalk = heightSkip;
         } else {
             assert(pindexWalk->pprev);
@@ -114,7 +114,7 @@ const CBlockIndex* CBlockIndex::GetAncestor(int height) const
 void CBlockIndex::BuildSkip()
 {
     if (pprev)
-        pskip = pprev->GetAncestor(GetSkipHeight(nHeight));
+        pnext = pprev->GetAncestor(GetSkipHeight(nHeight));
 }
 
 arith_uint256 GetBlockProof(const CBlockIndex& block)
