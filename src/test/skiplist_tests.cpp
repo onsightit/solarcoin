@@ -26,10 +26,10 @@ BOOST_AUTO_TEST_CASE(skiplist_test)
 
     for (int i=0; i<SKIPLIST_LENGTH; i++) {
         if (i > 0) {
-            BOOST_CHECK(vIndex[i].pskip == &vIndex[vIndex[i].pskip->nHeight]);
-            BOOST_CHECK(vIndex[i].pskip->nHeight < i);
+            BOOST_CHECK(vIndex[i].pnext == &vIndex[vIndex[i].pnext->nHeight]);
+            BOOST_CHECK(vIndex[i].pnext->nHeight < i);
         } else {
-            BOOST_CHECK(vIndex[i].pskip == nullptr);
+            BOOST_CHECK(vIndex[i].pnext == nullptr);
         }
     }
 

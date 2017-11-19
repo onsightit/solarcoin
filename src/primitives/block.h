@@ -6,10 +6,14 @@
 #ifndef BITCOIN_PRIMITIVES_BLOCK_H
 #define BITCOIN_PRIMITIVES_BLOCK_H
 
+#include <hash.h>
+#include <crypto/common.h>
+#include <crypto/scrypt.h>
 #include <primitives/transaction.h>
 #include <serialize.h>
 #include <uint256.h>
 #include <util.h>
+#include <utilstrencodings.h>
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
@@ -64,9 +68,11 @@ public:
         return (nBits == 0);
     }
 
-    uint256 GetHash() const;
-
-    uint256 GetPoWHash() const;
+    uint256 GetHash() const
+    {
+        //return SerializeHash(*this);
+        return Hash(BEGIN(nVersion), END(nNonce));
+    }
 
     int64_t GetBlockTime() const
     {
@@ -103,7 +109,6 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(*(CBlockHeader*)this);
-        //READWRITE(vtx);
         // PoST: ConnectBlock depends on vtx following header to generate CDiskTxPos
         if (!(s.GetType() & (SER_GETHASH|SER_BLOCKHEADERONLY))) {
             READWRITE(vtx);
@@ -141,7 +146,14 @@ public:
 
     std::string ToString() const;
 
-    /* SolarCoin PoS methods */
+    /* SolarCoin methods */
+    uint256 GetPoWHash() const
+    {
+        uint256 thash;
+        scrypt_1024_1_1_256(BEGIN(nVersion), BEGIN(thash));
+        return thash;
+    }
+
     // ppcoin: entropy bit for stake modifier if chosen by modifier
     unsigned int GetStakeEntropyBit(unsigned int nTime) const
     {
@@ -169,7 +181,6 @@ public:
         const CTransaction& tx = *vtx[1];
         return IsProofOfStake() ? std::make_pair(tx.vin[0].prevout, tx.nTime) : std::make_pair(COutPoint(), (unsigned int)0);
     }
-
 };
 
 /** Describes a place in the block chain to another node such that if the
