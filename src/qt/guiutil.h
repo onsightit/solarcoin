@@ -34,6 +34,20 @@ QT_END_NAMESPACE
  */
 namespace GUIUtil
 {
+    extern int TOOLBAR_WIDTH;
+    extern int TOOLBAR_ICON_WIDTH;
+    extern int TOOLBAR_ICON_HEIGHT;
+    extern int HEADER_WIDTH;
+    extern int HEADER_HEIGHT;
+    extern int BUTTON_WIDTH;
+    extern int BUTTON_HEIGHT;
+    extern int FRAMEBLOCKS_LABEL_WIDTH;
+    extern int WINDOW_MIN_WIDTH;
+    extern int WINDOW_MIN_HEIGHT;
+    extern int STATUSBAR_ICONSIZE;
+    extern int STATUSBAR_MARGIN;
+    extern int STATUSBAR_HEIGHT;
+    
     // Common stylesheets
     extern QString veriStyleSheet;
     extern QString veriAskPassphrasePageStyleSheet;
