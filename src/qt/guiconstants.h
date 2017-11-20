@@ -34,6 +34,13 @@ static const bool DEFAULT_SPLASHSCREEN = true;
 /* Transaction list -- TX status decoration - default color */
 #define COLOR_BLACK QColor(0, 0, 0)
 
+/* Custom colors / fonts */
+#define STR_COLOR QString("#cc6600")
+#define STR_COLOR_LT QString("#ff9614")
+#define STR_COLOR_HOVER QString("#ffd114")
+#define STR_COLOR_TTBG QString("#cc6600")
+#define STR_FONT_COLOR QString("#444748")
+
 /* Tooltips longer than this (in characters) are converted into rich text,
    so that they can be word-wrapped.
  */
