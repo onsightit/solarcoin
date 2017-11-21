@@ -26,15 +26,14 @@ class CBlockHeader
 {
 public:
     // header
-    static const int LEGACY_VERSION_1 = 1;
     static const int LEGACY_VERSION_2 = 2;
     static const int CURRENT_VERSION = 3;
-    int32_t nVersion;
+    int nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
-    uint32_t nTime;
-    uint32_t nBits;
-    uint32_t nNonce;
+    unsigned int nTime;
+    unsigned int nBits;
+    unsigned int nNonce;
 
     CBlockHeader()
     {

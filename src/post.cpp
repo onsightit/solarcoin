@@ -379,7 +379,6 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 {
     int DiffMode = (pindexLast->nHeight+1 >= 310000 || fTestNet ? 2 : 1);
 
-    LogPrintf("DEBUG: GetNextWorkRequired(): DiffMode = %d\n", DiffMode);
     if (DiffMode == 1) {
         return GetNextWorkRequired_V1(pindexLast, pblock, params); // nHeight_Version2 = 208440 (less than 310000)
     } else {
