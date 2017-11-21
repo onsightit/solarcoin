@@ -56,6 +56,7 @@
 #include <QTimer>
 #include <QToolBar>
 #include <QVBoxLayout>
+#include <QFontDatabase>
 
 #if QT_VERSION < 0x050000
 #include <QTextDocument>
@@ -77,6 +78,8 @@ const std::string BitcoinGUI::DEFAULT_UIPLATFORM =
 /** Display name for default wallet name. Uses tilde to avoid name
  * collisions in the future with additional wallets */
 const QString BitcoinGUI::DEFAULT_WALLET = "~Default";
+
+bool resizeGUICalled = false;
 
 BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *networkStyle, QWidget *parent) :
     QMainWindow(parent),
@@ -128,6 +131,21 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
         // Restore failed (perhaps missing setting), center the window
         move(QApplication::desktop()->availableGeometry().center() - frameGeometry().center());
     }
+
+    QRect screenSize = QApplication::desktop()->availableGeometry(QApplication::desktop()->primaryScreen());
+    //QRect screenSize = QRect(0, 0, 1024, 728); // for testing
+    if (screenSize.height() <= GUIUtil::WINDOW_MIN_HEIGHT)
+    {
+        GUIUtil::refactorGUI(screenSize);
+    }
+    setMinimumSize(GUIUtil::WINDOW_MIN_WIDTH, GUIUtil::WINDOW_MIN_HEIGHT);
+    resizeGUI();
+    setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, size(), screenSize));
+
+    QFontDatabase::addApplicationFont(":fonts/Lato-Bold");
+    QFontDatabase::addApplicationFont(":fonts/Lato-Regular");
+    GUIUtil::setFontPixelSizes();
+    qApp->setFont(qFont);
 
     QString windowTitle = tr(PACKAGE_NAME) + " - ";
 #ifdef ENABLE_WALLET
@@ -463,15 +481,17 @@ void BitcoinGUI::createToolBars()
         QToolBar *toolbar = addToolBar(tr("Tabs toolbar"));
         toolbar->setContextMenuPolicy(Qt::PreventContextMenu);
         toolbar->setMovable(false);
-        
+
+        addToolBar(Qt::LeftToolBarArea, toolbar);
+        toolbar->setMovable(false);
         toolbar->setAutoFillBackground(true);
         toolbar->setContentsMargins(0,0,0,0);
         toolbar->layout()->setSpacing(0);
-        toolbar->setOrientation(Qt::Vertical);
         toolbar->setIconSize(QSize(GUIUtil::TOOLBAR_ICON_WIDTH,GUIUtil::TOOLBAR_ICON_HEIGHT));
         toolbar->setFixedWidth(GUIUtil::TOOLBAR_WIDTH);
-        
-        toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        toolbar->setOrientation(Qt::Vertical);
+        toolbar->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+
         toolbar->addAction(overviewAction);
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
@@ -644,6 +664,15 @@ void BitcoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
     }
 }
 #endif
+
+void BitcoinGUI::resizeGUI()
+{
+    resizeGUICalled = true;
+
+    resize(GUIUtil::WINDOW_MIN_WIDTH, GUIUtil::WINDOW_MIN_HEIGHT);
+
+    resizeGUICalled = false;
+}
 
 void BitcoinGUI::optionsClicked()
 {

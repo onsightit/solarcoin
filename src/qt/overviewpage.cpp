@@ -121,7 +121,37 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     currentWatchImmatureBalance(-1),
     txdelegate(new TxViewDelegate(platformStyle, this))
 {
+    //ui->setupUi(this);
+
+    // Setup header and styles
+    if (GUIUtil::fNoHeaders)
+        GUIUtil::header(this, QString(""));
+    else if (GUIUtil::fSmallHeaders)
+        GUIUtil::header(this, QString(":images/headerOverviewSmall"));
+    else
+        GUIUtil::header(this, QString(":images/headerOverview"));
+
     ui->setupUi(this);
+    this->layout()->setContentsMargins(0, 0 + GUIUtil::HEADER_HEIGHT, 0, 0);
+
+    // try to make more room for small screens
+    /*
+    if (GUIUtil::fNoHeaders) {
+        ui->gridLayout_3->layout()->setContentsMargins(0, 10, 10, 0);
+    }
+    */
+
+    ui->labelBalance->setFont(qFontLargerBold);
+    //ui->labelTransactions->setFont(qFontLargerBold);
+
+    //ui->labelSpendableText->setFont(qFont);
+    ui->labelSpendable->setFont(qFont);
+    //ui->labelStakeText->setFont(qFont);
+    //ui->labelStake->setFont(qFont);
+    //ui->labelUnconfirmedText->setFont(qFont);
+    ui->labelUnconfirmed->setFont(qFont);
+    ui->labelTotalText->setFont(qFont);
+    ui->labelTotal->setFont(qFont);
 
     // use a SingleColorIcon for the "out of sync warning" icon
     QIcon icon = platformStyle->SingleColorIcon(":/icons/warning");
