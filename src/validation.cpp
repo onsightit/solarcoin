@@ -2995,17 +2995,18 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
 {
     assert(pindexPrev != nullptr);
     const int nHeight = pindexPrev->nHeight + 1;
+    bool fPoW = block.nVersion <= CBlockHeader::LEGACY_VERSION_2 ? true : false;
 
     const Consensus::Params& consensusParams = params.GetConsensus();
-    if (pindexPrev->IsProofOfStake()) {
-        // Check proof of stake
-        if (block.nBits != GetNextTargetRequired(pindexPrev, true, consensusParams)) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of stake");
-        }
-    } else {
+    if (fPoW) {
         // Check proof of work
         if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams)) {
             return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
+        }
+    } else {
+        // Check proof of stake
+        if (block.nBits != GetNextTargetRequired(pindexPrev, !fPoW, consensusParams)) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of stake");
         }
     }
 
