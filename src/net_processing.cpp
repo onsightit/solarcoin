@@ -2560,10 +2560,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     {
         std::vector<CBlockHeader> headers;
 
-        LogPrintf("DEBUG: Processing HEADERS pfrom=%s\n", pfrom->addr.ToString().c_str());
-
         // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
         unsigned int nCount = ReadCompactSize(vRecv);
+        LogPrintf("DEBUG: Processing (%u) HEADERS pfrom=%s\n", nCount, pfrom->addr.ToString().c_str());
         if (nCount > MAX_HEADERS_RESULTS) {
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 20);
@@ -2572,7 +2571,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         headers.resize(nCount);
         for (unsigned int n = 0; n < nCount; n++) {
             vRecv >> headers[n];
-            ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
+            // DEBUG: ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
         }
 
         // Headers received via a HEADERS message should be valid, and reflect
