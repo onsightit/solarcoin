@@ -34,6 +34,8 @@ QT_END_NAMESPACE
  */
 namespace GUIUtil
 {
+    extern bool fNoHeaders;
+    extern bool fSmallHeaders;
     extern int TOOLBAR_WIDTH;
     extern int TOOLBAR_ICON_WIDTH;
     extern int TOOLBAR_ICON_HEIGHT;
@@ -52,6 +54,11 @@ namespace GUIUtil
     extern QString veriStyleSheet;
     extern QString veriAskPassphrasePageStyleSheet;
     extern QGraphicsView *header(QWidget *parent, QString backgroundImage);
+
+    void refactorGUI(QRect screenSize);
+    int pointsToPixels(int points);
+    void setFontPixelSize(QFont *font);
+    void setFontPixelSizes();
 
     // Create human-readable string from date
     QString dateTimeStr(const QDateTime &datetime);

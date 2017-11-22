@@ -78,6 +78,8 @@ extern double NSAppKitVersionNumber;
 
 namespace GUIUtil {
 
+bool fNoHeaders = false;
+bool fSmallHeaders = false;
 int TOOLBAR_WIDTH = 100;
 int TOOLBAR_ICON_WIDTH = TOOLBAR_WIDTH;
 int TOOLBAR_ICON_HEIGHT = 48;
@@ -85,6 +87,87 @@ int HEADER_WIDTH = 1040;
 int HEADER_HEIGHT = 160;
 int BUTTON_WIDTH = 140;
 int BUTTON_HEIGHT = 27;
+int FRAMEBLOCKS_LABEL_WIDTH = 100;
+int WINDOW_MIN_WIDTH = TOOLBAR_WIDTH + HEADER_WIDTH;
+#ifdef Q_OS_WIN
+int WINDOW_MIN_HEIGHT = 710;
+#else
+#ifdef Q_OS_MAC
+int WINDOW_MIN_HEIGHT = 700;
+#else
+int WINDOW_MIN_HEIGHT = 714;
+#endif
+#endif
+int STATUSBAR_ICONSIZE = 16;
+int STATUSBAR_MARGIN = 10;
+int STATUSBAR_HEIGHT = 32;
+
+void refactorGUI(QRect screenSize)
+{
+    // Set the new geometry
+#ifdef Q_OS_WIN
+    int newHeight = screenSize.height() - 40;
+#else
+#ifdef Q_OS_MAC
+    int newHeight = screenSize.height() - 30;
+#else
+    int newHeight = screenSize.height() - 25;
+#endif
+#endif
+    int newWidth = WINDOW_MIN_WIDTH;
+    if (screenSize.width() < newWidth - 2)
+    {
+        newWidth = screenSize.width() - 2;
+        STATUSBAR_MARGIN = 0;
+        TOOLBAR_WIDTH = 90;
+        TOOLBAR_ICON_WIDTH = TOOLBAR_WIDTH;
+        HEADER_WIDTH = newWidth - TOOLBAR_WIDTH;
+    }
+    if (screenSize.height() <= 600)
+    {
+        TOOLBAR_ICON_HEIGHT = 32;
+        HEADER_HEIGHT = 0;
+        fNoHeaders = true;
+    }
+    else if (screenSize.height() < 728) // 728px if OS taskbar is not hidden
+    {
+        TOOLBAR_ICON_HEIGHT = 32;
+        HEADER_HEIGHT = 32;
+        fNoHeaders = true;
+    }
+    else // Default small wallet at 728px to 768px
+    {
+        TOOLBAR_ICON_HEIGHT = 34;
+        HEADER_HEIGHT = 85;
+        fSmallHeaders = true;
+    }
+
+    WINDOW_MIN_WIDTH = TOOLBAR_WIDTH + HEADER_WIDTH;
+    WINDOW_MIN_HEIGHT = newHeight;
+}
+
+int pointsToPixels(int points) { return(points * 4 / 3); }
+
+void setFontPixelSize(QFont *font)
+{
+    font->setPixelSize(pointsToPixels(font->pointSize()));
+}
+
+void setFontPixelSizes()
+{
+    setFontPixelSize((QFont *)&qFontSmallest);
+    setFontPixelSize((QFont *)&qFontSmaller);
+    setFontPixelSize((QFont *)&qFontSmall);
+    setFontPixelSize((QFont *)&qFont);
+    setFontPixelSize((QFont *)&qFontLarge);
+    setFontPixelSize((QFont *)&qFontLarger);
+    setFontPixelSize((QFont *)&qFontSmallerBold);
+    setFontPixelSize((QFont *)&qFontSmallBold);
+    setFontPixelSize((QFont *)&qFontBold);
+    setFontPixelSize((QFont *)&qFontLargeBold);
+    setFontPixelSize((QFont *)&qFontLargerBold);
+}
+
 
 // Common SolarCoin stylesheets
 QString veriCentralWidgetStyleSheet = QString("QStackedWidget { background: white; } ");

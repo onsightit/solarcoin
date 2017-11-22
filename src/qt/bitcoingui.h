@@ -208,6 +208,8 @@ private Q_SLOTS:
     /** Show open dialog */
     void openClicked();
 #endif // ENABLE_WALLET
+    /**Resize GUI window*/
+    void resizeGUI();
     /** Show configuration dialog */
     void optionsClicked();
     /** Show about dialog */
