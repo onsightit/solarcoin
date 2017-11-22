@@ -3006,6 +3006,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
     } else {
         // Check proof of stake
         if (block.nBits != GetNextTargetRequired(pindexPrev, !fPoW, consensusParams)) {
+            LogPrintf("DEBUG: block.nBits=%u, GetNextTargetRequired.nBits=%u\n", block.nBits, GetNextTargetRequired(pindexPrev, !fPoW, consensusParams));
             return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of stake");
         }
     }

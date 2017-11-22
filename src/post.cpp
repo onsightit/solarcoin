@@ -145,7 +145,8 @@ unsigned int GetNextTargetRequiredV2(const CBlockIndex* pindexLast, bool fProofO
     // ppcoin: target change every block
     // ppcoin: retarget with exponential moving toward target spacing
     arith_uint256 bnNew;
-    bnNew.SetCompact(pindexPrev->nBits);
+    // DEBUG: bnNew.SetCompact(pindexPrev->nBits);
+    bnNew.SetCompact(pindexPrevPrev->nBits);
     int64_t nInterval = params.DifficultyAdjustmentInterval_V2();
     bnNew *= ((nInterval - 1) * params.nTargetSpacing + nActualSpacing + nActualSpacing);
     bnNew /= ((nInterval + 1) * params.nTargetSpacing);
