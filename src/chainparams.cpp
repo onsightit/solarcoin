@@ -87,6 +87,7 @@ public:
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); 
         consensus.posLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // SolarCoin: proof-of-stake limit
         consensus.nTargetSpacing = 1 * 60; // SolarCoin: 1 minute
+        consensus.nTargetTimespan = 16 * 60; // SolarCoin: 16 minutes for PoST
         consensus.nTargetTimespan_Version1 = 24 * 60 * 60; // 1 day
         consensus.nTargetTimespan_Version2 = consensus.DifficultyAdjustmentInterval_V2() * consensus.nTargetSpacing; // 15 minutes
         consensus.nHeight_Version2 = 208440;

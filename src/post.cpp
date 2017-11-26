@@ -92,46 +92,14 @@ int64_t GetProofOfStakeTimeReward(int64_t nStakeTime, int64_t nFees, CBlockIndex
     return nSubsidy + nFees;
 }
 
-// Target adjustment V1
-unsigned int GetNextTargetRequiredV1(const CBlockIndex* pindexLast, bool fProofOfStake, const Consensus::Params& params)
-{
-    arith_uint256 bnTargetLimit = fProofOfStake ? UintToArith256(params.posLimit) : UintToArith256(params.powLimit);
-    
-    if (pindexLast == nullptr)
-        return bnTargetLimit.GetCompact(); // genesis block
-
-    const CBlockIndex* pindexPrev = GetLastBlockIndex(pindexLast, fProofOfStake);
-    if (pindexPrev->pprev == nullptr)
-        return bnTargetLimit.GetCompact(); // first block
-    const CBlockIndex* pindexPrevPrev = GetLastBlockIndex(pindexPrev->pprev, fProofOfStake);
-    if (pindexPrevPrev->pprev == nullptr)
-        return bnTargetLimit.GetCompact(); // second block
-
-    int64_t nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
-
-    // ppcoin: target change every block
-    // ppcoin: retarget with exponential moving toward target spacing
-    arith_uint256 bnNew;
-    bnNew.SetCompact(pindexPrev->nBits);
-    int64_t nInterval = params.DifficultyAdjustmentInterval_V1();
-    bnNew *= ((nInterval - 1) * params.nTargetSpacing + nActualSpacing + nActualSpacing);
-    bnNew /= ((nInterval + 1) * params.nTargetSpacing);
-
-    if (bnNew > bnTargetLimit)
-        bnNew = bnTargetLimit;
-
-    return bnNew.GetCompact();
-}
-
-// Target adjustment V2
-unsigned int GetNextTargetRequiredV2(const CBlockIndex* pindexLast, bool fProofOfStake, const Consensus::Params& params)
+// PoST Target adjustment
+unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake, const Consensus::Params& params)
 {
     arith_uint256 bnTargetLimit = fProofOfStake ? UintToArith256(params.posLimit) : UintToArith256(params.powLimit);
 
     if (pindexLast == nullptr)
         return bnTargetLimit.GetCompact(); // genesis block
 
-    // TODO: Latest test made it here (2017/11/23).
     const CBlockIndex* pindexPrev = GetLastBlockIndex(pindexLast, fProofOfStake);
     if (pindexPrev->pprev == nullptr)
         return bnTargetLimit.GetCompact(); // first block
@@ -147,8 +115,8 @@ unsigned int GetNextTargetRequiredV2(const CBlockIndex* pindexLast, bool fProofO
     // ppcoin: retarget with exponential moving toward target spacing
     arith_uint256 bnNew;
     // DEBUG: bnNew.SetCompact(pindexPrev->nBits);
-    bnNew.SetCompact(pindexPrevPrev->nBits);
-    int64_t nInterval = params.DifficultyAdjustmentInterval_V2();
+    bnNew.SetCompact(pindexPrev->nBits);
+    int64_t nInterval = params.nTargetTimespan / params.nTargetSpacing;
     bnNew *= ((nInterval - 1) * params.nTargetSpacing + nActualSpacing + nActualSpacing);
     bnNew /= ((nInterval + 1) * params.nTargetSpacing);
 
@@ -158,19 +126,6 @@ unsigned int GetNextTargetRequiredV2(const CBlockIndex* pindexLast, bool fProofO
     return bnNew.GetCompact();
 }
 
-// PoST Target adjustment
-unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake, const Consensus::Params& params)
-{
-    int DiffMode = (pindexLast->nHeight+1 >= 310000 || fTestNet ? 2 : 1);
-
-    LogPrintf("DEBUG: GetNextTargetRequired(): DiffMode = %d\n", DiffMode);
-    if (DiffMode == 1) {
-        return GetNextTargetRequiredV1(pindexLast, fProofOfStake, params);
-    } else {
-        return GetNextTargetRequiredV2(pindexLast, fProofOfStake, params);
-    }
-}
-
 // PoW Difficulty adjustment
 unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, uint64_t TargetBlocksSpacingSeconds, uint64_t PastBlocksMin, uint64_t PastBlocksMax, const Consensus::Params& params) {
 
@@ -178,7 +133,6 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, uint64_t Ta
     arith_uint256 bnStartDiff        = (bnProofOfWorkLimit >> 6);
 
     if (pindexLast->nHeight+1 == 160 && !fTestNet) {
-        LogPrintf("DEBUG: Height 160: %08x %s\n", bnStartDiff.GetCompact(), ArithToUint256(bnStartDiff).ToString().c_str());
         return bnStartDiff.GetCompact();
     }
 

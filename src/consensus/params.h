@@ -76,6 +76,7 @@ struct Params {
     uint256 powLimit; 
     uint256 posLimit;
     int64_t nTargetSpacing;
+    int64_t nTargetTimespan; // SolarCoin: PoST
     int64_t nTargetTimespan_Version1;
     int64_t nTargetTimespan_Version2;
     int64_t nInterval_Version2;
