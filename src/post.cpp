@@ -92,7 +92,7 @@ int64_t GetProofOfStakeTimeReward(int64_t nStakeTime, int64_t nFees, CBlockIndex
     return nSubsidy + nFees;
 }
 
-// Target adjustment V2
+// Target adjustment V1
 unsigned int GetNextTargetRequiredV1(const CBlockIndex* pindexLast, bool fProofOfStake, const Consensus::Params& params)
 {
     arith_uint256 bnTargetLimit = fProofOfStake ? UintToArith256(params.posLimit) : UintToArith256(params.powLimit);
@@ -127,10 +127,11 @@ unsigned int GetNextTargetRequiredV1(const CBlockIndex* pindexLast, bool fProofO
 unsigned int GetNextTargetRequiredV2(const CBlockIndex* pindexLast, bool fProofOfStake, const Consensus::Params& params)
 {
     arith_uint256 bnTargetLimit = fProofOfStake ? UintToArith256(params.posLimit) : UintToArith256(params.powLimit);
-    
+
     if (pindexLast == nullptr)
         return bnTargetLimit.GetCompact(); // genesis block
 
+    // TODO: Latest test made it here (2017/11/23).
     const CBlockIndex* pindexPrev = GetLastBlockIndex(pindexLast, fProofOfStake);
     if (pindexPrev->pprev == nullptr)
         return bnTargetLimit.GetCompact(); // first block
@@ -411,8 +412,12 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
 // ppcoin: find last block index up to pindex
 const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfStake)
 {
-    while (pindex && pindex->pprev && (pindex->IsProofOfStake() != fProofOfStake))
+    while (pindex && pindex->pprev && (pindex->IsProofOfStake() != fProofOfStake)) {
         pindex = pindex->pprev;
+    }
+    // DEBUG:
+    if (fProofOfStake)
+        printf("DEBUG: pindex: IsProofOfStake=%d nHeight=%d\n", pindex->IsProofOfStake(), pindex->nHeight);
     return pindex;
 }
 
