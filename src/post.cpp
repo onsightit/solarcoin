@@ -95,27 +95,29 @@ int64_t GetProofOfStakeTimeReward(int64_t nStakeTime, int64_t nFees, CBlockIndex
 // PoST Target adjustment
 unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake, const Consensus::Params& params)
 {
-    arith_uint256 bnTargetLimit = fProofOfStake ? UintToArith256(params.posLimit) : UintToArith256(params.powLimit);
+    arith_uint256 bnTargetLimit = UintToArith256(params.posLimit);
 
     if (pindexLast == nullptr)
         return bnTargetLimit.GetCompact(); // genesis block
 
-    const CBlockIndex* pindexPrev = GetLastBlockIndex(pindexLast, fProofOfStake);
+    const CBlockIndex* pindexPrev = GetLastBlockIndex(pindexLast, fProofOfStake, params);
     if (pindexPrev->pprev == nullptr)
         return bnTargetLimit.GetCompact(); // first block
-    const CBlockIndex* pindexPrevPrev = GetLastBlockIndex(pindexPrev->pprev, fProofOfStake);
+    const CBlockIndex* pindexPrevPrev = GetLastBlockIndex(pindexPrev->pprev, fProofOfStake, params);
     if (pindexPrevPrev->pprev == nullptr)
         return bnTargetLimit.GetCompact(); // second block
 
     int64_t nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
-    if (nActualSpacing < 0)
+    if (nActualSpacing < 0) {
+        LogPrintf("GetNextTargetRequired(): nActualSpacing=%d Setting to default spacing.\n", nActualSpacing);
         nActualSpacing = params.nTargetSpacing;
+    }
 
     // ppcoin: target change every block
     // ppcoin: retarget with exponential moving toward target spacing
     arith_uint256 bnNew;
-    // DEBUG: bnNew.SetCompact(pindexPrev->nBits);
     bnNew.SetCompact(pindexPrev->nBits);
+    //LogPrintf("DEBUG: GetNextTargetRequired(): pindexLast->nHeight=%d bnNew=%08x %s\n", pindexLast->nHeight, bnNew.GetCompact(), ArithToUint256(bnNew).ToString().c_str());
     int64_t nInterval = params.nTargetTimespan / params.nTargetSpacing;
     bnNew *= ((nInterval - 1) * params.nTargetSpacing + nActualSpacing + nActualSpacing);
     bnNew /= ((nInterval + 1) * params.nTargetSpacing);
@@ -211,21 +213,21 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, uint64_t Ta
     }
 
     arith_uint256 bnNew = PastDifficultyAverage;
-    //LogPrintf("DEBUG: bnNew=%08x %s\n", bnNew.GetCompact(), ArithToUint256(bnNew).ToString().c_str());
     if (PastRateActualSeconds != 0 && PastRateTargetSeconds != 0) {
         bnNew *= PastRateActualSeconds;
         bnNew /= PastRateTargetSeconds;
     }
-    // TODO: bnNew should NOT be greater than bnPoWLimit
     if (bnNew > bnProofOfWorkLimit) {
         bnNew = bnProofOfWorkLimit;
     }
 
     /// debug print
     LogPrintf("%s(): RETARGET (Gravity Well)\n", __func__);
-    LogPrintf("PastRateAdjustmentRatio = %g\n", PastRateAdjustmentRatio);
-    LogPrintf("Before: %08x %s\n", BlockLastSolved->nBits, ArithToUint256(arith_uint256().SetCompact(BlockLastSolved->nBits)).ToString().c_str());
-    LogPrintf("After: %08x %s\n", bnNew.GetCompact(), ArithToUint256(bnNew).ToString().c_str());
+    if (fDebug) {
+        LogPrintf("PastRateAdjustmentRatio = %g\n", PastRateAdjustmentRatio);
+        LogPrintf("Before: %08x %s\n", BlockLastSolved->nBits, ArithToUint256(arith_uint256().SetCompact(BlockLastSolved->nBits)).ToString().c_str());
+        LogPrintf("After: %08x %s\n", bnNew.GetCompact(), ArithToUint256(bnNew).ToString().c_str());
+    }
 
     return bnNew.GetCompact();
 }
@@ -308,9 +310,11 @@ unsigned int static GetNextWorkRequired_V1(const CBlockIndex* pindexLast, const 
 
     /// debug print
     LogPrintf("%s(): RETARGET\n", __func__);
-    LogPrintf("nTargetTimespan = %ld    nActualTimespan = %ld\n", nTargetTimespan, nActualTimespan);
-    LogPrintf("Before: %08x  %s\n", pindexLast->nBits, ArithToUint256(arith_uint256().SetCompact(pindexLast->nBits)).ToString().c_str());
-    LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), ArithToUint256(bnNew).ToString().c_str());
+    if (fDebug) {
+        LogPrintf("nTargetTimespan = %ld    nActualTimespan = %ld\n", nTargetTimespan, nActualTimespan);
+        LogPrintf("Before: %08x  %s\n", pindexLast->nBits, ArithToUint256(arith_uint256().SetCompact(pindexLast->nBits)).ToString().c_str());
+        LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), ArithToUint256(bnNew).ToString().c_str());
+    }
 
     return bnNew.GetCompact();
 }
@@ -350,8 +354,6 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
 
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
 
-    LogPrintf("DEBUG: CheckProofOfWork: nBits=%08x bnTarget=%s\n", nBits, bnTarget.ToString().c_str());
-
     // Check range
     if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(params.powLimit))
         return false;
@@ -364,14 +366,15 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
 }
 
 // ppcoin: find last block index up to pindex
-const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfStake)
+const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfStake, const Consensus::Params& params)
 {
+    // During header downloads, there is no disk blockIndex, so IsProofOfStake() will alway return false.
+    // Just return pindex (which is pindexPrev) until disk blockIndex has been created.
+    // fProofOfStake should be false during header downloads.
     while (pindex && pindex->pprev && (pindex->IsProofOfStake() != fProofOfStake)) {
         pindex = pindex->pprev;
     }
-    // DEBUG:
-    if (fProofOfStake)
-        printf("DEBUG: pindex: IsProofOfStake=%d nHeight=%d\n", pindex->IsProofOfStake(), pindex->nHeight);
+
     return pindex;
 }
 

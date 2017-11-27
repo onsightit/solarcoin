@@ -35,18 +35,18 @@ static const int NO_BLOOM_VERSION = 70005; // SolarCoin
 
 //! "sendheaders" command and announcing blocks with headers starts with this version
 //static const int SENDHEADERS_VERSION = 70012; // Bitcoin
-static const int SENDHEADERS_VERSION = 70005; // SolarCoin
+static const int SENDHEADERS_VERSION = 70005; // SolarCoin: Allow sendheaders with lagacy 2.1.8 nodes.
 
 //! "feefilter" tells peers to filter invs to you by fee starts with this version
 //static const int FEEFILTER_VERSION = 70013; // Bitcoin
-static const int FEEFILTER_VERSION = 70005; // SolarCoin
+static const int FEEFILTER_VERSION = 70013; // SolarCoin: TODO: Introduce feefilter in future protocol.
 
 //! short-id-based block download starts with this version
 //static const int SHORT_IDS_BLOCKS_VERSION = 70014; // Bitcoin
-static const int SHORT_IDS_BLOCKS_VERSION = 70005; // SolarCoin
+static const int SHORT_IDS_BLOCKS_VERSION = 70014; // SolarCoin: TODO: Introduce short_ids in future protocol.
 
 //! not banning for invalid compact blocks starts with this version
 //static const int INVALID_CB_NO_BAN_VERSION = 70015; // Bitcoin
-static const int INVALID_CB_NO_BAN_VERSION = 70005; // SolarCoin
+static const int INVALID_CB_NO_BAN_VERSION = 70015; // SolarCoin
 
 #endif // BITCOIN_VERSION_H

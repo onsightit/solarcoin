@@ -55,6 +55,10 @@ public:
         return fCoinBase;
     }
 
+    bool IsCoinStake() const {
+        return (nHeight > 835213); // SolarCoin: LAST_POW_BLOCK
+    }
+
     template<typename Stream>
     void Serialize(Stream &s) const {
         assert(!IsSpent());

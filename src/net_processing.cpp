@@ -2562,7 +2562,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
         unsigned int nCount = ReadCompactSize(vRecv);
-        LogPrintf("DEBUG: Processing (%u) HEADERS pfrom=%s\n", nCount, pfrom->addr.ToString().c_str());
         if (nCount > MAX_HEADERS_RESULTS) {
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 20);
@@ -2571,7 +2570,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         headers.resize(nCount);
         for (unsigned int n = 0; n < nCount; n++) {
             vRecv >> headers[n];
-            // DEBUG: ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
         }
 
         // Headers received via a HEADERS message should be valid, and reflect
@@ -2920,16 +2918,6 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
            HexStr(hash.begin(), hash.begin()+CMessageHeader::CHECKSUM_SIZE),
            HexStr(hdr.pchChecksum, hdr.pchChecksum+CMessageHeader::CHECKSUM_SIZE));
         return fMoreWork;
-    }
-
-    // DEBUG: Remove later
-    if (strCommand == NetMsgType::HEADERS && (nMessageSize > 162003))
-    {
-        LogPrintf("DEBUG: Large Message Size %s(%s, %u bytes)\n", __func__,
-           SanitizeString(strCommand), nMessageSize);
-    //    LogPrintf("DEBUG: %s(%s, %u bytes): %s\n", __func__,
-    //       SanitizeString(strCommand), nMessageSize,
-    //       HexStr(vRecv.begin(), vRecv.end()));
     }
 
     // Process message
