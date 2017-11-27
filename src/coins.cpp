@@ -88,7 +88,7 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
 }
 
 void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool check) {
-    bool fCoinbase = (tx.IsCoinBase() || tx.IsCoinStake());
+    bool fCoinbase = tx.IsCoinBase();
     const uint256& txid = tx.GetHash();
     for (size_t i = 0; i < tx.vout.size(); ++i) {
         bool overwrite = check ? cache.HaveCoin(COutPoint(txid, i)) : fCoinbase;
@@ -225,7 +225,7 @@ unsigned int CCoinsViewCache::GetCacheSize() const {
 
 CAmount CCoinsViewCache::GetValueIn(const CTransaction& tx) const
 {
-    if (tx.IsCoinBase() || tx.IsCoinStake())
+    if (tx.IsCoinBase())
         return 0;
 
     CAmount nResult = 0;
@@ -237,7 +237,7 @@ CAmount CCoinsViewCache::GetValueIn(const CTransaction& tx) const
 
 bool CCoinsViewCache::HaveInputs(const CTransaction& tx) const
 {
-    if (!tx.IsCoinBase() && !tx.IsCoinStake()) {
+    if (!tx.IsCoinBase()) {
         for (unsigned int i = 0; i < tx.vin.size(); i++) {
             if (!HaveCoin(tx.vin[i].prevout)) {
                 return false;
