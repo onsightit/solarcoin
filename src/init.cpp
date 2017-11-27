@@ -927,6 +927,7 @@ bool AppInitParameterInteraction()
                 }
                 logCategories |= flag;
             }
+            fDebug = true; // SolarCoin: Legacy flag
         }
     }
 

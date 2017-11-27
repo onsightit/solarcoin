@@ -18,6 +18,7 @@
 #include <fs.h>
 #include <hash.h>
 #include <init.h>
+#include <kernel.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
@@ -61,6 +62,9 @@
  */
 
 CCriticalSection cs_main;
+
+// SolarCoin: PoST
+HashMap mapProofOfStake;
 
 BlockMap mapBlockIndex;
 CChain chainActive;
@@ -625,7 +629,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         bool fSpendsCoinbase = false;
         for (const CTxIn &txin : tx.vin) {
             const Coin &coin = view.AccessCoin(txin.prevout);
-            if (coin.IsCoinBase() || coin.IsCoinStake()) {
+            if (coin.IsCoinBase()) {
                 fSpendsCoinbase = true;
                 break;
             }
@@ -2686,7 +2690,7 @@ bool ResetBlockFailureFlags(CBlockIndex *pindex) {
     return true;
 }
 
-static CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
+static CBlockIndex* AddToBlockIndex(const CBlockHeader& block, const CChainParams& chainparams)
 {
     // Check for duplicate
     uint256 hash = block.GetHash();
@@ -2711,6 +2715,37 @@ static CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
     }
     pindexNew->nTimeMax = (pindexNew->pprev ? std::max(pindexNew->pprev->nTimeMax, pindexNew->nTime) : pindexNew->nTime);
     pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + GetBlockProof(*pindexNew);
+
+    // ppcoin: compute stake entropy bit for stake modifier
+    if (!pindexNew->SetStakeEntropyBit(pindexNew->GetStakeEntropyBit()))
+        LogPrintf("AddToBlockIndex() : SetStakeEntropyBit() failed at nHeight=%d\n", pindexNew->nHeight);
+
+    // ppcoin: record proof-of-stake hash value
+    if (pindexNew->IsProofOfStake())
+    {
+        HashMap::iterator mi = mapProofOfStake.find(hash);
+        if (mi != mapProofOfStake.end())
+        {
+            pindexNew->hashProofOfStake = (*mi).second;
+        }
+        else
+        {
+            LogPrintf("WARNING: AddToBlockIndex() : hashProofOfStake not found in map at nHeight=%d for block=%s\n", pindexNew->nHeight, hash.ToString().c_str());
+        }
+    }
+
+    // ppcoin: compute stake modifier
+    uint64_t nStakeModifier = 0;
+    bool fGeneratedStakeModifier = false;
+    if (!ComputeNextStakeModifier(pindexNew, nStakeModifier, fGeneratedStakeModifier, chainparams.GetConsensus()))
+        LogPrintf("AddToBlockIndex() : ComputeNextStakeModifier() failed at nHeight=%d\n", pindexNew->nHeight);
+
+    pindexNew->SetStakeModifier(nStakeModifier, fGeneratedStakeModifier);
+    pindexNew->nStakeModifierChecksum = GetStakeModifierChecksum(pindexNew, chainparams.GetConsensus());
+    if (pindexNew->nHeight > 0)
+        if (!fTestNet && !CheckStakeModifierCheckpoints(pindexNew->nHeight, pindexNew->nStakeModifierChecksum))
+            LogPrintf("AddToBlockIndex() : Rejected by stake modifier checkpoint height=%d, modifier=%x\n", pindexNew->nHeight, nStakeModifier);
+
     pindexNew->RaiseValidity(BLOCK_VALID_TREE);
     if (pindexBestHeader == nullptr || pindexBestHeader->nChainWork < pindexNew->nChainWork)
         pindexBestHeader = pindexNew;
@@ -2904,10 +2939,10 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-length", false, "size limits failed");
 
     // First transaction must be coinbase, the rest must not be
-    if (block.vtx.empty() || !(block.vtx[0]->IsCoinBase() || block.vtx[0]->IsCoinStake()))
-        return state.DoS(100, false, REJECT_INVALID, "bad-cb-missing", false, "first tx is not coinbase");
+    if (block.vtx.empty() || !(block.vtx[0]->IsCoinBase() || (block.vtx.size() > 1 && block.vtx[1]->IsCoinStake())))
+        return state.DoS(100, false, REJECT_INVALID, "bad-cb-missing", false, "first tx is not coinbase or second is not coinstake");
     for (unsigned int i = 1; i < block.vtx.size(); i++)
-        if (block.vtx[i]->IsCoinBase() || block.vtx[i]->IsCoinStake())
+        if (block.vtx[i]->IsCoinBase())
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase/coinstake");
 
     // Check transactions
@@ -3008,8 +3043,9 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
             return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
         }
     } else {
-        // Check proof of stake (TODO: PoST nBits not consistently set until height 835213+501)
-        if (block.nBits != GetNextTargetRequired(pindexPrev, false, consensusParams) && nHeight > consensusParams.LAST_POW_BLOCK + consensusParams.COINBASE_MATURITY + 1) {
+        // Check proof of stake (TODO: PoST nBits are not consistently set until height 835213+501.
+        // Use TWO_PERCENT_INT_HEIGHT to start checking nBits.)
+        if (block.nBits != GetNextTargetRequired(pindexPrev, false, consensusParams) && nHeight >= consensusParams.TWO_PERCENT_INT_HEIGHT) {
             LogPrintf("DEBUG: nHeight=%d block.nBits=%u, GetNextTargetRequired.nBits=%u\n", nHeight, block.nBits, GetNextTargetRequired(pindexPrev, false, consensusParams));
             return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of stake");
         }
@@ -3172,7 +3208,7 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
         }
     }
     if (pindex == nullptr)
-        pindex = AddToBlockIndex(block);
+        pindex = AddToBlockIndex(block, chainparams);
 
     if (ppindex)
         *ppindex = pindex;
@@ -3305,6 +3341,23 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         LOCK(cs_main);
 
         if (ret) {
+            // ppcoin: verify hash target and signature of coinstake tx
+            // Orphan it if we don't have the previous block
+            if (pblock->IsProofOfStake() && mapBlockIndex.count(pblock->hashPrevBlock))
+            {
+                uint256 hash = pblock->GetHash();
+                uint256 hashProofOfStake, targetProofOfStake;
+                if (!CheckProofOfStake((const CTransaction&)pblock->vtx[1], pblock->nBits, hashProofOfStake, targetProofOfStake, chainparams.GetConsensus())) {
+                    LogPrintf("WARNING: AddToBlockIndex() : CheckProofOfStake() failed for block=%s\n", hash.ToString().c_str());
+                } else {
+                    HashMap::iterator mi = mapProofOfStake.find(hash);
+                    if (mi == mapProofOfStake.end())
+                    {
+                        mapProofOfStake.insert(std::make_pair(hash, hashProofOfStake));
+                    }
+                }
+            }
+
             // Store to disk
             ret = AcceptBlock(pblock, state, chainparams, &pindex, fForceProcessing, nullptr, fNewBlock);
         }
@@ -4006,6 +4059,7 @@ void UnloadBlockIndex()
         delete entry.second;
     }
     mapBlockIndex.clear();
+    mapProofOfStake.clear();
     fHavePruned = false;
 }
 
@@ -4055,7 +4109,7 @@ bool LoadGenesisBlock(const CChainParams& chainparams)
             return error("%s: FindBlockPos failed", __func__);
         if (!WriteBlockToDisk(block, blockPos, chainparams.MessageStart()))
             return error("%s: writing genesis block to disk failed", __func__);
-        CBlockIndex *pindex = AddToBlockIndex(block);
+        CBlockIndex *pindex = AddToBlockIndex(block, chainparams);
         if (!ReceivedBlockTransactions(block, state, pindex, blockPos, chainparams.GetConsensus()))
             return error("%s: genesis block not accepted", __func__);
     } catch (const std::runtime_error& e) {

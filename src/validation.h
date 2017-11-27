@@ -154,6 +154,10 @@ struct BlockHasher
     size_t operator()(const uint256& hash) const { return hash.GetCheapHash(); }
 };
 
+// SolarCoin: PoST
+typedef std::unordered_map<uint256, uint256, BlockHasher> HashMap;
+extern HashMap mapProofOfStake;
+
 extern CScript COINBASE_FLAGS;
 extern CCriticalSection cs_main;
 extern CBlockPolicyEstimator feeEstimator;

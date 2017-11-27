@@ -57,7 +57,7 @@ int64_t GetCurrentCoinSupply(CBlockIndex* pindexPrev, const Consensus::Params& p
         if (pindexPrev->nHeight >= params.FORK_HEIGHT_2)
             // Bug fix: pindexPrev->nMoneySupply is an int64_t that has overflowed and is now negative.
             // Use the real coin supply + expected growth rate since twoPercentIntHeight from granting.
-            return ((pindexPrev->nMoneySupply - (98000000000 * COIN)) / COIN) + (int64_t)((double)(pindexPrev->nHeight - params.TWO_PERCENT_INT_HEIGHT) * params.COIN_SUPPLY_GROWTH_RATE);
+            return ((pindexPrev->nMoneySupply / COIN) - 98000000000 + (int64_t)((double)(pindexPrev->nHeight - params.TWO_PERCENT_INT_HEIGHT) * params.COIN_SUPPLY_GROWTH_RATE));
         else
             return params.INITIAL_COIN_SUPPLY;
     else
@@ -109,7 +109,7 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
 
     int64_t nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
     if (nActualSpacing < 0) {
-        LogPrintf("GetNextTargetRequired(): nActualSpacing=%d Setting to default spacing.\n", nActualSpacing);
+        LogPrintf("GetNextTargetRequired(): Negative nActualSpacing=%d at nHeight=%d\n", nActualSpacing, pindexPrev->nHeight);
         nActualSpacing = params.nTargetSpacing;
     }
 
@@ -222,8 +222,8 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, uint64_t Ta
     }
 
     /// debug print
-    LogPrintf("%s(): RETARGET (Gravity Well)\n", __func__);
     if (fDebug) {
+        LogPrintf("%s(): RETARGET (Gravity Well)\n", __func__);
         LogPrintf("PastRateAdjustmentRatio = %g\n", PastRateAdjustmentRatio);
         LogPrintf("Before: %08x %s\n", BlockLastSolved->nBits, ArithToUint256(arith_uint256().SetCompact(BlockLastSolved->nBits)).ToString().c_str());
         LogPrintf("After: %08x %s\n", bnNew.GetCompact(), ArithToUint256(bnNew).ToString().c_str());
@@ -309,8 +309,8 @@ unsigned int static GetNextWorkRequired_V1(const CBlockIndex* pindexLast, const 
         bnNew = bnProofOfWorkLimit;
 
     /// debug print
-    LogPrintf("%s(): RETARGET\n", __func__);
     if (fDebug) {
+        LogPrintf("%s(): RETARGET\n", __func__);
         LogPrintf("nTargetTimespan = %ld    nActualTimespan = %ld\n", nTargetTimespan, nActualTimespan);
         LogPrintf("Before: %08x  %s\n", pindexLast->nBits, ArithToUint256(arith_uint256().SetCompact(pindexLast->nBits)).ToString().c_str());
         LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), ArithToUint256(bnNew).ToString().c_str());
