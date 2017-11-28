@@ -447,7 +447,8 @@ bool TipMayBeStale(const Consensus::Params &consensusParams)
 // Requires cs_main
 bool CanDirectFetch(const Consensus::Params &consensusParams)
 {
-    return chainActive.Tip()->GetBlockTime() > GetAdjustedTime() - consensusParams.nTargetSpacing * 20;
+    LogPrintf("DEBUG: CanDirectFetch() : IsInitialBlockDownload=%d, TipTime=%d, AdjTime=%d (height=%d)\n", IsInitialBlockDownload(), chainActive.Tip()->GetBlockTime(), chainActive.Tip()->nHeight);
+    return (chainActive.Tip()->GetBlockTime() > GetAdjustedTime() - consensusParams.nTargetSpacing * (consensusParams.nTargetTimespan / 60) || IsInitialBlockDownload());
 }
 
 // Requires cs_main
@@ -1375,6 +1376,7 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
         // If this set of headers is valid and ends in a block with at least as
         // much work as our tip, download as much as possible.
         if (fCanDirectFetch && pindexLast->IsValid(BLOCK_VALID_TREE) && chainActive.Tip()->nChainWork <= pindexLast->nChainWork) {
+            LogPrintf("DEBUG: DirectFetching to peer=%d (startheight:%d)\n", pfrom->GetId(), pfrom->nStartingHeight);
             std::vector<const CBlockIndex*> vToFetch;
             const CBlockIndex *pindexWalk = pindexLast;
             // Calculate all the blocks we'd need to switch to pindexLast, up to a limit.

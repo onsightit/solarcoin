@@ -97,8 +97,8 @@ public:
 
         consensus.fAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
-        consensus.nRuleChangeActivationThreshold = 6048; // 75% of 8064
-        consensus.nMinerConfirmationWindow = 8064; // nTargetTimespan / nTargetSpacing * 4
+        consensus.nRuleChangeActivationThreshold = 48; // 75% of 64
+        consensus.nMinerConfirmationWindow = 64; // nTargetTimespan / nTargetSpacing * 4
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
@@ -251,7 +251,7 @@ public:
         genesis = CreateGenesisBlock(1384473600, 1397766, 0x1e0ffff0, CTransaction::LEGACY_VERSION_2, 100 * COIN);        
         consensus.hashGenesisBlock = genesis.GetHash();
 
-        printf("TestNet: hashGenesisBlock: %08x \n", consensus.hashGenesisBlock);
+        printf("TestNet: consensus.hashGenesisBlock: %s \n", genesis.GetHash().ToString().c_str());
         assert(consensus.hashGenesisBlock == uint256S("0xedcf32dbfd327fe7f546d3a175d91b05e955ec1224e087961acc9a2aa8f592ee"));
         assert(genesis.hashMerkleRoot == uint256S("0x33ecdb1985425f576c65e2c85d7983edc6207038a2910fefaf86cfb4e53185a3"));
 
