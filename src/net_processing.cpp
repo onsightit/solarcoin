@@ -447,7 +447,7 @@ bool TipMayBeStale(const Consensus::Params &consensusParams)
 // Requires cs_main
 bool CanDirectFetch(const Consensus::Params &consensusParams)
 {
-    LogPrintf("DEBUG: CanDirectFetch() : IsInitialBlockDownload=%d, TipTime=%d, AdjTime=%d (height=%d)\n", IsInitialBlockDownload(), chainActive.Tip()->GetBlockTime(), chainActive.Tip()->nHeight);
+    LogPrintf("DEBUG: CanDirectFetch() : IsInitialBlockDownload=%d, TipTime=%d, AdjTime=%d (height=%d)\n", IsInitialBlockDownload(), chainActive.Tip()->GetBlockTime(), GetAdjustedTime() - consensusParams.nTargetSpacing * (consensusParams.nTargetTimespan / 60),chainActive.Tip()->nHeight);
     return (chainActive.Tip()->GetBlockTime() > GetAdjustedTime() - consensusParams.nTargetSpacing * (consensusParams.nTargetTimespan / 60) || IsInitialBlockDownload());
 }
 
