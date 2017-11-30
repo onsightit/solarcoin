@@ -306,14 +306,15 @@ public:
 /**
  * Basic transaction serialization format:
  * - int32_t nVersion
+ * - uint32_t nTime
  * - std::vector<CTxIn> vin
  * - std::vector<CTxOut> vout
  * - uint32_t nLockTime
- * - uint32_t nTime
  * - std::string strTxComment
  *
  * Extended transaction serialization format:
  * - int32_t nVersion
+ * - uint32_t nTime
  * - unsigned char dummy = 0x00
  * - unsigned char flags (!= 0)
  * - std::vector<CTxIn> vin
@@ -321,15 +322,18 @@ public:
  * - if (flags & 1):
  *   - CTxWitness wit;
  * - uint32_t nLockTime
- * - uint32_t nTime
  * - std::string strTxComment
  */
 template<typename Stream, typename TxType>
 inline void UnserializeTransaction(TxType& tx, Stream& s) {
     const bool fSerializeTime = (!(s.GetType() & (SER_GETHASH|SER_LEGACYPROTOCOL)) || tx.nVersion > CTransaction::LEGACY_VERSION_3 || s.GetType() & SER_DISK);
 
+    tx.nVersion = CTransaction::CURRENT_VERSION;
+    tx.nTime = 0;
     tx.vin.clear();
     tx.vout.clear();
+    tx.nLockTime = 0;
+    tx.strTxComment.clear();
 
     s >> tx.nVersion;
     if (fSerializeTime) {

@@ -1943,7 +1943,8 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
  * if they're too large, if it's been a while since the last write,
  * or always and in all cases if we're in prune mode and are deleting files.
  */
-bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &state, FlushStateMode mode, int nManualPruneHeight) {
+// SolarCoin: decl was "bool static"
+static bool FlushStateToDisk(const CChainParams& chainparams, CValidationState &state, FlushStateMode mode, int nManualPruneHeight) {
     int64_t nMempoolUsage = mempool.DynamicMemoryUsage();
     LOCK(cs_main);
     static int64_t nLastWrite = 0;
@@ -2727,6 +2728,7 @@ static CBlockIndex* AddToBlockIndex(const CBlockHeader& block, const CChainParam
         if (mi != mapProofOfStake.end())
         {
             pindexNew->hashProofOfStake = (*mi).second;
+            LogPrintf("DEBUG: AddToBlockIndex() : pindexNew->hashProofOfStake=%s\n", pindexNew->hashProofOfStake.ToString().c_str());
         }
         else
         {
@@ -2751,6 +2753,7 @@ static CBlockIndex* AddToBlockIndex(const CBlockHeader& block, const CChainParam
         pindexBestHeader = pindexNew;
 
     setDirtyBlockIndex.insert(pindexNew);
+    LogPrintf("DEBUG: AddToBlockIndex() : Inserted pindexNew\n");
 
     return pindexNew;
 }
@@ -3222,7 +3225,8 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
 }
 
 // Exposed wrapper for AcceptBlockHeader
-bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, CValidationState& state, const CChainParams& chainparams, const CBlockIndex** ppindex, CBlockHeader *first_invalid)
+// DEBUG: bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, CValidationState& state, const CChainParams& chainparams, const CBlockIndex** ppindex, CBlockHeader *first_invalid)
+bool ProcessNewBlockHeaders(const std::vector<CBlock>& headers, CValidationState& state, const CChainParams& chainparams, const CBlockIndex** ppindex, CBlockHeader *first_invalid)
 {
     if (first_invalid != nullptr) first_invalid->SetNull();
     {
@@ -3233,7 +3237,9 @@ bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, CValidatio
                 if (first_invalid) *first_invalid = header;
                 return false;
             }
-            if (ppindex) {
+            // DEBUG: The appears to be a bug in bitcoin core!
+            //if (ppindex) {
+            if (pindex) {
                 *ppindex = pindex;
             }
         }
