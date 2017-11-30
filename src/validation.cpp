@@ -3273,6 +3273,8 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
     // block is in a chain leading to a candidate for best tip, despite not
     // being such a candidate itself.
 
+    LogPrintf("DEBUG: Bool Flags: fAlreadyHave=%d fHasMoreOrSameWork=%d fTooFarAhead=%d pindex.nHeight=%d chainActive.Height=%d\n", fAlreadyHave, fHasMoreOrSameWork, fTooFarAhead, pindex->nHeight, chainActive.Height());
+
     // TODO: deal better with return value and error conditions for duplicate
     // and unrequested blocks.
     if (fAlreadyHave) return true;
@@ -3348,7 +3350,7 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
                 uint256 hash = pblock->GetHash();
                 uint256 hashProofOfStake, targetProofOfStake;
                 if (!CheckProofOfStake((const CTransaction&)pblock->vtx[1], pblock->nBits, hashProofOfStake, targetProofOfStake, chainparams.GetConsensus())) {
-                    LogPrintf("WARNING: AddToBlockIndex() : CheckProofOfStake() failed for block=%s\n", hash.ToString().c_str());
+                    LogPrintf("WARNING: ProcessNewBlock() : CheckProofOfStake() failed for block=%s\n", hash.ToString().c_str());
                 } else {
                     HashMap::iterator mi = mapProofOfStake.find(hash);
                     if (mi == mapProofOfStake.end())
@@ -3359,6 +3361,7 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
             }
 
             // Store to disk
+            LogPrintf("DEBUG: ProcessNewBlock() : Calling AcceptBlock\n");
             ret = AcceptBlock(pblock, state, chainparams, &pindex, fForceProcessing, nullptr, fNewBlock);
         }
         CheckBlockIndex(chainparams.GetConsensus());
