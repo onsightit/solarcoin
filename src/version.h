@@ -18,7 +18,6 @@ static const int INIT_PROTO_VERSION = 209;
 //! In this version, 'getheaders' was introduced.
 //static const int GETHEADERS_VERSION = 70002; // Bitcoin
 static const int GETHEADERS_VERSION = 70005; // SolarCoin
-//static const int GETHEADERS_VERSION = 70006; // SolarCoin
 
 //! disconnect from peers older than this proto version
 static const int MIN_PEER_PROTO_VERSION = 70005;

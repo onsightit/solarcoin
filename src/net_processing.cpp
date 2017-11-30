@@ -1864,25 +1864,17 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     // we now only provide a getheaders response here. When we receive the headers, we will
                     // then ask for the blocks we need.
                     // DEBUG: Revert this to original logic.
-                    if (pfrom->nVersion >= GETHEADERS_VERSION) {
-                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), inv.hash));
-                        LogPrint(BCLog::NET, "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, inv.hash.ToString(), pfrom->GetId());
-                    } else {
-                        LogPrintf("DEBUG: AskFor (%d) %s to peer=%d\n", pindexBestHeader->nHeight, inv.hash.ToString(), pfrom->GetId());
-                        pfrom->AskFor(inv);
-                        //connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETBLOCKS, chainActive.GetLocator(pindexBestHeader), inv.hash));
-                        //LogPrint(BCLog::NET, "getblocks (%d) %s to peer=%d\n", pindexBestHeader->nHeight, inv.hash.ToString(), pfrom->GetId());
-                    }
+                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), inv.hash));
+                    LogPrint(BCLog::NET, "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, inv.hash.ToString(), pfrom->GetId());
                 }
             }
             else
             {
                 pfrom->AddInventoryKnown(inv);
-                if (fBlocksOnly) {
+                if (fBlocksOnly)
                     LogPrint(BCLog::NET, "transaction (%s) inv sent in violation of protocol peer=%d\n", inv.hash.ToString(), pfrom->GetId());
-                } else if (!fAlreadyHave && !fImporting && !fReindex && !IsInitialBlockDownload()) {
+                else if (!fAlreadyHave && !fImporting && !fReindex && !IsInitialBlockDownload())
                     pfrom->AskFor(inv);
-                }
             }
 
             // Track requests for our stuff
@@ -2597,7 +2589,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     }
 
     // DEBUG: process block
-    else if (strCommand == NetMsgType::BLOCK && ((!fImporting && !fReindex) || pfrom->nVersion < GETHEADERS_VERSION)) // Ignore blocks received while importing (SolarCoin: Have to download blocks instead of blockheaders. TODO: Re-test header downloading.)
+    else if (strCommand == NetMsgType::BLOCK && !fImporting && !fReindex) // Ignore blocks received while importing
     {
         std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
         vRecv >> *pblock;
@@ -3254,12 +3246,10 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
         // Start block sync
         if (pindexBestHeader == nullptr)
             pindexBestHeader = chainActive.Tip();
-        // SolarCoin: Download if node is at GETHEADERS_VERSION, and...
-        // Download if this is a nice peer, or we have no nice peers and this one might do.
-        bool fFetch = pto->nVersion >= GETHEADERS_VERSION && (state.fPreferredDownload || (nPreferredDownload == 0 && !pto->fClient && !pto->fOneShot));
+        bool fFetch = state.fPreferredDownload || (nPreferredDownload == 0 && !pto->fClient && !pto->fOneShot); // Download if this is a nice peer, or we have no nice peers and this one might do.
         if (!state.fSyncStarted && !pto->fClient && !fImporting && !fReindex) {
             // Only actively request headers/blocks from a single peer, unless we're close to today.
-            if (nSyncStarted == 0 || pindexBestHeader->GetBlockTime() > GetAdjustedTime() - 24 * 60 * 60) {
+            if ((nSyncStarted == 0 && fFetch) || pindexBestHeader->GetBlockTime() > GetAdjustedTime() - 24 * 60 * 60) {
                 state.fSyncStarted = true;
                 state.nHeadersSyncTimeout = GetTimeMicros() + HEADERS_DOWNLOAD_TIMEOUT_BASE + HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER * (GetAdjustedTime() - pindexBestHeader->GetBlockTime())/(consensusParams.nTargetSpacing);
                 nSyncStarted++;
@@ -3273,16 +3263,8 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
                 got back an empty response.  */
                 if (pindexStart->pprev)
                     pindexStart = pindexStart->pprev;
-
-                if (fFetch) {
-                    // Fetch headers
-                    LogPrint(BCLog::NET, "initial getheaders (%d) to peer=%d (startheight:%d)\n", pindexStart->nHeight, pto->GetId(), pto->nStartingHeight);
-                    connman->PushMessage(pto, msgMaker.Make(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexStart), uint256()));
-                } else {
-                    // SolarCoin: Request blocks for syncing with legacy nodes
-                    LogPrint(BCLog::NET, "initial getblocks (%d) to peer=%d (startheight:%d)\n", pindexStart->nHeight, pto->GetId(), pto->nStartingHeight);
-                    connman->PushMessage(pto, msgMaker.Make(NetMsgType::GETBLOCKS, chainActive.GetLocator(pindexStart), uint256()));
-                }
+                LogPrint(BCLog::NET, "initial getheaders (%d) to peer=%d (startheight:%d)\n", pindexStart->nHeight, pto->GetId(), pto->nStartingHeight);
+                connman->PushMessage(pto, msgMaker.Make(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexStart), uint256()));
             }
         }
 
@@ -3634,8 +3616,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
         // Message: getdata (blocks)
         //
         std::vector<CInv> vGetData;
-        // SolarCoin: Get blocks from legacy nodes.
-        if (!pto->fClient && (pto->nVersion < GETHEADERS_VERSION || fFetch || !IsInitialBlockDownload()) && state.nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+        if (!pto->fClient && (fFetch || !IsInitialBlockDownload()) && state.nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             std::vector<const CBlockIndex*> vToDownload;
             NodeId staller = -1;
             FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller, consensusParams);
