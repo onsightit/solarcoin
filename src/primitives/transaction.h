@@ -326,75 +326,32 @@ public:
  */
 template<typename Stream, typename TxType>
 inline void UnserializeTransaction(TxType& tx, Stream& s) {
-    const bool fAllowWitness = !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_WITNESS);
     const bool fSerializeTime = (!(s.GetType() & (SER_GETHASH|SER_LEGACYPROTOCOL)) || tx.nVersion > CTransaction::LEGACY_VERSION_3 || s.GetType() & SER_DISK);
 
-    s >> tx.nVersion;
-    unsigned char flags = 0;
     tx.vin.clear();
     tx.vout.clear();
-    /* Try to read the vin. In case the dummy is there, this will be read as an empty vector. */
-    s >> tx.vin;
-    if (tx.vin.size() == 0 && fAllowWitness) {
-        /* We read a dummy or an empty vin. */
-        s >> flags;
-        if (flags != 0) {
-            s >> tx.vin;
-            s >> tx.vout;
-        }
-    } else {
-        /* We read a non-empty vin. Assume a normal vout follows. */
-        s >> tx.vout;
-    }
-    if ((flags & 1) && fAllowWitness) {
-        /* The witness flag is present, and we support witnesses. */
-        flags ^= 1;
-        for (size_t i = 0; i < tx.vin.size(); i++) {
-            s >> tx.vin[i].scriptWitness.stack;
-        }
-    }
-    if (flags) {
-        /* Unknown flag in the serialization */
-        throw std::ios_base::failure("Unknown transaction optional data");
-    }
-    s >> tx.nLockTime;
+
+    s >> tx.nVersion;
     if (fSerializeTime) {
         s >> tx.nTime;
     }
+    s >> tx.vin;
+    s >> tx.vout;
+    s >> tx.nLockTime;
     s >> tx.strTxComment;
 }
 
 template<typename Stream, typename TxType>
 inline void SerializeTransaction(const TxType& tx, Stream& s) {
-    const bool fAllowWitness = !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_WITNESS);
     const bool fSerializeTime = (!(s.GetType() & (SER_GETHASH|SER_LEGACYPROTOCOL)) || tx.nVersion > CTransaction::LEGACY_VERSION_3 || s.GetType() & SER_DISK);
 
     s << tx.nVersion;
-    unsigned char flags = 0;
-    // Consistency check
-    if (fAllowWitness) {
-        /* Check whether witnesses need to be serialized. */
-        if (tx.HasWitness()) {
-            flags |= 1;
-        }
-    }
-    if (flags) {
-        /* Use extended format in case witnesses are to be serialized. */
-        std::vector<CTxIn> vinDummy;
-        s << vinDummy;
-        s << flags;
-    }
-    s << tx.vin;
-    s << tx.vout;
-    if (flags & 1) {
-        for (size_t i = 0; i < tx.vin.size(); i++) {
-            s << tx.vin[i].scriptWitness.stack;
-        }
-    }
-    s << tx.nLockTime;
     if (fSerializeTime) {
         s << tx.nTime;
     }
+    s << tx.vin;
+    s << tx.vout;
+    s << tx.nLockTime;
     s << tx.strTxComment;
 }
 
