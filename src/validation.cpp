@@ -2914,12 +2914,14 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 
     // Check that the header is valid (particularly PoW).  This is mostly
     // redundant with the call in AcceptBlockHeader.
+    LogPrintf("DEBUG: CheckBlock() : Calling CheckBlockHeader\n");
     if (!CheckBlockHeader(block, state, consensusParams, fCheckPOW))
         return false;
 
     // Check the merkle root.
     if (fCheckMerkleRoot) {
         bool mutated;
+        LogPrintf("DEBUG: CheckBlock() : Calling BlockMerkleRoot\n");
         uint256 hashMerkleRoot2 = BlockMerkleRoot(block, &mutated);
         if (block.hashMerkleRoot != hashMerkleRoot2)
             return state.DoS(100, false, REJECT_INVALID, "bad-txnmrklroot", true, "hashMerkleRoot mismatch");
@@ -2938,10 +2940,12 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     // checks that use witness data may be performed here.
 
     // Size limits
+    LogPrintf("DEBUG: CheckBlock() : Checking size limits\n");
     if (block.vtx.empty() || block.vtx.size() * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT)
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-length", false, "size limits failed");
 
     // First transaction must be coinbase, the rest must not be
+    LogPrintf("DEBUG: CheckBlock() : Checking coinbase and coinstake\n");
     if (block.vtx.empty() || !(block.vtx[0]->IsCoinBase() || (block.vtx.size() > 1 && block.vtx[1]->IsCoinStake())))
         return state.DoS(100, false, REJECT_INVALID, "bad-cb-missing", false, "first tx is not coinbase or second is not coinstake");
     for (unsigned int i = 1; i < block.vtx.size(); i++)
@@ -2949,12 +2953,14 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase/coinstake");
 
     // Check transactions
+    LogPrintf("DEBUG: CheckBlock() : Checking transactions\n");
     for (const auto& tx : block.vtx)
         if (!CheckTransaction(*tx, state, false))
             return state.Invalid(false, state.GetRejectCode(), state.GetRejectReason(),
                                  strprintf("Transaction check failed (tx hash %s) %s", tx->GetHash().ToString(), state.GetDebugMessage()));
 
     unsigned int nSigOps = 0;
+    LogPrintf("DEBUG: CheckBlock() : Checking sigops\n");
     for (const auto& tx : block.vtx)
     {
         nSigOps += GetLegacySigOpCount(*tx);
@@ -3344,6 +3350,7 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         CValidationState state;
         // Ensure that CheckBlock() passes before calling AcceptBlock, as
         // belt-and-suspenders.
+        LogPrintf("DEBUG: ProcessNewBlock() : Calling CheckBlock\n");
         bool ret = CheckBlock(*pblock, state, chainparams.GetConsensus());
 
         LOCK(cs_main);

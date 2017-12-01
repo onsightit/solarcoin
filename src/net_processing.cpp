@@ -2597,31 +2597,35 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     // DEBUG: process block
     else if (strCommand == NetMsgType::BLOCK && !fImporting && !fReindex) // Ignore blocks received while importing
     {
-        std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
-        vRecv >> *pblock;
+        // SolarCoin: Ignore block command until all headers are downloaded.
+        if (!IsInitialBlockDownload()) {
+            std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
+            vRecv >> *pblock;
 
-        LogPrint(BCLog::NET, "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom->GetId());
+            LogPrint(BCLog::NET, "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom->GetId());
 
-        bool forceProcessing = false;
-        const uint256 hash(pblock->GetHash());
-        {
-            LOCK(cs_main);
-            // Also always process if we requested the block explicitly, as we may
-            // need it even though it is not a candidate for a new best tip.
-            forceProcessing |= MarkBlockAsReceived(hash);
-            // mapBlockSource is only used for sending reject messages and DoS scores,
-            // so the race between here and cs_main in ProcessNewBlock is fine.
-            mapBlockSource.emplace(hash, std::make_pair(pfrom->GetId(), true));
-        }
-        bool fNewBlock = false;
-        LogPrintf("DEBUG: Process New block %s peer=%d\n", pblock->GetHash().ToString(), pfrom->GetId());
-        ProcessNewBlock(chainparams, pblock, forceProcessing, &fNewBlock);
-        if (fNewBlock) {
-            pfrom->nLastBlockTime = GetTime();
+            bool forceProcessing = false;
+            const uint256 hash(pblock->GetHash());
+            {
+                LOCK(cs_main);
+                // Also always process if we requested the block explicitly, as we may
+                // need it even though it is not a candidate for a new best tip.
+                forceProcessing |= MarkBlockAsReceived(hash);
+                // mapBlockSource is only used for sending reject messages and DoS scores,
+                // so the race between here and cs_main in ProcessNewBlock is fine.
+                mapBlockSource.emplace(hash, std::make_pair(pfrom->GetId(), true));
+            }
+            bool fNewBlock = false;
+            LogPrintf("DEBUG: Process New block %s from peer=%d\n", pblock->GetHash().ToString(), pfrom->GetId());
+            ProcessNewBlock(chainparams, pblock, forceProcessing, &fNewBlock);
+            if (fNewBlock) {
+                pfrom->nLastBlockTime = GetTime();
+            } else {
+                LOCK(cs_main);
+                mapBlockSource.erase(pblock->GetHash());
+            }
         } else {
-            LOCK(cs_main);
-            mapBlockSource.erase(pblock->GetHash());
-            LogPrintf("DEBUG: Ignore New block %s peer=%d\n", pblock->GetHash().ToString(), pfrom->GetId());
+            LogPrint(BCLog::NET, "ignoring block during initial download peer=%d\n", pfrom->GetId());
         }
     }
 
@@ -3627,7 +3631,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
             NodeId staller = -1;
             FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller, consensusParams);
             for (const CBlockIndex *pindex : vToDownload) {
-                LogPrintf("DEBUG: Requesting block=%s peer=%d\n", pindex->GetBlockHash().ToString(), pto->GetId());
+                LogPrintf("DEBUG: Sending request for block=%s peer=%d\n", pindex->GetBlockHash().ToString(), pto->GetId());
                 uint32_t nFetchFlags = GetFetchFlags(pto);
                 vGetData.push_back(CInv(MSG_BLOCK | nFetchFlags, pindex->GetBlockHash()));
                 MarkBlockAsInFlight(pto->GetId(), pindex->GetBlockHash(), pindex);
@@ -3648,7 +3652,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
         while (!pto->mapAskFor.empty() && (*pto->mapAskFor.begin()).first <= nNow)
         {
             const CInv& inv = (*pto->mapAskFor.begin()).second;
-            LogPrintf("DEBUG: Requesting inv=%s peer=%d\n", inv.ToString(), pto->GetId());
+            LogPrintf("DEBUG: Sending getdata=%s peer=%d\n", inv.ToString(), pto->GetId());
             if (!AlreadyHave(inv))
             {
                 LogPrint(BCLog::NET, "Requesting %s peer=%d\n", inv.ToString(), pto->GetId());
