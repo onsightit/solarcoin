@@ -1863,9 +1863,15 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     // fell back to inv we probably have a reorg which we should get the headers for first,
                     // we now only provide a getheaders response here. When we receive the headers, we will
                     // then ask for the blocks we need.
-                    // DEBUG: Revert this to original logic.
-                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), inv.hash));
-                    LogPrint(BCLog::NET, "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, inv.hash.ToString(), pfrom->GetId());
+                    // SolarCoin: Despite the comment above, we need to request the block if the peer is at
+                    // legacy protocol version 70005.
+                    if (pfrom->nVersion == LEGACY_PROTOCOL_VERSION) {
+                        pfrom->AskFor(inv);
+                        LogPrintf("DEBUG: Ask peer=%d for block=%s\n", pfrom->GetId(), inv.hash.ToString());
+                    } else {
+                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), inv.hash));
+                        LogPrint(BCLog::NET, "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, inv.hash.ToString(), pfrom->GetId());
+                    }
                 }
             }
             else

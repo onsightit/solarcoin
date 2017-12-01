@@ -9,8 +9,10 @@
  * network protocol versioning
  */
 
+static const int LEGACY_PROTOCOL_VERSION = 70005; // SolarCoin v2.1.8
+
 //static const int PROTOCOL_VERSION = 70015; // Bitcoin
-static const int PROTOCOL_VERSION = 70005; // SolarCoin
+static const int PROTOCOL_VERSION = 70005; // SolarCoin v3.15.1
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
