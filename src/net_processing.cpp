@@ -2597,35 +2597,32 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     // DEBUG: process block
     else if (strCommand == NetMsgType::BLOCK && !fImporting && !fReindex) // Ignore blocks received while importing
     {
-        // SolarCoin: Ignore block command until all headers are downloaded.
-        if (!IsInitialBlockDownload()) {
-            std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
-            vRecv >> *pblock;
+        std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
+        vRecv >> *pblock;
 
-            LogPrint(BCLog::NET, "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom->GetId());
+        LogPrint(BCLog::NET, "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom->GetId());
 
-            bool forceProcessing = false;
-            const uint256 hash(pblock->GetHash());
-            {
-                LOCK(cs_main);
-                // Also always process if we requested the block explicitly, as we may
-                // need it even though it is not a candidate for a new best tip.
-                forceProcessing |= MarkBlockAsReceived(hash);
-                // mapBlockSource is only used for sending reject messages and DoS scores,
-                // so the race between here and cs_main in ProcessNewBlock is fine.
-                mapBlockSource.emplace(hash, std::make_pair(pfrom->GetId(), true));
-            }
-            bool fNewBlock = false;
-            LogPrintf("DEBUG: Process New block %s from peer=%d\n", pblock->GetHash().ToString(), pfrom->GetId());
-            ProcessNewBlock(chainparams, pblock, forceProcessing, &fNewBlock);
-            if (fNewBlock) {
-                pfrom->nLastBlockTime = GetTime();
-            } else {
-                LOCK(cs_main);
-                mapBlockSource.erase(pblock->GetHash());
-            }
+        bool forceProcessing = false;
+        const uint256 hash(pblock->GetHash());
+        {
+            LOCK(cs_main);
+            // Also always process if we requested the block explicitly, as we may
+            // need it even though it is not a candidate for a new best tip.
+            forceProcessing |= MarkBlockAsReceived(hash);
+            // mapBlockSource is only used for sending reject messages and DoS scores,
+            // so the race between here and cs_main in ProcessNewBlock is fine.
+            mapBlockSource.emplace(hash, std::make_pair(pfrom->GetId(), true));
+        }
+        bool fNewBlock = false;
+        LogPrintf("DEBUG: Process New block %s from peer=%d\n", pblock->GetHash().ToString(), pfrom->GetId());
+        ProcessNewBlock(chainparams, pblock, forceProcessing, &fNewBlock);
+        if (fNewBlock) {
+            pfrom->nLastBlockTime = GetTime();
         } else {
-            LogPrint(BCLog::NET, "ignoring block during initial download peer=%d\n", pfrom->GetId());
+            LOCK(cs_main);
+            mapBlockSource.erase(pblock->GetHash());
+            // SolarCoin: Ignore block command until all headers are downloaded.
+            LogPrint(BCLog::NET, "ignoring non-contiguous block during initial download peer=%d\n", pfrom->GetId());
         }
     }
 
