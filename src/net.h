@@ -84,6 +84,8 @@ static const bool DEFAULT_FORCEDNSSEED = false;
 static const size_t DEFAULT_MAXRECEIVEBUFFER = 5 * 1000;
 static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 
+static const ServiceFlags REQUIRED_SERVICES = NODE_NETWORK;
+
 // NOTE: When adjusting this, update rpcnet:setban's help ("24h")
 static const unsigned int DEFAULT_MISBEHAVING_BANTIME = 60 * 60 * 24;  // Default 24-hour ban
 
@@ -128,6 +130,7 @@ public:
     struct Options
     {
         ServiceFlags nLocalServices = NODE_NONE;
+        ServiceFlags nRelevantServices = NODE_NONE;
         int nMaxConnections = 0;
         int nMaxOutbound = 0;
         int nMaxAddnode = 0;
@@ -142,13 +145,11 @@ public:
         std::vector<std::string> vSeedNodes;
         std::vector<CSubNet> vWhitelistedRange;
         std::vector<CService> vBinds, vWhiteBinds;
-        bool m_use_addrman_outgoing = true;
-        std::vector<std::string> m_specified_outgoing;
-        std::vector<std::string> m_added_nodes;
     };
 
     void Init(const Options& connOptions) {
         nLocalServices = connOptions.nLocalServices;
+        nRelevantServices = connOptions.nRelevantServices;
         nMaxConnections = connOptions.nMaxConnections;
         nMaxOutbound = std::min(connOptions.nMaxOutbound, connOptions.nMaxConnections);
         nMaxAddnode = connOptions.nMaxAddnode;
@@ -161,7 +162,6 @@ public:
         nMaxOutboundTimeframe = connOptions.nMaxOutboundTimeframe;
         nMaxOutboundLimit = connOptions.nMaxOutboundLimit;
         vWhitelistedRange = connOptions.vWhitelistedRange;
-        vAddedNodes = connOptions.m_added_nodes;
     }
 
     CConnman(uint64_t seed0, uint64_t seed1);
@@ -322,7 +322,7 @@ private:
     void ThreadOpenAddedConnections();
     void AddOneShot(const std::string& strDest);
     void ProcessOneShot();
-    void ThreadOpenConnections(std::vector<std::string> connect);
+    void ThreadOpenConnections();
     void ThreadMessageHandler();
     void AcceptConnection(const ListenSocket& hListenSocket);
     void ThreadSocketHandler();
@@ -399,8 +399,11 @@ private:
     /** Services this instance offers */
     ServiceFlags nLocalServices;
 
-    std::unique_ptr<CSemaphore> semOutbound;
-    std::unique_ptr<CSemaphore> semAddnode;
+    /** Services this instance cares about */
+    ServiceFlags nRelevantServices;
+
+    CSemaphore *semOutbound;
+    CSemaphore *semAddnode;
     int nMaxConnections;
     int nMaxOutbound;
     int nMaxAddnode;
@@ -598,6 +601,7 @@ class CNode
 public:
     // socket
     std::atomic<ServiceFlags> nServices;
+    ServiceFlags nServicesExpected;
     SOCKET hSocket;
     size_t nSendSize; // total size of all vSendMsg entries
     size_t nSendOffset; // offset inside the first vSendMsg already sent
@@ -648,7 +652,7 @@ public:
     bool fSentAddr;
     CSemaphoreGrant grantOutbound;
     CCriticalSection cs_filter;
-    std::unique_ptr<CBloomFilter> pfilter;
+    CBloomFilter* pfilter;
     std::atomic<int> nRefCount;
 
     const uint64_t nKeyedNetGroup;
@@ -716,11 +720,13 @@ public:
 
     CNode(NodeId id, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress &addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress &addrBindIn, const std::string &addrNameIn = "", bool fInboundIn = false);
     ~CNode();
-    CNode(const CNode&) = delete;
-    CNode& operator=(const CNode&) = delete;
 
 private:
+    CNode(const CNode&);
+    void operator=(const CNode&);
     const NodeId id;
+
+
     const uint64_t nLocalHostNonce;
     // Services offered to this peer
     const ServiceFlags nLocalServices;

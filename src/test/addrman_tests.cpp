@@ -15,7 +15,7 @@ class CAddrManTest : public CAddrMan
     uint64_t state;
 
 public:
-    explicit CAddrManTest(bool makeDeterministic = true)
+    CAddrManTest(bool makeDeterministic = true)
     {
         state = 1;
 

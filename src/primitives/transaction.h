@@ -251,9 +251,6 @@ public:
         return hash;
     }
 
-    /* SolarCoin PoS functions */
-    //unsigned int nTime;
-
     // Compute a hash that includes both transaction and witness data
     uint256 GetWitnessHash() const;
 
@@ -273,6 +270,8 @@ public:
     {
         return (vin.size() == 1 && vin[0].prevout.IsNull());
     }
+
+    /* SolarCoin: PoS functions */
 
     bool IsCoinStake() const
     {

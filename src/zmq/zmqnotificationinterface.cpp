@@ -120,7 +120,7 @@ void CZMQNotificationInterface::Shutdown()
         }
         zmq_ctx_destroy(pcontext);
 
-        pcontext = nullptr;
+        pcontext = 0;
     }
 }
 

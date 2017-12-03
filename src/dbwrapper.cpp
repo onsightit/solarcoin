@@ -19,7 +19,7 @@ class CBitcoinLevelDBLogger : public leveldb::Logger {
 public:
     // This code is adapted from posix_logger.h, which is why it is using vsprintf.
     // Please do not do this in normal code
-    void Logv(const char * format, va_list ap) override {
+    virtual void Logv(const char * format, va_list ap) override {
             if (!LogAcceptCategory(BCLog::LEVELDB)) {
                 return;
             }
@@ -190,7 +190,7 @@ bool CDBWrapper::IsEmpty()
 }
 
 CDBIterator::~CDBIterator() { delete piter; }
-bool CDBIterator::Valid() const { return piter->Valid(); }
+bool CDBIterator::Valid() { return piter->Valid(); }
 void CDBIterator::SeekToFirst() { piter->SeekToFirst(); }
 void CDBIterator::Next() { piter->Next(); }
 

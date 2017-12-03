@@ -26,14 +26,14 @@ class CBlockHeader
 {
 public:
     // header
-    static const int LEGACY_VERSION_2 = 2;
-    static const int CURRENT_VERSION = 3;
-    int nVersion;
+    static const int32_t LEGACY_VERSION_2 = 2;
+    static const int32_t CURRENT_VERSION = 3;
+    int32_t nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
-    unsigned int nTime;
-    unsigned int nBits;
-    unsigned int nNonce;
+    uint32_t nTime;
+    uint32_t nBits;
+    uint32_t nNonce;
 
     CBlockHeader()
     {
@@ -74,11 +74,7 @@ public:
         return thash;
     }
 
-    uint256 GetHash() const
-    {
-        //return SerializeHash(*this);
-        return Hash(BEGIN(nVersion), END(nNonce));
-    }
+    uint256 GetHash() const;
 
     int64_t GetBlockTime() const
     {
@@ -115,18 +111,9 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(*(CBlockHeader*)this);
-        // PoST: ConnectBlock depends on vtx following header to generate CDiskTxPos
-        if (!(s.GetType() & (SER_GETHASH|SER_BLOCKHEADERONLY))) {
-            READWRITE(vtx);
-            if (this->nVersion >= CBlockHeader::CURRENT_VERSION) {
-                READWRITE(vchBlockSig);
-            }
-        } else {
-            if (ser_action.ForRead())
-            {
-                const_cast<CBlock*>(this)->vtx.clear();
-                const_cast<CBlock*>(this)->vchBlockSig.clear();
-            }
+        READWRITE(vtx);
+        if (this->nVersion >= CBlockHeader::CURRENT_VERSION) {
+            READWRITE(vchBlockSig);
         }
     }
 
@@ -193,7 +180,7 @@ struct CBlockLocator
 
     CBlockLocator() {}
 
-    explicit CBlockLocator(const std::vector<uint256>& vHaveIn) : vHave(vHaveIn) {}
+    CBlockLocator(const std::vector<uint256>& vHaveIn) : vHave(vHaveIn) {}
 
     ADD_SERIALIZE_METHODS;
 

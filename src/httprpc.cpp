@@ -43,7 +43,7 @@ private:
 class HTTPRPCTimerInterface : public RPCTimerInterface
 {
 public:
-    explicit HTTPRPCTimerInterface(struct event_base* _base) : base(_base)
+    HTTPRPCTimerInterface(struct event_base* _base) : base(_base)
     {
     }
     const char* Name() override
@@ -62,7 +62,7 @@ private:
 /* Pre-base64-encoded authentication token */
 static std::string strRPCUserColonPass;
 /* Stored RPC timer interface (for unregistration) */
-static std::unique_ptr<HTTPRPCTimerInterface> httpRPCTimerInterface;
+static HTTPRPCTimerInterface* httpRPCTimerInterface = 0;
 
 static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const UniValue& id)
 {
@@ -192,7 +192,7 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
 
         // array of requests
         } else if (valRequest.isArray())
-            strReply = JSONRPCExecBatch(jreq, valRequest.get_array());
+            strReply = JSONRPCExecBatch(valRequest.get_array());
         else
             throw JSONRPCError(RPC_PARSE_ERROR, "Top-level object parse error");
 
@@ -238,8 +238,8 @@ bool StartHTTPRPC()
     RegisterHTTPHandler("/wallet/", false, HTTPReq_JSONRPC);
 #endif
     assert(EventBase());
-    httpRPCTimerInterface = MakeUnique<HTTPRPCTimerInterface>(EventBase());
-    RPCSetTimerInterface(httpRPCTimerInterface.get());
+    httpRPCTimerInterface = new HTTPRPCTimerInterface(EventBase());
+    RPCSetTimerInterface(httpRPCTimerInterface);
     return true;
 }
 
@@ -253,7 +253,8 @@ void StopHTTPRPC()
     LogPrint(BCLog::RPC, "Stopping HTTP RPC server\n");
     UnregisterHTTPHandler("/", true);
     if (httpRPCTimerInterface) {
-        RPCUnsetTimerInterface(httpRPCTimerInterface.get());
-        httpRPCTimerInterface.reset();
+        RPCUnsetTimerInterface(httpRPCTimerInterface);
+        delete httpRPCTimerInterface;
+        httpRPCTimerInterface = 0;
     }
 }
