@@ -24,7 +24,6 @@
 #include <util.h>
 #include <utilstrencodings.h>
 #include <hash.h>
-#include <warnings.h>
 
 #include <stdint.h>
 

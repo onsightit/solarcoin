@@ -26,7 +26,7 @@ class RecipientCatcher : public QObject
     Q_OBJECT
 
 public Q_SLOTS:
-    void getRecipient(const SendCoinsRecipient& r);
+    void getRecipient(SendCoinsRecipient r);
 
 public:
     SendCoinsRecipient recipient;
