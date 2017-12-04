@@ -30,7 +30,6 @@
 #include <policy/policy.h>
 #include <rpc/server.h>
 #include <rpc/register.h>
-#include <rpc/safemode.h>
 #include <rpc/blockchain.h>
 #include <script/standard.h>
 #include <script/sigcache.h>
@@ -44,7 +43,7 @@
 #include <utilmoneystr.h>
 #include <validationinterface.h>
 #ifdef ENABLE_WALLET
-#include <wallet/init.h>
+#include <wallet/wallet.h>
 #endif
 #include <warnings.h>
 #include <stdint.h>

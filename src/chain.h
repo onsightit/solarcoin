@@ -276,7 +276,7 @@ public:
         SetNull();
     }
 
-    CBlockIndex(const CBlockHeader& block)
+    CBlockIndex(const CBlock& block)
     {
         SetNull();
 
@@ -293,6 +293,17 @@ public:
             prevoutStake.SetNull();
             nStakeTime = 0;
         }
+
+        nVersion       = block.nVersion;
+        hashMerkleRoot = block.hashMerkleRoot;
+        nTime          = block.nTime;
+        nBits          = block.nBits;
+        nNonce         = block.nNonce;
+    }
+
+    CBlockIndex(const CBlockHeader& block)
+    {
+        SetNull();
 
         nVersion       = block.nVersion;
         hashMerkleRoot = block.hashMerkleRoot;

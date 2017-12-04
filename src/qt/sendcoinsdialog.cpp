@@ -22,7 +22,6 @@
 #include <ui_interface.h>
 #include <txmempool.h>
 #include <policy/fees.h>
-#include <wallet/fees.h>
 
 #include <QFontMetrics>
 #include <QMessageBox>

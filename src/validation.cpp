@@ -2676,7 +2676,7 @@ bool ResetBlockFailureFlags(CBlockIndex *pindex) {
     return true;
 }
 
-static CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
+static CBlockIndex* AddToBlockIndex(const CBlockHeader& block, const CChainParams& chainparams)
 {
     // Check for duplicate
     uint256 hash = block.GetHash();
@@ -3196,7 +3196,7 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
         }
     }
     if (pindex == nullptr)
-        pindex = AddToBlockIndex(block);
+        pindex = AddToBlockIndex(block, chainparams);
 
     if (ppindex)
         *ppindex = pindex;
@@ -4103,7 +4103,7 @@ bool LoadGenesisBlock(const CChainParams& chainparams)
             return error("%s: FindBlockPos failed", __func__);
         if (!WriteBlockToDisk(block, blockPos, chainparams.MessageStart()))
             return error("%s: writing genesis block to disk failed", __func__);
-        CBlockIndex *pindex = AddToBlockIndex(block);
+        CBlockIndex *pindex = AddToBlockIndex(block, chainparams);
         if (!ReceivedBlockTransactions(block, state, pindex, blockPos, chainparams.GetConsensus()))
             return error("%s: genesis block not accepted", __func__);
     } catch (const std::runtime_error& e) {

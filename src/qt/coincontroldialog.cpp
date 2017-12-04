@@ -18,7 +18,6 @@
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <validation.h> // For mempool
-#include <wallet/fees.h>
 #include <wallet/wallet.h>
 
 #include <QApplication>

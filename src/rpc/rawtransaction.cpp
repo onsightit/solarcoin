@@ -17,7 +17,6 @@
 #include <policy/policy.h>
 #include <policy/rbf.h>
 #include <primitives/transaction.h>
-#include <rpc/safemode.h>
 #include <rpc/server.h>
 #include <script/script.h>
 #include <script/script_error.h>

@@ -5,7 +5,6 @@
 #include <base58.h>
 #include <chain.h>
 #include <rpc/server.h>
-#include <wallet/init.h>
 #include <validation.h>
 #include <script/script.h>
 #include <script/standard.h>

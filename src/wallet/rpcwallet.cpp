@@ -8,6 +8,7 @@
 #include <chain.h>
 #include <consensus/validation.h>
 #include <core_io.h>
+#include <init.h>
 #include <httpserver.h>
 #include <validation.h>
 #include <net.h>
@@ -16,7 +17,6 @@
 #include <policy/policy.h>
 #include <policy/rbf.h>
 #include <rpc/mining.h>
-#include <rpc/safemode.h>
 #include <rpc/server.h>
 #include <script/sign.h>
 #include <timedata.h>
