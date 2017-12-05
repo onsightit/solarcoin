@@ -3245,6 +3245,8 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
     CBlockIndex *pindexDummy = nullptr;
     CBlockIndex *&pindex = ppindex ? *ppindex : pindexDummy;
 
+    LogPrintf("DEBUG: AcceptBlock() : IsProofOfStake()=%d\n", pblock->IsProofOfStake());
+
     if (!AcceptBlockHeader(block, state, chainparams, &pindex))
         return false;
 
@@ -3338,20 +3340,22 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
 
         if (ret) {
             // ppcoin: verify hash target and signature of coinstake tx
-            // Orphan it if we don't have the previous block
-            LogPrintf("DEBUG: ProcessNewBlock() : IsProofOfStake()=%d\n", pblock->IsProofOfStake());
-            if (pblock->IsProofOfStake() && mapBlockIndex.count(pblock->hashPrevBlock))
-            {
-                uint256 hash = pblock->GetHash();
-                uint256 hashProofOfStake, targetProofOfStake;
-                LogPrintf("DEBUG: ProcessNewBlock() : vtx.size=%d\n", pblock->vtx.size());
-                if (!CheckProofOfStake(*pblock->vtx[1], pblock->nBits, hashProofOfStake, targetProofOfStake, chainparams.GetConsensus())) {
-                    LogPrintf("WARNING: ProcessNewBlock() : CheckProofOfStake() failed for block=%s\n", hash.ToString().c_str());
-                } else {
-                    HashMap::iterator mi = mapProofOfStake.find(hash);
-                    if (mi == mapProofOfStake.end())
-                    {
-                        mapProofOfStake.insert(std::make_pair(hash, hashProofOfStake));
+            // if we have the previous block and we are not downloading
+            if (!IsInitialBlockDownload()) {
+                LogPrintf("DEBUG: ProcessNewBlock() : IsProofOfStake()=%d\n", pblock->IsProofOfStake());
+                if (pblock->IsProofOfStake() && mapBlockIndex.count(pblock->hashPrevBlock))
+                {
+                    uint256 hash = pblock->GetHash();
+                    uint256 hashProofOfStake, targetProofOfStake;
+                    if (!CheckProofOfStake(*pblock->vtx[1], pblock->nBits, hashProofOfStake, targetProofOfStake, chainparams.GetConsensus())) {
+                        LogPrintf("WARNING: ProcessNewBlock() : CheckProofOfStake() failed for block=%s\n", hash.ToString().c_str());
+                        return false; // do not error here as we expect this during initial block download
+                    } else {
+                        HashMap::iterator mi = mapProofOfStake.find(hash);
+                        if (mi == mapProofOfStake.end())
+                        {
+                            mapProofOfStake.insert(std::make_pair(hash, hashProofOfStake));
+                        }
                     }
                 }
             }
