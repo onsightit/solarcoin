@@ -188,6 +188,9 @@ public:
         const CTransaction& tx = *vtx[1];
         return IsProofOfStake() ? std::make_pair(tx.vin[0].prevout, tx.nTime) : std::make_pair(COutPoint(), (unsigned int)0);
     }
+
+    bool SignBlock(CWallet& wallet, int64_t nFees);
+    bool CheckBlockSignature(bool fProofOfStake) const;
 };
 
 /** Describes a place in the block chain to another node such that if the
