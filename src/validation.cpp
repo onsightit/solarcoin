@@ -3330,19 +3330,23 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         CValidationState state;
         // Ensure that CheckBlock() passes before calling AcceptBlock, as
         // belt-and-suspenders.
+        LogPrintf("DEBUG: ProcessNewBlock() : Calling CheckBlock() pblock=%s\n", pblock->ToString());
         bool ret = CheckBlock(*pblock, state, chainparams.GetConsensus());
+        LogPrintf("DEBUG: ProcessNewBlock() : CheckBlock() ret=%d\n", ret);
 
         LOCK(cs_main);
 
         if (ret) {
             // ppcoin: verify hash target and signature of coinstake tx
             // Orphan it if we don't have the previous block
+            LogPrintf("DEBUG: ProcessNewBlock() : IsProofOfStake()=%d\n", pblock->IsProofOfStake());
             if (pblock->IsProofOfStake() && mapBlockIndex.count(pblock->hashPrevBlock))
             {
+                LogPrintf("DEBUG: ProcessNewBlock() : PRE-SEGV\n");
                 uint256 hash = pblock->GetHash();
                 uint256 hashProofOfStake, targetProofOfStake;
-                const CTransaction& tx = (const CTransaction&)pblock->vtx[1];
-                if (!CheckProofOfStake((const CTransaction&)tx, pblock->nBits, hashProofOfStake, targetProofOfStake, chainparams.GetConsensus())) {
+                LogPrintf("DEBUG: ProcessNewBlock() : vtx.size=%d\n", pblock->vtx.size());
+                if (!CheckProofOfStake(*pblock->vtx[1], pblock->nBits, hashProofOfStake, targetProofOfStake, chainparams.GetConsensus())) {
                     LogPrintf("WARNING: ProcessNewBlock() : CheckProofOfStake() failed for block=%s\n", hash.ToString().c_str());
                 } else {
                     HashMap::iterator mi = mapProofOfStake.find(hash);
