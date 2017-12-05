@@ -383,8 +383,9 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
     CTransactionRef txPrevRef;
 
     // First try finding the previous transaction in database
+    LogPrintf("DEBUG: CheckProofOfStake() : PRE-SEGV\n");
     if (!GetTransaction(hashTx, txPrevRef, Params().GetConsensus(), hashBlock, true)) {
-        LogPrintf("%s(): INFO: read txPrev failed", __func__);  // previous transaction not in main chain, may occur during initial download
+        LogPrintf("%s(): INFO: read txPrev failed\n", __func__);  // previous transaction not in main chain, may occur during initial download
         return false;
     }
     const CTransaction& txPrev = *txPrevRef;

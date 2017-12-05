@@ -3342,7 +3342,6 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
             LogPrintf("DEBUG: ProcessNewBlock() : IsProofOfStake()=%d\n", pblock->IsProofOfStake());
             if (pblock->IsProofOfStake() && mapBlockIndex.count(pblock->hashPrevBlock))
             {
-                LogPrintf("DEBUG: ProcessNewBlock() : PRE-SEGV\n");
                 uint256 hash = pblock->GetHash();
                 uint256 hashProofOfStake, targetProofOfStake;
                 LogPrintf("DEBUG: ProcessNewBlock() : vtx.size=%d\n", pblock->vtx.size());
