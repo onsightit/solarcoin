@@ -1229,8 +1229,7 @@ inline void static SendBlockTransactions(const CBlock& block, const BlockTransac
     connman->PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::BLOCKTXN, resp));
 }
 
-// DEBUG: bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::vector<CBlockHeader>& headers, const CChainParams& chainparams, bool punish_duplicate_invalid)
-bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::vector<CBlock>& headers, const CChainParams& chainparams, bool punish_duplicate_invalid)
+bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::vector<CBlockHeader>& headers, const CChainParams& chainparams, bool punish_duplicate_invalid)
 {
     const CNetMsgMaker msgMaker(pfrom->GetSendVersion());
     size_t nCount = headers.size();
@@ -1852,7 +1851,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     // legacy protocol version 70005.
                     if (pfrom->nVersion == LEGACY_PROTOCOL_VERSION) {
                         pfrom->AskFor(inv);
-                        LogPrintf("DEBUG: Ask peer=%d for block=%s\n", pfrom->GetId(), inv.hash.ToString());
+                        LogPrintf("DEBUG: AskFor(inv) peer=%d for block=%s\n", pfrom->GetId(), inv.hash.ToString());
                     } else {
                         connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), inv.hash));
                         LogPrint(BCLog::NET, "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, inv.hash.ToString(), pfrom->GetId());
@@ -2550,29 +2549,67 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
     else if (strCommand == NetMsgType::HEADERS && !fImporting && !fReindex) // Ignore headers received while importing
     {
-        // DEBUG: Use CBlock instead
-        //std::vector<CBlockHeader> headers;
-        std::vector<CBlock> headers;
+        if (pfrom->nVersion == LEGACY_PROTOCOL_VERSION) {
+            // SolarCoin: Use CBlock instead, since 2.1.8 is sending more than just the header!
+            std::vector<CBlock> blocks;
+            std::vector<CBlockHeader> headers;
+            // SolarCoin: Only serialize the header
+            vRecv.SetType(vRecv.GetType()|SER_BLOCKHEADERONLY);
 
-        // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
-        unsigned int nCount = ReadCompactSize(vRecv);
-        if (nCount > MAX_HEADERS_RESULTS) {
-            LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 20);
-            return error("headers message size = %u", nCount);
-        }
-        headers.resize(nCount);
-        for (unsigned int n = 0; n < nCount; n++) {
-            vRecv >> headers[n];
-            ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
-        }
+            // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
+            unsigned int nCount = ReadCompactSize(vRecv);
+            if (nCount > MAX_HEADERS_RESULTS) {
+                LOCK(cs_main);
+                Misbehaving(pfrom->GetId(), 20);
+                return error("headers message size = %u", nCount);
+            }
 
-        // Headers received via a HEADERS message should be valid, and reflect
-        // the chain the peer is on. If we receive a known-invalid header,
-        // disconnect the peer if it is using one of our outbound connection
-        // slots.
-        bool should_punish = !pfrom->fInbound && !pfrom->m_manual_connection;
-        return ProcessHeadersMessage(pfrom, connman, headers, chainparams, should_punish);
+            blocks.resize(nCount);
+            headers.resize(nCount);
+            int nType = SER_BLOCKHEADERONLY;
+            CDataStream ss(nType, PROTOCOL_VERSION);
+            ss.reserve(MAX_BLOCK_SERIALIZED_SIZE);
+            for (unsigned int n = 0; n < nCount; n++) {
+                vRecv >> blocks[n];
+                ss << blocks[n];
+                ss >> headers[n];
+                ss.clear();
+                //LogPrintf("DEBUG: HEADER : n=%d header=%s\n", n, headers[n].ToString());
+                if (n < nCount - 1) // Don't call if we just processed the last header
+                    ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
+            }
+            blocks.clear();
+
+            // Headers received via a HEADERS message should be valid, and reflect
+            // the chain the peer is on. If we receive a known-invalid header,
+            // disconnect the peer if it is using one of our outbound connection
+            // slots.
+            bool should_punish = !pfrom->fInbound && !pfrom->m_manual_connection;
+            return ProcessHeadersMessage(pfrom, connman, headers, chainparams, should_punish);
+        } else {
+            // SolarCoin: Use CBlockHeaders normally.
+            std::vector<CBlockHeader> headers;
+
+            // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
+            unsigned int nCount = ReadCompactSize(vRecv);
+            if (nCount > MAX_HEADERS_RESULTS) {
+                LOCK(cs_main);
+                Misbehaving(pfrom->GetId(), 20);
+                return error("headers message size = %u", nCount);
+            }
+            headers.resize(nCount);
+            for (unsigned int n = 0; n < nCount; n++) {
+                vRecv >> headers[n];
+                ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
+            }
+
+            // Headers received via a HEADERS message should be valid, and reflect
+            // the chain the peer is on. If we receive a known-invalid header,
+            // disconnect the peer if it is using one of our outbound connection
+            // slots.
+            bool should_punish = !pfrom->fInbound && !pfrom->m_manual_connection;
+            return ProcessHeadersMessage(pfrom, connman, headers, chainparams, should_punish);
+        }
     }
 
     // DEBUG: process block
@@ -2595,7 +2632,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             mapBlockSource.emplace(hash, std::make_pair(pfrom->GetId(), true));
         }
         bool fNewBlock = false;
-        LogPrintf("DEBUG: Process New block %s from peer=%d\n", pblock->GetHash().ToString(), pfrom->GetId());
         ProcessNewBlock(chainparams, pblock, forceProcessing, &fNewBlock);
         if (fNewBlock) {
             pfrom->nLastBlockTime = GetTime();

@@ -2882,10 +2882,14 @@ static bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, 
 
 static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
+    // SolarCoin: Only check PoW and instantiate a block with the header to get the PoW hash.
     bool fPoW = block.nVersion <= CBlockHeader::LEGACY_VERSION_2 ? true : false;
     // Check proof of work matches claimed amount
-    if (fPoW && fCheckPOW && !CheckProofOfWork(block.GetPoWHash(), block.nBits, consensusParams))
-        return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
+    if (fPoW && fCheckPOW) {
+        CBlock b(block);
+        if (!CheckProofOfWork(b.GetPoWHash(), block.nBits, consensusParams))
+            return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
+    }
 
     return true;
 }
@@ -3034,7 +3038,6 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
         // Check proof of stake (TODO: PoST nBits are not consistently set until height 835213+501.
         // Use TWO_PERCENT_INT_HEIGHT to start checking nBits.)
         if (block.nBits != GetNextTargetRequired(pindexPrev, false, consensusParams) && nHeight >= consensusParams.TWO_PERCENT_INT_HEIGHT) {
-            LogPrintf("DEBUG: nHeight=%d block.nBits=%u, GetNextTargetRequired.nBits=%u\n", nHeight, block.nBits, GetNextTargetRequired(pindexPrev, false, consensusParams));
             return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of stake");
         }
     }
@@ -3210,8 +3213,7 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
 }
 
 // Exposed wrapper for AcceptBlockHeader
-// DEBUG: bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, CValidationState& state, const CChainParams& chainparams, const CBlockIndex** ppindex, CBlockHeader *first_invalid)
-bool ProcessNewBlockHeaders(const std::vector<CBlock>& headers, CValidationState& state, const CChainParams& chainparams, const CBlockIndex** ppindex, CBlockHeader *first_invalid)
+bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, CValidationState& state, const CChainParams& chainparams, const CBlockIndex** ppindex, CBlockHeader *first_invalid)
 {
     if (first_invalid != nullptr) first_invalid->SetNull();
     {
@@ -3222,9 +3224,8 @@ bool ProcessNewBlockHeaders(const std::vector<CBlock>& headers, CValidationState
                 if (first_invalid) *first_invalid = header;
                 return false;
             }
-            // DEBUG: The appears to be a bug in bitcoin core!
-            //if (ppindex) {
-            if (pindex) {
+            // SolarCoin: This appears to be a bug in bitcoin core. "if (ppindex) {"
+            if (ppindex && pindex) {
                 *ppindex = pindex;
             }
         }
@@ -3338,7 +3339,6 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
             // Orphan it if we don't have the previous block
             if (pblock->IsProofOfStake() && mapBlockIndex.count(pblock->hashPrevBlock))
             {
-                LogPrintf("DEBUG: ProcessNewBlock() : Calling CheckProofOfStake\n");
                 uint256 hash = pblock->GetHash();
                 uint256 hashProofOfStake, targetProofOfStake;
                 const CTransaction& tx = (const CTransaction&)pblock->vtx[1];
@@ -3354,7 +3354,6 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
             }
 
             // Store to disk
-            LogPrintf("DEBUG: ProcessNewBlock() : Calling AcceptBlock\n");
             ret = AcceptBlock(pblock, state, chainparams, &pindex, fForceProcessing, nullptr, fNewBlock);
         }
         CheckBlockIndex(chainparams.GetConsensus());
@@ -3382,7 +3381,7 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
     indexDummy.pprev = pindexPrev;
     indexDummy.nHeight = pindexPrev->nHeight + 1;
 
-    // NOTE: CheckBlockHeader is called by CheckBlock
+    // NOTE: CheckBlockHeader is called by CheckBlock and AcceptBlockHeader
     if (!ContextualCheckBlockHeader(block, state, chainparams, pindexPrev, GetAdjustedTime()))
         return error("%s: Consensus::ContextualCheckBlockHeader: %s", __func__, FormatStateMessage(state));
     if (!CheckBlock(block, state, chainparams.GetConsensus(), fCheckPOW, fCheckMerkleRoot))

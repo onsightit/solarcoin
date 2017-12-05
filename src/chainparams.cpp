@@ -250,7 +250,7 @@ public:
         genesis = CreateGenesisBlock(1384473600, 1397766, 0x1e0ffff0, CTransaction::LEGACY_VERSION_2, 100 * COIN);        
         consensus.hashGenesisBlock = genesis.GetHash();
 
-        printf("TestNet: consensus.hashGenesisBlock: %s \n", genesis.GetHash().ToString().c_str());
+        // printf("TestNet: consensus.hashGenesisBlock: %s \n", genesis.GetHash().ToString().c_str());
         assert(consensus.hashGenesisBlock == uint256S("0xedcf32dbfd327fe7f546d3a175d91b05e955ec1224e087961acc9a2aa8f592ee"));
         assert(genesis.hashMerkleRoot == uint256S("0x33ecdb1985425f576c65e2c85d7983edc6207038a2910fefaf86cfb4e53185a3"));
 

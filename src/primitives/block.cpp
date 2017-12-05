@@ -4,15 +4,27 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <primitives/block.h>
-
-#include <hash.h>
+#include <chain.h>
 #include <tinyformat.h>
 #include <utilstrencodings.h>
-#include <crypto/common.h>
+#include <stdlib.h>
+#include <timedata.h>
 
-uint256 CBlockHeader::GetHash() const
+void CBlockHeader::UpdateTime(const CBlockIndex* pindexPrev)
 {
-    return SerializeHash(*this);
+    nTime = std::max(GetBlockTime(), GetAdjustedTime());
+}
+
+std::string CBlockHeader::ToString() const
+{
+    std::stringstream s;
+    s << strprintf("CBlockHeader(hash=%s, ver=0x%08x, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u)\n",
+        GetHash().ToString(),
+        nVersion,
+        hashPrevBlock.ToString(),
+        hashMerkleRoot.ToString(),
+        nTime, nBits, nNonce);
+    return s.str();
 }
 
 std::string CBlock::ToString() const

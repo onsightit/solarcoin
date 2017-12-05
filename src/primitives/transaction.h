@@ -20,10 +20,10 @@ class COutPoint
 {
 public:
     uint256 hash;
-    uint32_t n;
+    unsigned int n;
 
-    COutPoint(): n((uint32_t) -1) { }
-    COutPoint(const uint256& hashIn, uint32_t nIn): hash(hashIn), n(nIn) { }
+    COutPoint(): n((unsigned int) -1) { }
+    COutPoint(const uint256& hashIn, unsigned int nIn): hash(hashIn), n(nIn) { }
 
     ADD_SERIALIZE_METHODS;
 
@@ -33,8 +33,8 @@ public:
         READWRITE(n);
     }
 
-    void SetNull() { hash.SetNull(); n = (uint32_t) -1; }
-    bool IsNull() const { return (hash.IsNull() && n == (uint32_t) -1); }
+    void SetNull() { hash.SetNull(); n = (unsigned int) -1; }
+    bool IsNull() const { return (hash.IsNull() && n == (unsigned int) -1); }
 
     friend bool operator<(const COutPoint& a, const COutPoint& b)
     {
@@ -64,26 +64,26 @@ class CTxIn
 public:
     COutPoint prevout;
     CScript scriptSig;
-    uint32_t nSequence;
+    unsigned int nSequence;
     CScriptWitness scriptWitness; //! Only serialized through CTransaction
 
     /* Setting nSequence to this value for every input in a transaction
      * disables nLockTime. */
-    static const uint32_t SEQUENCE_FINAL = 0xffffffff;
+    static const unsigned int SEQUENCE_FINAL = 0xffffffff;
 
     /* Below flags apply in the context of BIP 68*/
     /* If this flag set, CTxIn::nSequence is NOT interpreted as a
      * relative lock-time. */
-    static const uint32_t SEQUENCE_LOCKTIME_DISABLE_FLAG = (1 << 31);
+    static const unsigned int SEQUENCE_LOCKTIME_DISABLE_FLAG = (1 << 31);
 
     /* If CTxIn::nSequence encodes a relative lock-time and this flag
      * is set, the relative lock-time has units of 512 seconds,
      * otherwise it specifies blocks with a granularity of 1. */
-    static const uint32_t SEQUENCE_LOCKTIME_TYPE_FLAG = (1 << 22);
+    static const unsigned int SEQUENCE_LOCKTIME_TYPE_FLAG = (1 << 22);
 
     /* If CTxIn::nSequence encodes a relative lock-time, this mask is
      * applied to extract that lock-time from the sequence field. */
-    static const uint32_t SEQUENCE_LOCKTIME_MASK = 0x0000ffff;
+    static const unsigned int SEQUENCE_LOCKTIME_MASK = 0x0000ffff;
 
     /* In order to use the same number of bits to encode roughly the
      * same wall-clock duration, and because blocks are naturally
@@ -99,8 +99,8 @@ public:
         nSequence = SEQUENCE_FINAL;
     }
 
-    explicit CTxIn(COutPoint prevoutIn, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=SEQUENCE_FINAL);
-    CTxIn(uint256 hashPrevTx, uint32_t nOut, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=SEQUENCE_FINAL);
+    explicit CTxIn(COutPoint prevoutIn, CScript scriptSigIn=CScript(), unsigned int nSequenceIn=SEQUENCE_FINAL);
+    CTxIn(uint256 hashPrevTx, unsigned int nOut, CScript scriptSigIn=CScript(), unsigned int nSequenceIn=SEQUENCE_FINAL);
 
     ADD_SERIALIZE_METHODS;
 
@@ -196,27 +196,27 @@ class CTransaction
 {
 public:
     // Legacy transaction versions.
-    static const int32_t LEGACY_VERSION_2 = 2;
-    static const int32_t LEGACY_VERSION_3 = 3;
+    static const int LEGACY_VERSION_2 = 2;
+    static const int LEGACY_VERSION_3 = 3;
     // Default transaction version.
-    static const int32_t CURRENT_VERSION = 4; // V4 - Includes nTime in tx hash
+    static const int CURRENT_VERSION = 4; // V4 - Includes nTime in tx hash
 
     // Changing the default transaction version requires a two step process: first
     // adapting relay policy by bumping MAX_STANDARD_VERSION, and then later date
     // bumping the default CURRENT_VERSION at which point both CURRENT_VERSION and
     // MAX_STANDARD_VERSION will be equal.
-    static const int32_t MAX_STANDARD_VERSION = 4;
+    static const int MAX_STANDARD_VERSION = 4;
 
     // The local variables are made const to prevent unintended modification
     // without updating the cached hash value. However, CTransaction is not
     // actually immutable; deserialization and assignment are implemented,
     // and bypass the constness. This is safe, as they update the entire
     // structure, including the hash.
-    const int32_t nVersion;
-    const uint32_t nTime;
+    const int nVersion;
+    const unsigned int nTime;
     const std::vector<CTxIn> vin;
     const std::vector<CTxOut> vout;
-    const uint32_t nLockTime;
+    const unsigned int nLockTime;
     std::string strTxComment;
 
 private:
@@ -304,23 +304,23 @@ public:
 
 /**
  * Basic transaction serialization format:
- * - int32_t nVersion
- * - uint32_t nTime
+ * - int nVersion
+ * - unsigned int nTime
  * - std::vector<CTxIn> vin
  * - std::vector<CTxOut> vout
- * - uint32_t nLockTime
+ * - unsigned int nLockTime
  * - std::string strTxComment
  *
  * Extended transaction serialization format:
- * - int32_t nVersion
- * - uint32_t nTime
+ * - int nVersion
+ * - unsigned int nTime
  * - unsigned char dummy = 0x00
  * - unsigned char flags (!= 0)
  * - std::vector<CTxIn> vin
  * - std::vector<CTxOut> vout
  * - if (flags & 1):
  *   - CTxWitness wit;
- * - uint32_t nLockTime
+ * - unsigned int nLockTime
  * - std::string strTxComment
  */
 template<typename Stream, typename TxType>
@@ -361,11 +361,11 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
 /** A mutable version of CTransaction. */
 struct CMutableTransaction
 {
-    int32_t nVersion;
-    uint32_t nTime;
+    int nVersion;
+    unsigned int nTime;
     std::vector<CTxIn> vin;
     std::vector<CTxOut> vout;
-    uint32_t nLockTime;
+    unsigned int nLockTime;
     std::string strTxComment;
     
     CMutableTransaction();
