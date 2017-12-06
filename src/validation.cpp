@@ -3175,8 +3175,14 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
         // Get prev block index
         CBlockIndex* pindexPrev = nullptr;
         BlockMap::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
-        if (mi == mapBlockIndex.end())
-            return state.DoS(10, error("%s: prev block not found", __func__), 0, "prev-blk-not-found");
+        if (mi == mapBlockIndex.end()) {
+            // SolarCoin: Don't DoS if IsInitialBlockDownload
+            if (IsInitialBlockDownload()) {
+                return false;
+            } else {
+                return state.DoS(10, error("%s: prev block not found", __func__), 0, "prev-blk-not-found");
+            }
+        }
         pindexPrev = (*mi).second;
         if (pindexPrev->nStatus & BLOCK_FAILED_MASK)
             return state.DoS(100, error("%s: prev block invalid", __func__), REJECT_INVALID, "bad-prevblk");
@@ -3260,14 +3266,13 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
     // blocks which are too close in height to the tip.  Apply this test
     // regardless of whether pruning is enabled; it should generally be safe to
     // not process unrequested blocks.
-    bool fTooFarAhead = (pindex->nHeight > int(chainActive.Height() + MIN_BLOCKS_TO_KEEP));
+    // DEBUG: //bool fTooFarAhead = (pindex->nHeight > int(chainActive.Height() + MIN_BLOCKS_TO_KEEP));
+    bool fTooFarAhead = false;
 
     // TODO: Decouple this function from the block download logic by removing fRequested
     // This requires some new chain data structure to efficiently look up if a
     // block is in a chain leading to a candidate for best tip, despite not
     // being such a candidate itself.
-
-    LogPrintf("DEBUG: Bool Flags: fAlreadyHave=%d fHasMoreOrSameWork=%d fTooFarAhead=%d pindex.nHeight=%d chainActive.Height=%d\n", fAlreadyHave, fHasMoreOrSameWork, fTooFarAhead, pindex->nHeight, chainActive.Height());
 
     // TODO: deal better with return value and error conditions for duplicate
     // and unrequested blocks.
@@ -3281,9 +3286,14 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
         // If our tip is behind, a peer could try to send us
         // low-work blocks on a fake chain that we would never
         // request; don't process these.
-        if (pindex->nChainWork < nMinimumChainWork) return true;
+        if (pindex->nChainWork < nMinimumChainWork) {
+            LogPrintf("DEBUG: Returning because pindex->nChainWork=%08x %s  <  nMinimumChainWork=%08x %s\n", pindex->nChainWork.GetCompact(), pindex->nChainWork.GetHex(), nMinimumChainWork.GetCompact(), nMinimumChainWork.GetHex());
+            return true;
+        }
     }
     if (fNewBlock) *fNewBlock = true;
+
+    LogPrintf("DEBUG: Bool Flags: fAlreadyHave=%d fHasMoreOrSameWork=%d fTooFarAhead=%d pindex.nHeight=%d chainActive.Height=%d\n", fAlreadyHave, fHasMoreOrSameWork, fTooFarAhead, pindex->nHeight, chainActive.Height());
 
     if (!CheckBlock(block, state, chainparams.GetConsensus()) ||
         !ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev)) {
@@ -3301,6 +3311,7 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
 
     int nHeight = pindex->nHeight;
 
+    LogPrintf("DEBUG: AcceptBlock() : Writing block to history file.\n");
     // Write block to history file
     try {
         unsigned int nBlockSize = ::GetSerializeSize(block, SER_DISK, CLIENT_VERSION);
@@ -3332,9 +3343,7 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         CValidationState state;
         // Ensure that CheckBlock() passes before calling AcceptBlock, as
         // belt-and-suspenders.
-        LogPrintf("DEBUG: ProcessNewBlock() : Calling CheckBlock() pblock=%s\n", pblock->ToString());
         bool ret = CheckBlock(*pblock, state, chainparams.GetConsensus());
-        LogPrintf("DEBUG: ProcessNewBlock() : CheckBlock() ret=%d\n", ret);
 
         LOCK(cs_main);
 
@@ -3343,20 +3352,19 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
             // if we have the previous block and we are not downloading
             if (!IsInitialBlockDownload()) {
                 LogPrintf("DEBUG: ProcessNewBlock() : IsProofOfStake()=%d\n", pblock->IsProofOfStake());
+                uint256 hash = pblock->GetHash();
+                uint256 hashProofOfStake, targetProofOfStake;
                 if (pblock->IsProofOfStake() && mapBlockIndex.count(pblock->hashPrevBlock))
                 {
-                    uint256 hash = pblock->GetHash();
-                    uint256 hashProofOfStake, targetProofOfStake;
                     if (!CheckProofOfStake(*pblock->vtx[1], pblock->nBits, hashProofOfStake, targetProofOfStake, chainparams.GetConsensus())) {
                         LogPrintf("WARNING: ProcessNewBlock() : CheckProofOfStake() failed for block=%s\n", hash.ToString().c_str());
                         return false; // do not error here as we expect this during initial block download
-                    } else {
-                        HashMap::iterator mi = mapProofOfStake.find(hash);
-                        if (mi == mapProofOfStake.end())
-                        {
-                            mapProofOfStake.insert(std::make_pair(hash, hashProofOfStake));
-                        }
                     }
+                }
+                HashMap::iterator mi = mapProofOfStake.find(hash);
+                if (mi == mapProofOfStake.end())
+                {
+                    mapProofOfStake.insert(std::make_pair(hash, hashProofOfStake));
                 }
             }
 

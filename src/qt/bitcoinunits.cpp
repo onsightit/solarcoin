@@ -51,9 +51,9 @@ QString BitcoinUnits::description(int unit)
 {
     switch(unit)
     {
-    case SLR: return QString("Solarcoins");
-    case mSLR: return QString("Milli-Solarcoins (1 / 1" THIN_SP_UTF8 "000)");
-    case uSLR: return QString("Micro-Solarcoins (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    case SLR: return QString("SolarCoins");
+    case mSLR: return QString("Milli-SolarCoins (1 / 1" THIN_SP_UTF8 "000)");
+    case uSLR: return QString("Micro-SolarCoins (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
     default: return QString("???");
     }
 }

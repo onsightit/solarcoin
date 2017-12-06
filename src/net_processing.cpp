@@ -2639,7 +2639,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             LOCK(cs_main);
             mapBlockSource.erase(pblock->GetHash());
             // SolarCoin: Ignore block command until all headers are downloaded.
-            LogPrint(BCLog::NET, "ignoring non-contiguous block during initial download peer=%d\n", pfrom->GetId());
+            if (IsInitialBlockDownload())
+                LogPrint(BCLog::NET, "ignoring non-contiguous block during initial download peer=%d\n", pfrom->GetId());
         }
     }
 

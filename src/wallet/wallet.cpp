@@ -4337,7 +4337,7 @@ int CMerkleTx::GetBlocksToMaturity() const
 {
     if (!IsCoinBase() && !IsCoinStake())
         return 0;
-    return std::max(0, (COINBASE_MATURITY+1) - GetDepthInMainChain());
+    return std::max(0, ((tx->nVersion < CTransaction::LEGACY_VERSION_3 ? COINBASE_MATURITY_POW : COINBASE_MATURITY)+1) - GetDepthInMainChain());
 }
 
 

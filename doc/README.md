@@ -31,7 +31,6 @@ Drag SolarCoin-Core to your applications folder, and then run SolarCoin-Core.
 * See the documentation at the [SolarCoin Wiki](https://solarcoin.info/)
 for help and more information.
 * Ask for help on [#solarcoin](http://webchat.freenode.net?channels=solarcoin) on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net?channels=solarcoin).
-* Ask for help on the [SolarcoinTalk](https://solarcointalk.io/) forums.
 
 Building
 ---------------------
@@ -61,7 +60,6 @@ The SolarCoin repo's [root README](/README.md) contains relevant information on 
 - [Benchmarking](benchmarking.md)
 
 ### Resources
-* Discuss on the [SolarcoinTalk](https://solarcointalk.io/) forums.
 * Discuss general SolarCoin development on #solarcoin-dev on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=solarcoin-dev).
 
 ### Miscellaneous
