@@ -29,7 +29,16 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(const PlatformStyle *_platformStyle, QWid
     model(0),
     platformStyle(_platformStyle)
 {
+    // Setup header and styles
+    if (GUIUtil::fNoHeaders)
+        GUIUtil::header(this, QString(""));
+    else if (GUIUtil::fSmallHeaders)
+        GUIUtil::header(this, QString(":images/headerReceiveSmall"));
+    else
+        GUIUtil::header(this, QString(":images/headerReceive"));
+
     ui->setupUi(this);
+    this->layout()->setContentsMargins(10, 10 + GUIUtil::HEADER_HEIGHT, 10, 10);
 
     if (!_platformStyle->getImagesOnButtons()) {
         ui->clearButton->setIcon(QIcon());
