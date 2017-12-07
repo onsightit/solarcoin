@@ -226,13 +226,12 @@ public:
     unsigned int nStakeTime;
     uint256 hashProofOfStake;
 
-    // block header
-    int32_t nVersion;
-    uint256 hashPrev;
+    //! block header
+    int nVersion;
     uint256 hashMerkleRoot;
-    uint32_t nTime;
-    uint32_t nBits;
-    uint32_t nNonce;
+    unsigned int nTime;
+    unsigned int nBits;
+    unsigned int nNonce;
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     int32_t nSequenceId;
@@ -245,32 +244,31 @@ public:
         phashBlock = nullptr;
         pprev = nullptr;
         pnext = nullptr;
+        nHeight = 0;
         nFile = 0;
         nDataPos = 0;
         nUndoPos = 0;
-        nStatus = 0;
+        nChainWork = arith_uint256();
         nTx = 0;
-        nHeight = 0;
+        nChainTx = 0;
+        nStatus = 0;
+        nSequenceId = 0;
+        nTimeMax = 0;
+
         nMint = 0;
         nMoneySupply = 0;
         nFlags = 0;
         nStakeModifier = 0;
+        nStakeModifierChecksum = 0;
         prevoutStake.SetNull();
         nStakeTime = 0;
         hashProofOfStake = uint256();
+
         nVersion       = 0;
-        hashPrev       = uint256();
         hashMerkleRoot = uint256();
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
-
-        nChainWork = arith_uint256();
-        nChainTx = 0;
-        nSequenceId = 0;
-        nTimeMax = 0;
-        nStakeModifierChecksum = 0;
-
     }
 
     CBlockIndex()
@@ -297,20 +295,17 @@ public:
         }
 
         nVersion       = block.nVersion;
-        hashPrev       = block.hashPrevBlock;
         hashMerkleRoot = block.hashMerkleRoot;
         nTime          = block.nTime;
         nBits          = block.nBits;
         nNonce         = block.nNonce;
     }
 
-
-    explicit CBlockIndex(const CBlockHeader& block)
+    CBlockIndex(const CBlockHeader& block)
     {
         SetNull();
 
         nVersion       = block.nVersion;
-        hashPrev       = block.hashPrevBlock;
         hashMerkleRoot = block.hashMerkleRoot;
         nTime          = block.nTime;
         nBits          = block.nBits;
@@ -363,7 +358,7 @@ public:
         return (int64_t)nTimeMax;
     }
 
-    static constexpr int nMedianTimeSpan = 11;
+    enum { nMedianTimeSpan=11 };
 
     int64_t GetMedianTimePast() const
     {
@@ -483,22 +478,15 @@ const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* 
 /** Used to marshal pointers into hashes for db storage. */
 class CDiskBlockIndex : public CBlockIndex
 {
-private:
-    uint256 blockHash;
-
 public:
     uint256 hashPrev;
-    uint256 hashNext;
 
     CDiskBlockIndex() {
-        blockHash = uint256();
         hashPrev = uint256();
-        hashNext = uint256();
     }
 
     explicit CDiskBlockIndex(const CBlockIndex* pindex) : CBlockIndex(*pindex) {
         hashPrev = (pprev ? pprev->GetBlockHash() : uint256());
-        hashNext = (pnext ? pnext->GetBlockHash() : uint256());
     }
 
     ADD_SERIALIZE_METHODS;
@@ -509,8 +497,9 @@ public:
         if (!(s.GetType() & SER_GETHASH))
             READWRITE(VARINT(_nVersion));
 
-        READWRITE(hashNext);
         READWRITE(VARINT(nHeight));
+        READWRITE(VARINT(nStatus));
+        READWRITE(VARINT(nTx));
         if (nStatus & (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO))
             READWRITE(VARINT(nFile));
         if (nStatus & BLOCK_HAVE_DATA)
@@ -518,6 +507,7 @@ public:
         if (nStatus & BLOCK_HAVE_UNDO)
             READWRITE(VARINT(nUndoPos));
 
+        // SolarCoin: PoST
         READWRITE(VARINT(nMint));
         READWRITE(VARINT(nMoneySupply));
         READWRITE(VARINT(nFlags));
@@ -541,10 +531,6 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
-        READWRITE(blockHash);
-
-        READWRITE(VARINT(nStatus));
-        READWRITE(VARINT(nTx));
     }
 
     uint256 GetBlockHash() const

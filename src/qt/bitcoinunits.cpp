@@ -17,9 +17,9 @@ BitcoinUnits::BitcoinUnits(QObject *parent):
 QList<BitcoinUnits::Unit> BitcoinUnits::availableUnits()
 {
     QList<BitcoinUnits::Unit> unitlist;
-    unitlist.append(BTC);
-    unitlist.append(mBTC);
-    unitlist.append(uBTC);
+    unitlist.append(SLR);
+    unitlist.append(mSLR);
+    unitlist.append(uSLR);
     return unitlist;
 }
 
@@ -27,9 +27,9 @@ bool BitcoinUnits::valid(int unit)
 {
     switch(unit)
     {
-    case BTC:
-    case mBTC:
-    case uBTC:
+    case SLR:
+    case mSLR:
+    case uSLR:
         return true;
     default:
         return false;
@@ -40,9 +40,9 @@ QString BitcoinUnits::name(int unit)
 {
     switch(unit)
     {
-    case BTC: return QString("SLR");
-    case mBTC: return QString("mSLR");
-    case uBTC: return QString::fromUtf8("μSLR");
+    case SLR: return QString("SLR");
+    case mSLR: return QString("mSLR");
+    case uSLR: return QString::fromUtf8("μSLR");
     default: return QString("???");
     }
 }
@@ -51,9 +51,9 @@ QString BitcoinUnits::description(int unit)
 {
     switch(unit)
     {
-    case BTC: return QString("Solarcoins");
-    case mBTC: return QString("Milli-Solarcoins (1 / 1" THIN_SP_UTF8 "000)");
-    case uBTC: return QString("Micro-Solarcoins (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    case SLR: return QString("SolarCoins");
+    case mSLR: return QString("Milli-SolarCoins (1 / 1" THIN_SP_UTF8 "000)");
+    case uSLR: return QString("Micro-SolarCoins (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
     default: return QString("???");
     }
 }
@@ -62,9 +62,9 @@ qint64 BitcoinUnits::factor(int unit)
 {
     switch(unit)
     {
-    case BTC:  return 100000000;
-    case mBTC: return 100000;
-    case uBTC: return 100;
+    case SLR:  return 100000000;
+    case mSLR: return 100000;
+    case uSLR: return 100;
     default:   return 100000000;
     }
 }
@@ -73,9 +73,9 @@ int BitcoinUnits::decimals(int unit)
 {
     switch(unit)
     {
-    case BTC: return 8;
-    case mBTC: return 5;
-    case uBTC: return 2;
+    case SLR: return 8;
+    case mSLR: return 5;
+    case uSLR: return 2;
     default: return 0;
     }
 }

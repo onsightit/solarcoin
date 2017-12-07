@@ -120,7 +120,7 @@ bool AppInit(int argc, char* argv[])
         for (int i = 1; i < argc; i++) {
             if (!IsSwitchChar(argv[i][0])) {
                 fprintf(stderr, "Error: Command line contains unexpected token '%s', see bitcoind -h for a list of options.\n", argv[i]);
-                return false;
+                exit(EXIT_FAILURE);
             }
         }
 
@@ -132,17 +132,17 @@ bool AppInit(int argc, char* argv[])
         if (!AppInitBasicSetup())
         {
             // InitError will have been called with detailed error, which ends up on console
-            return false;
+            exit(EXIT_FAILURE);
         }
         if (!AppInitParameterInteraction())
         {
             // InitError will have been called with detailed error, which ends up on console
-            return false;
+            exit(EXIT_FAILURE);
         }
         if (!AppInitSanityChecks())
         {
             // InitError will have been called with detailed error, which ends up on console
-            return false;
+            exit(EXIT_FAILURE);
         }
         if (gArgs.GetBoolArg("-daemon", false))
         {
@@ -163,7 +163,7 @@ bool AppInit(int argc, char* argv[])
         if (!AppInitLockDataDirectory())
         {
             // If locking the data directory failed, exit immediately
-            return false;
+            exit(EXIT_FAILURE);
         }
         fRet = AppInitMain(threadGroup, scheduler);
     }

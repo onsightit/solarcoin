@@ -46,10 +46,10 @@
 #include <openssl/err.h>
 #include <openssl/rand.h>
 
-[[noreturn]] static void RandFailure()
+static void RandFailure()
 {
     LogPrintf("Failed to read randomness, aborting\n");
-    std::abort();
+    abort();
 }
 
 static inline int64_t GetPerformanceCounter()
@@ -242,7 +242,7 @@ void GetOSRand(unsigned char *ent32)
     }
 #elif defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX)
     // We need a fallback for OSX < 10.12
-    if (&getentropy != nullptr) {
+    if (&getentropy != NULL) {
         if (getentropy(ent32, NUM_OS_RANDOM_BYTES) != 0) {
             RandFailure();
         }

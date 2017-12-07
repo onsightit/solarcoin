@@ -152,11 +152,11 @@ public:
         pre_vector.assign(n, value);
     }
 
-    Size size() const {
+    Size size() {
         return real_vector.size();
     }
 
-    Size capacity() const {
+    Size capacity() {
         return pre_vector.capacity();
     }
 

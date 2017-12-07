@@ -51,6 +51,11 @@ void RPCServer::OnStopped(std::function<void ()> slot)
     g_rpcSignals.Stopped.connect(slot);
 }
 
+void RPCServer::OnPreCommand(std::function<void (const CRPCCommand&)> slot)
+{
+    g_rpcSignals.PreCommand.connect(boost::bind(slot, _1));
+}
+
 void RPCTypeCheck(const UniValue& params,
                   const std::list<UniValue::VType>& typesExpected,
                   bool fAllowNull)
@@ -262,12 +267,12 @@ UniValue uptime(const JSONRPCRequest& jsonRequest)
  * Call Table
  */
 static const CRPCCommand vRPCCommands[] =
-{ //  category              name                      actor (function)         argNames
-  //  --------------------- ------------------------  -----------------------  ----------
+{ //  category              name                      actor (function)         okSafe argNames
+  //  --------------------- ------------------------  -----------------------  ------ ----------
     /* Overall control/query calls */
-    { "control",            "help",                   &help,                   {"command"}  },
-    { "control",            "stop",                   &stop,                   {}  },
-    { "control",            "uptime",                 &uptime,                 {}  },
+    { "control",            "help",                   &help,                   true,  {"command"}  },
+    { "control",            "stop",                   &stop,                   true,  {}  },
+    { "control",            "uptime",                 &uptime,                 true,  {}  },
 };
 
 CRPCTable::CRPCTable()
@@ -382,17 +387,11 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
         throw JSONRPCError(RPC_INVALID_REQUEST, "Params must be an array or object");
 }
 
-bool IsDeprecatedRPCEnabled(const std::string& method)
-{
-    const std::vector<std::string> enabled_methods = gArgs.GetArgs("-deprecatedrpc");
-
-    return find(enabled_methods.begin(), enabled_methods.end(), method) != enabled_methods.end();
-}
-
-static UniValue JSONRPCExecOne(JSONRPCRequest jreq, const UniValue& req)
+static UniValue JSONRPCExecOne(const UniValue& req)
 {
     UniValue rpc_result(UniValue::VOBJ);
 
+    JSONRPCRequest jreq;
     try {
         jreq.parse(req);
 
@@ -412,11 +411,11 @@ static UniValue JSONRPCExecOne(JSONRPCRequest jreq, const UniValue& req)
     return rpc_result;
 }
 
-std::string JSONRPCExecBatch(const JSONRPCRequest& jreq, const UniValue& vReq)
+std::string JSONRPCExecBatch(const UniValue& vReq)
 {
     UniValue ret(UniValue::VARR);
     for (unsigned int reqIdx = 0; reqIdx < vReq.size(); reqIdx++)
-        ret.push_back(JSONRPCExecOne(jreq, vReq[reqIdx]));
+        ret.push_back(JSONRPCExecOne(vReq[reqIdx]));
 
     return ret.write() + "\n";
 }

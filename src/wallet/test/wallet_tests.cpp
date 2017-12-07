@@ -19,7 +19,7 @@
 #include <boost/test/unit_test.hpp>
 #include <univalue.h>
 
-extern std::unique_ptr<CWallet> pwalletMain;
+extern CWallet* pwalletMain;
 
 extern UniValue importmulti(const JSONRPCRequest& request);
 extern UniValue dumpwallet(const JSONRPCRequest& request);
@@ -386,7 +386,7 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
     {
         CWallet wallet;
         AddKey(wallet, coinbaseKey);
-        BOOST_CHECK_EQUAL(nullBlock, wallet.ScanForWalletTransactions(oldTip, nullptr));
+        BOOST_CHECK_EQUAL(nullBlock, wallet.ScanForWalletTransactions(oldTip));
         BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 100 * COIN);
     }
 
@@ -399,7 +399,7 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
     {
         CWallet wallet;
         AddKey(wallet, coinbaseKey);
-        BOOST_CHECK_EQUAL(oldTip, wallet.ScanForWalletTransactions(oldTip, nullptr));
+        BOOST_CHECK_EQUAL(oldTip, wallet.ScanForWalletTransactions(oldTip));
         BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 50 * COIN);
     }
 
@@ -489,7 +489,6 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
         vpwallets[0] = &wallet;
         ::importwallet(request);
 
-        LOCK(wallet.cs_wallet);
         BOOST_CHECK_EQUAL(wallet.mapWallet.size(), 3);
         BOOST_CHECK_EQUAL(coinbaseTxns.size(), 103);
         for (size_t i = 0; i < coinbaseTxns.size(); ++i) {
@@ -535,7 +534,6 @@ static int64_t AddTx(CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64
     SetMockTime(mockTime);
     CBlockIndex* block = nullptr;
     if (blockTime > 0) {
-        LOCK(cs_main);
         auto inserted = mapBlockIndex.emplace(GetRandHash(), new CBlockIndex);
         assert(inserted.second);
         const uint256& hash = inserted.first->first;
@@ -549,7 +547,6 @@ static int64_t AddTx(CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64
         wtx.SetMerkleBranch(block, 0);
     }
     wallet.AddToWallet(wtx);
-    LOCK(wallet.cs_wallet);
     return wallet.mapWallet.at(wtx.GetHash()).nTimeSmart;
 }
 
@@ -586,7 +583,6 @@ BOOST_AUTO_TEST_CASE(ComputeTimeSmart)
 BOOST_AUTO_TEST_CASE(LoadReceiveRequests)
 {
     CTxDestination dest = CKeyID();
-    LOCK(pwalletMain->cs_wallet);
     pwalletMain->AddDestData(dest, "misc", "val_misc");
     pwalletMain->AddDestData(dest, "rr0", "val_rr0");
     pwalletMain->AddDestData(dest, "rr1", "val_rr1");
@@ -608,7 +604,7 @@ public:
         bool firstRun;
         wallet->LoadWallet(firstRun);
         AddKey(*wallet, coinbaseKey);
-        wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr);
+        wallet->ScanForWalletTransactions(chainActive.Genesis());
     }
 
     ~ListCoinsTestingSetup()
@@ -629,7 +625,6 @@ public:
         BOOST_CHECK(wallet->CreateTransaction({recipient}, wtx, reservekey, fee, changePos, error, dummy));
         CValidationState state;
         BOOST_CHECK(wallet->CommitTransaction(wtx, reservekey, nullptr, state));
-        LOCK(wallet->cs_wallet);
         auto it = wallet->mapWallet.find(wtx.GetHash());
         BOOST_CHECK(it != wallet->mapWallet.end());
         CreateAndProcessBlock({CMutableTransaction(*it->second.tx)}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));

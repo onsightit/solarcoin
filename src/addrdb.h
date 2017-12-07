@@ -37,7 +37,7 @@ public:
         SetNull();
     }
 
-    explicit CBanEntry(int64_t nCreateTimeIn)
+    CBanEntry(int64_t nCreateTimeIn)
     {
         SetNull();
         nCreateTime = nCreateTimeIn;
@@ -61,7 +61,7 @@ public:
         banReason = BanReasonUnknown;
     }
 
-    std::string banReasonToString() const
+    std::string banReasonToString()
     {
         switch (banReason) {
         case BanReasonNodeMisbehaving:

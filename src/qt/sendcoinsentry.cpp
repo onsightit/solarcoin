@@ -48,7 +48,6 @@ SendCoinsEntry::SendCoinsEntry(const PlatformStyle *_platformStyle, QWidget *par
     connect(ui->deleteButton, SIGNAL(clicked()), this, SLOT(deleteClicked()));
     connect(ui->deleteButton_is, SIGNAL(clicked()), this, SLOT(deleteClicked()));
     connect(ui->deleteButton_s, SIGNAL(clicked()), this, SLOT(deleteClicked()));
-    connect(ui->useAvailableBalanceButton, SIGNAL(clicked()), this, SLOT(useAvailableBalanceClicked()));
 }
 
 SendCoinsEntry::~SendCoinsEntry()
@@ -109,23 +108,13 @@ void SendCoinsEntry::clear()
     ui->memoTextLabel_s->clear();
     ui->payAmount_s->clear();
 
-    // update the display unit, to not use the default ("BTC")
+    // update the display unit, to not use the default ("SLR")
     updateDisplayUnit();
-}
-
-void SendCoinsEntry::checkSubtractFeeFromAmount()
-{
-    ui->checkboxSubtractFeeFromAmount->setChecked(true);
 }
 
 void SendCoinsEntry::deleteClicked()
 {
     Q_EMIT removeEntry(this);
-}
-
-void SendCoinsEntry::useAvailableBalanceClicked()
-{
-    Q_EMIT useAvailableBalance(this);
 }
 
 bool SendCoinsEntry::validate()
@@ -237,11 +226,6 @@ void SendCoinsEntry::setAddress(const QString &address)
 {
     ui->payTo->setText(address);
     ui->payAmount->setFocus();
-}
-
-void SendCoinsEntry::setAmount(const CAmount &amount)
-{
-    ui->payAmount->setValue(amount);
 }
 
 bool SendCoinsEntry::isClear()

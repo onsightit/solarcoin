@@ -41,7 +41,7 @@
 static const size_t MAX_HEADERS_SIZE = 8192;
 
 /** HTTP request work item */
-class HTTPWorkItem final : public HTTPClosure
+class HTTPWorkItem : public HTTPClosure
 {
 public:
     HTTPWorkItem(std::unique_ptr<HTTPRequest> _req, const std::string &_path, const HTTPRequestHandler& _func):
@@ -80,7 +80,7 @@ private:
     {
     public:
         WorkQueue &wq;
-        explicit ThreadCounter(WorkQueue &w): wq(w)
+        ThreadCounter(WorkQueue &w): wq(w)
         {
             std::lock_guard<std::mutex> lock(wq.cs);
             wq.numThreads += 1;
@@ -94,7 +94,7 @@ private:
     };
 
 public:
-    explicit WorkQueue(size_t _maxDepth) : running(true),
+    WorkQueue(size_t _maxDepth) : running(true),
                                  maxDepth(_maxDepth),
                                  numThreads(0)
     {
@@ -165,13 +165,13 @@ struct HTTPPathHandler
 /** HTTP module state */
 
 //! libevent event loop
-static struct event_base* eventBase = nullptr;
+static struct event_base* eventBase = 0;
 //! HTTP server
-struct evhttp* eventHTTP = nullptr;
+struct evhttp* eventHTTP = 0;
 //! List of subnets to allow RPC connections from
 static std::vector<CSubNet> rpc_allow_subnets;
 //! Work queue for handling longer requests off the event loop thread
-static WorkQueue<HTTPClosure>* workQueue = nullptr;
+static WorkQueue<HTTPClosure>* workQueue = 0;
 //! Handlers for (sub)paths
 std::vector<HTTPPathHandler> pathHandlers;
 //! Bound listening sockets
@@ -427,7 +427,7 @@ bool InitHTTPServer()
     LogPrintf("HTTP: creating work queue of depth %d\n", workQueueDepth);
 
     workQueue = new WorkQueue<HTTPClosure>(workQueueDepth);
-    // transfer ownership to eventBase/HTTP via .release()
+    // tranfer ownership to eventBase/HTTP via .release()
     eventBase = base_ctr.release();
     eventHTTP = http_ctr.release();
     return true;
@@ -492,8 +492,6 @@ void StopHTTPServer()
     }
     if (eventBase) {
         LogPrint(BCLog::HTTP, "Waiting for HTTP event thread to exit\n");
-        // Exit the event loop as soon as there are no active events.
-        event_base_loopexit(eventBase, nullptr);
         // Give event loop a few seconds to exit (to send back last RPC responses), then break it
         // Before this was solved with event_base_loopexit, but that didn't work as expected in
         // at least libevent 2.0.21 and always introduced a delay. In libevent
@@ -508,11 +506,11 @@ void StopHTTPServer()
     }
     if (eventHTTP) {
         evhttp_free(eventHTTP);
-        eventHTTP = nullptr;
+        eventHTTP = 0;
     }
     if (eventBase) {
         event_base_free(eventBase);
-        eventBase = nullptr;
+        eventBase = 0;
     }
     LogPrint(BCLog::HTTP, "Stopped HTTP server\n");
 }

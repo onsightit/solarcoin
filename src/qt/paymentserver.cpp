@@ -78,7 +78,7 @@ namespace // Anon namespace
 //
 static QString ipcServerName()
 {
-    QString name("SolarcoinQt");
+    QString name("SolarCoinQt");
 
     // Append a simple hash of the datadir
     // Note that GetDataDir(true) returns a different path
@@ -218,15 +218,17 @@ void PaymentServer::ipcParseCommandLine(int argc, char* argv[])
             SendCoinsRecipient r;
             if (GUIUtil::parseBitcoinURI(arg, &r) && !r.address.isEmpty())
             {
+                CBitcoinAddress address(r.address.toStdString());
                 auto tempChainParams = CreateChainParams(CBaseChainParams::MAIN);
 
-                if (IsValidDestinationString(r.address.toStdString(), *tempChainParams)) {
+                if (address.IsValid(*tempChainParams))
+                {
                     SelectParams(CBaseChainParams::MAIN);
-                } else {
+                }
+                else {
                     tempChainParams = CreateChainParams(CBaseChainParams::TESTNET);
-                    if (IsValidDestinationString(r.address.toStdString(), *tempChainParams)) {
+                    if (address.IsValid(*tempChainParams))
                         SelectParams(CBaseChainParams::TESTNET);
-                    }
                 }
             }
         }
@@ -362,7 +364,8 @@ void PaymentServer::initNetManager()
 {
     if (!optionsModel)
         return;
-    delete netManager;
+    if (netManager != nullptr)
+        delete netManager;
 
     // netManager is used to fetch paymentrequests given in bitcoin: URIs
     netManager = new QNetworkAccessManager(this);
@@ -438,7 +441,8 @@ void PaymentServer::handleURIOrFile(const QString& s)
             SendCoinsRecipient recipient;
             if (GUIUtil::parseBitcoinURI(s, &recipient))
             {
-                if (!IsValidDestinationString(recipient.address.toStdString())) {
+                CBitcoinAddress address(recipient.address.toStdString());
+                if (!address.IsValid()) {
                     Q_EMIT message(tr("URI handling"), tr("Invalid payment address %1").arg(recipient.address),
                         CClientUIInterface::MSG_ERROR);
                 }
@@ -556,7 +560,7 @@ bool PaymentServer::processPaymentRequest(const PaymentRequestPlus& request, Sen
         CTxDestination dest;
         if (ExtractDestination(sendingTo.first, dest)) {
             // Append destination address
-            addresses.append(QString::fromStdString(EncodeDestination(dest)));
+            addresses.append(QString::fromStdString(CBitcoinAddress(dest).ToString()));
         }
         else if (!recipient.authenticatedMerchant.isEmpty()) {
             // Unauthenticated payment requests to custom bitcoin addresses are not supported
@@ -616,7 +620,7 @@ void PaymentServer::fetchRequest(const QUrl& url)
     netManager->get(netRequest);
 }
 
-void PaymentServer::fetchPaymentACK(CWallet* wallet, const SendCoinsRecipient& recipient, QByteArray transaction)
+void PaymentServer::fetchPaymentACK(CWallet* wallet, SendCoinsRecipient recipient, QByteArray transaction)
 {
     const payments::PaymentDetails& details = recipient.paymentRequest.getDetails();
     if (!details.has_payment_url())

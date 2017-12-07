@@ -76,7 +76,7 @@ public:
 
     /** Create a new TorControlConnection.
      */
-    explicit TorControlConnection(struct event_base *base);
+    TorControlConnection(struct event_base *base);
     ~TorControlConnection();
 
     /**
@@ -121,7 +121,7 @@ private:
 };
 
 TorControlConnection::TorControlConnection(struct event_base *_base):
-    base(_base), b_conn(nullptr)
+    base(_base), b_conn(0)
 {
 }
 
@@ -227,7 +227,7 @@ bool TorControlConnection::Disconnect()
 {
     if (b_conn)
         bufferevent_free(b_conn);
-    b_conn = nullptr;
+    b_conn = 0;
     return true;
 }
 
@@ -476,7 +476,7 @@ TorController::~TorController()
 {
     if (reconnect_ev) {
         event_free(reconnect_ev);
-        reconnect_ev = nullptr;
+        reconnect_ev = 0;
     }
     if (service.IsValid()) {
         RemoveLocal(service);
@@ -770,7 +770,7 @@ void StopTorControl()
     if (gBase) {
         torControlThread.join();
         event_base_free(gBase);
-        gBase = nullptr;
+        gBase = 0;
     }
 }
 

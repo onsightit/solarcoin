@@ -46,7 +46,7 @@
       <key>CFBundleTypeRole</key>
       <string>Editor</string>
       <key>CFBundleURLName</key>
-      <string>org.solarcoin.SolarcoinPayment</string>
+      <string>org.solarcoin.SolarCoinPayment</string>
       <key>CFBundleURLSchemes</key>
       <array>
         <string>solarcoin</string>

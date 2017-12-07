@@ -10,7 +10,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-extern std::unique_ptr<CWallet> pwalletMain;
+extern CWallet* pwalletMain;
 
 BOOST_FIXTURE_TEST_SUITE(accounting_tests, WalletTestingSetup)
 
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
 
     wtx.mapValue["comment"] = "y";
     {
-        CMutableTransaction tx(*wtx.tx);
+        CMutableTransaction tx(wtx);
         --tx.nLockTime;  // Just to change the hash :)
         wtx.SetTx(MakeTransactionRef(std::move(tx)));
     }
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
 
     wtx.mapValue["comment"] = "x";
     {
-        CMutableTransaction tx(*wtx.tx);
+        CMutableTransaction tx(wtx);
         --tx.nLockTime;  // Just to change the hash :)
         wtx.SetTx(MakeTransactionRef(std::move(tx)));
     }
