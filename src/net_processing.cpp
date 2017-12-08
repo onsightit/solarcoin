@@ -2549,12 +2549,11 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
     else if (strCommand == NetMsgType::HEADERS && !fImporting && !fReindex) // Ignore headers received while importing
     {
+        // SolarCoin: This is a "fix" for headers coming from legacy nodes that have a non-canonical size
         if (pfrom->nVersion == LEGACY_PROTOCOL_VERSION) {
-            // SolarCoin: Use CBlock instead, since 2.1.8 is sending more than just the header!
+            // Use CBlock instead, since 2.1.8 is sending more than just the header!
             std::vector<CBlock> blocks;
             std::vector<CBlockHeader> headers;
-            // SolarCoin: Only serialize the header
-            vRecv.SetType(vRecv.GetType()|SER_BLOCKHEADERONLY);
 
             // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
             unsigned int nCount = ReadCompactSize(vRecv);
@@ -2564,21 +2563,20 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 return error("headers message size = %u", nCount);
             }
 
+            // Only deserialize the block header
+            int nType = vRecv.GetType();
+            vRecv.SetType(nType|SER_BLOCKHEADERONLY);
             blocks.resize(nCount);
             headers.resize(nCount);
-            int nType = SER_BLOCKHEADERONLY;
-            CDataStream ss(nType, PROTOCOL_VERSION);
-            ss.reserve(MAX_BLOCK_SERIALIZED_SIZE);
             for (unsigned int n = 0; n < nCount; n++) {
                 vRecv >> blocks[n];
-                ss << blocks[n];
-                ss >> headers[n];
-                ss.clear();
-                //LogPrintf("DEBUG: HEADER : n=%d header=%s\n", n, headers[n].ToString());
+                headers[n] = blocks[n].GetBlockHeader();
+                LogPrintf("DEBUG: Incoming block from getheaders=%s\n", blocks[n].ToString());
                 if (n < nCount - 1) // Don't call if we just processed the last header
                     ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
             }
             blocks.clear();
+            vRecv.SetType(nType);
 
             // Headers received via a HEADERS message should be valid, and reflect
             // the chain the peer is on. If we receive a known-invalid header,

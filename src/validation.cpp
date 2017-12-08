@@ -1017,7 +1017,7 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus:
     block.SetNull();
 
     // Open history file to read
-    CAutoFile filein(OpenBlockFile(pos, true), fReadTxns ? SER_DISK : SER_DISK | SER_BLOCKHEADERONLY, CLIENT_VERSION);
+    CAutoFile filein(OpenBlockFile(pos, true), fReadTxns ? SER_DISK : SER_DISK|SER_BLOCKHEADERONLY, CLIENT_VERSION);
     if (filein.IsNull())
         return error("ReadBlockFromDisk: OpenBlockFile failed for %s", pos.ToString());
 
@@ -3060,11 +3060,13 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
     if (block.GetBlockTime() > nAdjustedTime + MAX_FUTURE_BLOCK_TIME)
         return state.Invalid(false, REJECT_INVALID, "time-too-new", "block timestamp too far in the future");
 
-    // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
-    // check for version 2, 3 and 4 upgrades
-    if(block.nVersion < CBlockHeader::CURRENT_VERSION && nHeight > consensusParams.LAST_POW_BLOCK)
+    // SolarCoin: Legacy block version rules
+    if (block.nVersion < CBlockHeader::LEGACY_VERSION_3) {
+        if (nHeight > consensusParams.LAST_POW_BLOCK) {
             return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
-                                 strprintf("rejected nVersion=0x%08x block", block.nVersion));
+                                 strprintf("rejected nVersion=0x%08x block after PoW", block.nVersion));
+        }
+    }
 
     return true;
 }
@@ -3147,7 +3149,59 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-weight", false, strprintf("%s : weight limit failed", __func__));
     }
 
+    // SolarCoin: Legacy block version rules
+    // Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
+    if (block.nVersion < CBlockHeader::LEGACY_VERSION_2)
+    {
+        if ((!fTestNet && IsSuperMajority(CBlockHeader::LEGACY_VERSION_2, pindexPrev, 950, 1000)) ||
+            (fTestNet && IsSuperMajority(CBlockHeader::LEGACY_VERSION_2, pindexPrev, 75, 100)))
+        {
+            return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
+                                strprintf("rejected nVersion=0x%08x block", block.nVersion));
+        }
+    }
+    else
+    {
+        // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
+        if (block.nVersion == CBlockHeader::LEGACY_VERSION_2)
+        {
+            // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
+            if ((!fTestNet && IsSuperMajority(CBlockHeader::LEGACY_VERSION_2, pindexPrev, 750, 1000)) ||
+                (fTestNet && IsSuperMajority(CBlockHeader::LEGACY_VERSION_2, pindexPrev, 51, 100)))
+            {
+                CScript expect = CScript() << nHeight;
+                const CTransaction& tx = *block.vtx[0];
+                if (tx.vin[0].scriptSig.size() < expect.size() ||
+                    !std::equal(expect.begin(), expect.end(), tx.vin[0].scriptSig.begin()))
+                    return state.Invalid(false, REJECT_OBSOLETE, "block height mismatch in coinbase",
+                                        strprintf("rejected nVersion=0x%08x block at height=%d", block.nVersion, nHeight));
+            }
+        }
+        else
+        {
+            CScript expect = CScript() << nHeight;
+            const CTransaction& tx = *block.vtx[0];
+            if (tx.vin[0].scriptSig.size() < expect.size() ||
+                !std::equal(expect.begin(), expect.end(), tx.vin[0].scriptSig.begin()))
+                return state.Invalid(false, REJECT_OBSOLETE, "block height mismatch in coinbase",
+                                    strprintf("rejected nVersion=0x%08x block at height=%d", block.nVersion, nHeight));
+        }
+    }
+
     return true;
+}
+
+// SolarCoin: Legacy block version check
+bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRequired, unsigned int nToCheck)
+{
+    unsigned int nFound = 0;
+    for (unsigned int i = 0; i < nToCheck && nFound < nRequired && pstart != NULL; i++)
+    {
+        if (pstart->nVersion >= minVersion)
+            ++nFound;
+        pstart = pstart->pprev;
+    }
+    return (nFound >= nRequired);
 }
 
 static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex)

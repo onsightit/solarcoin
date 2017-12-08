@@ -487,4 +487,6 @@ void DumpMempool();
 /** Load the mempool from disk. */
 bool LoadMempool();
 
+bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRequired, unsigned int nToCheck);
+
 #endif // BITCOIN_VALIDATION_H
