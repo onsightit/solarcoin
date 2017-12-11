@@ -1368,7 +1368,6 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
         // If this set of headers is valid and ends in a block with at least as
         // much work as our tip, download as much as possible.
         if (fCanDirectFetch && pindexLast->IsValid(BLOCK_VALID_TREE) && chainActive.Tip()->nChainWork <= pindexLast->nChainWork) {
-            LogPrintf("DEBUG: DirectFetching to peer=%d (startheight:%d)\n", pfrom->GetId(), pfrom->nStartingHeight);
             std::vector<const CBlockIndex*> vToFetch;
             const CBlockIndex *pindexWalk = pindexLast;
             // Calculate all the blocks we'd need to switch to pindexLast, up to a limit.
@@ -2571,7 +2570,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             for (unsigned int n = 0; n < nCount; n++) {
                 vRecv >> blocks[n];
                 headers[n] = blocks[n].GetBlockHeader();
-                LogPrintf("DEBUG: Incoming block from getheaders=%s\n", blocks[n].ToString());
+                //LogPrintf("DEBUG: Incoming block from getheaders=%s\n", blocks[n].ToString());
                 if (n < nCount - 1) // Don't call if we just processed the last header
                     ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
             }
@@ -2614,7 +2613,12 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     else if (strCommand == NetMsgType::BLOCK && !fImporting && !fReindex) // Ignore blocks received while importing
     {
         std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
+        //int nType = vRecv.GetType();
+        //vRecv.SetType(nType|SER_BLOCKHEADERONLY);
+
         vRecv >> *pblock;
+
+        //vRecv.SetType(nType);
 
         LogPrint(BCLog::NET, "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom->GetId());
 

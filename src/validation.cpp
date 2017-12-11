@@ -926,7 +926,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 }
 
 /** Return transaction in txOut, and if it was found inside a block, its hash is placed in hashBlock */
-bool GetTransaction(const uint256 &hash, CTransactionRef &txOut, const Consensus::Params& consensusParams, uint256 &hashBlock, bool fAllowSlow)
+// SolarCoin: Modified to return nTxOffset into block.
+bool GetTransaction(const uint256 &hash, CTransactionRef &txOut, unsigned int &nTxOffset, const Consensus::Params& consensusParams, uint256 &hashBlock, bool fAllowSlow)
 {
     CBlockIndex *pindexSlow = nullptr;
 
@@ -945,6 +946,10 @@ bool GetTransaction(const uint256 &hash, CTransactionRef &txOut, const Consensus
             CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
             if (file.IsNull())
                 return error("%s: OpenBlockFile failed", __func__);
+
+            // SolarCoin: Return nTxOffset into block
+            nTxOffset = postx.nTxOffset;
+
             CBlockHeader header;
             try {
                 file >> header;
@@ -2714,7 +2719,6 @@ static CBlockIndex* AddToBlockIndex(const CBlockHeader& block, const CChainParam
         if (mi != mapProofOfStake.end())
         {
             pindexNew->hashProofOfStake = (*mi).second;
-            LogPrintf("DEBUG: AddToBlockIndex() : pindexNew->hashProofOfStake=%s\n", pindexNew->hashProofOfStake.ToString().c_str());
         }
         else
         {
@@ -2938,10 +2942,11 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase/coinstake");
 
     // Check transactions
-    for (const auto& tx : block.vtx)
+    for (const auto& tx : block.vtx) {
         if (!CheckTransaction(*tx, state, false))
             return state.Invalid(false, state.GetRejectCode(), state.GetRejectReason(),
                                  strprintf("Transaction check failed (tx hash %s) %s", tx->GetHash().ToString(), state.GetDebugMessage()));
+    }
 
     unsigned int nSigOps = 0;
     for (const auto& tx : block.vtx)
@@ -3305,8 +3310,6 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
     CBlockIndex *pindexDummy = nullptr;
     CBlockIndex *&pindex = ppindex ? *ppindex : pindexDummy;
 
-    LogPrintf("DEBUG: AcceptBlock() : IsProofOfStake()=%d\n", pblock->IsProofOfStake());
-
     if (!AcceptBlockHeader(block, state, chainparams, &pindex))
         return false;
 
@@ -3320,7 +3323,7 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
     // blocks which are too close in height to the tip.  Apply this test
     // regardless of whether pruning is enabled; it should generally be safe to
     // not process unrequested blocks.
-    // DEBUG: //bool fTooFarAhead = (pindex->nHeight > int(chainActive.Height() + MIN_BLOCKS_TO_KEEP));
+    // DEBUG: TODO: Test this. //bool fTooFarAhead = (pindex->nHeight > int(chainActive.Height() + MIN_BLOCKS_TO_KEEP));
     bool fTooFarAhead = false;
 
     // TODO: Decouple this function from the block download logic by removing fRequested
@@ -3341,7 +3344,6 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
         // low-work blocks on a fake chain that we would never
         // request; don't process these.
         if (pindex->nChainWork < nMinimumChainWork) {
-            LogPrintf("DEBUG: Returning because pindex->nChainWork=%08x %s  <  nMinimumChainWork=%08x %s\n", pindex->nChainWork.GetCompact(), pindex->nChainWork.GetHex(), nMinimumChainWork.GetCompact(), nMinimumChainWork.GetHex());
             return true;
         }
     }
@@ -3365,7 +3367,6 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
 
     int nHeight = pindex->nHeight;
 
-    LogPrintf("DEBUG: AcceptBlock() : Writing block to history file.\n");
     // Write block to history file
     try {
         unsigned int nBlockSize = ::GetSerializeSize(block, SER_DISK, CLIENT_VERSION);
@@ -3404,16 +3405,13 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         if (ret) {
             // ppcoin: verify hash target and signature of coinstake tx
             // if we have the previous block and we are not downloading
-            if (!IsInitialBlockDownload()) {
-                LogPrintf("DEBUG: ProcessNewBlock() : IsProofOfStake()=%d\n", pblock->IsProofOfStake());
+            if (pblock->IsProofOfStake() && mapBlockIndex.count(pblock->hashPrevBlock))
+            {
                 uint256 hash = pblock->GetHash();
                 uint256 hashProofOfStake, targetProofOfStake;
-                if (pblock->IsProofOfStake() && mapBlockIndex.count(pblock->hashPrevBlock))
-                {
-                    if (!CheckProofOfStake(*pblock->vtx[1], pblock->nBits, hashProofOfStake, targetProofOfStake, chainparams.GetConsensus())) {
-                        LogPrintf("WARNING: ProcessNewBlock() : CheckProofOfStake() failed for block=%s\n", hash.ToString().c_str());
-                        return false; // do not error here as we expect this during initial block download
-                    }
+                if (!CheckProofOfStake(*pblock->vtx[1], pblock->nBits, hashProofOfStake, targetProofOfStake, chainparams.GetConsensus())) {
+                    LogPrintf("WARNING: ProcessNewBlock() : CheckProofOfStake() failed for block=%s\n", hash.ToString().c_str());
+                    return false; // do not error here as we expect this during initial block download
                 }
                 HashMap::iterator mi = mapProofOfStake.find(hash);
                 if (mi == mapProofOfStake.end())
