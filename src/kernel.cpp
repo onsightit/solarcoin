@@ -332,7 +332,6 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
 
     // DEBUG: Loop to find the known hash
     for (int i=0; i<256; i++) {
-        nTxOffset++;
         ss << nStakeModifier;
 
         ss << nTimeBlockFrom << nTxOffset << txPrev.nTime << prevout.n << nTimeTx;
@@ -342,6 +341,7 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
             LogPrintf("DEBUG: FOUND IT! : nTxOffset=%d hashProofOfStake=%s\n", nTxOffset, hashProofOfStake.GetHex());
             break;
         }
+        nTxOffset++;
         ss.clear();
     }
     LogPrintf("DEBUG: CheckStakeTimeKernelHash() : Got hashProofOfStake=%s\n", hashProofOfStake.GetHex());
@@ -401,9 +401,7 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
     const CTransaction& txPrev = *txPrevRef;
     //nTxOffset *= 2; // DEBUG: Offset x's 2
     //nTxOffset -= 2; // DEBUG: Offset - 2
-    //nTxOffset /= 2; // DEBUG: Offset / 2
     //nTxOffset += 80; // DEBUG: Offset + block header
-    nTxOffset = 0; // DEBUG: Set to 0 for loop in CheckStakeTimeKernelHash
     LogPrintf("DEBUG: TxPrev: nTxOffset=%u txPrev=%s\n", nTxOffset, txPrev.ToString());
 
     // Verify signature (TODO: Add SolarCoin script function.)
