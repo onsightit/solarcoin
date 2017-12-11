@@ -337,7 +337,8 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
         ss << nTimeBlockFrom << nTxOffset << txPrev.nTime << prevout.n << nTimeTx;
         hashProofOfStake = Hash(ss.begin(), ss.end());
         LogPrintf("DEBUG: Trying nTxOffset=%d hashProofOfStake=%s\n", nTxOffset, hashProofOfStake.GetHex());
-        if (hashProofOfStake == uint256S("007aecf5f3d21fcb8b84826de4a89591c3da063d4312b3926c66319d561e1894")) {
+        if (UintToArith256(hashProofOfStake) <= UintToArith256(targetProofOfStake) ||
+            UintToArith256(hashProofOfStake) == UintToArith256(uint256S("007aecf5f3d21fcb8b84826de4a89591c3da063d4312b3926c66319d561e1894"))) {
             LogPrintf("DEBUG: FOUND IT! : nTxOffset=%d hashProofOfStake=%s\n", nTxOffset, hashProofOfStake.GetHex());
             break;
         }
@@ -399,8 +400,6 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
         return false;
     }
     const CTransaction& txPrev = *txPrevRef;
-    //nTxOffset *= 2; // DEBUG: Offset x's 2
-    //nTxOffset -= 2; // DEBUG: Offset - 2
     //nTxOffset += 80; // DEBUG: Offset + block header
     LogPrintf("DEBUG: TxPrev: nTxOffset=%u txPrev=%s\n", nTxOffset, txPrev.ToString());
 
