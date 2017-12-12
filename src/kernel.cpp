@@ -331,20 +331,23 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     LogPrintf("DEBUG: CheckStakeTimeKernelHash() : Got nStakeModifier=%d\n", nStakeModifier);
 
     // DEBUG: Loop to find the known hash
-    for (int i=0; i<256; i++) {
+    //for (int i=0; i<256; i++) {
         ss << nStakeModifier;
 
         ss << nTimeBlockFrom << nTxOffset << txPrev.nTime << prevout.n << nTimeTx;
         hashProofOfStake = Hash(ss.begin(), ss.end());
+
+        // DEBUG:
         LogPrintf("DEBUG: Trying nTxOffset=%d hashProofOfStake=%s\n", nTxOffset, hashProofOfStake.GetHex());
-        if (UintToArith256(hashProofOfStake) <= UintToArith256(targetProofOfStake) ||
-            UintToArith256(hashProofOfStake) == UintToArith256(uint256S("007aecf5f3d21fcb8b84826de4a89591c3da063d4312b3926c66319d561e1894"))) {
-            LogPrintf("DEBUG: FOUND IT! : nTxOffset=%d hashProofOfStake=%s\n", nTxOffset, hashProofOfStake.GetHex());
-            break;
-        }
-        nTxOffset++;
-        ss.clear();
-    }
+    //    if (UintToArith256(hashProofOfStake) <= UintToArith256(targetProofOfStake) ||
+    //        UintToArith256(hashProofOfStake) == UintToArith256(uint256S("007aecf5f3d21fcb8b84826de4a89591c3da063d4312b3926c66319d561e1894"))) {
+    //        LogPrintf("DEBUG: FOUND IT! : nTxOffset=%d hashProofOfStake=%s\n", nTxOffset, hashProofOfStake.GetHex());
+    //        break;
+    //    }
+    //    // DEBUG:
+    //    nTxOffset++;
+    //    ss.clear();
+    //} // DEBUG:
     LogPrintf("DEBUG: CheckStakeTimeKernelHash() : Got hashProofOfStake=%s\n", hashProofOfStake.GetHex());
 
     if (fPrintProofOfStake)

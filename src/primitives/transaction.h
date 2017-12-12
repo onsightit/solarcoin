@@ -218,12 +218,7 @@ public:
     const std::vector<CTxIn> vin;
     const std::vector<CTxOut> vout;
     const unsigned int nLockTime;
-    std::string strTxComment;
-
-    // TODO: This has been re-worked in bitcoin core
-    // Denial-of-service detection:
-    mutable int nDoS;
-    bool DoS(int nDoSIn, bool fIn) const { nDoS += nDoSIn; return fIn; }
+    const std::string strTxComment;
 
 private:
     /** Memory only. */
@@ -381,7 +376,6 @@ struct CMutableTransaction
     inline void Serialize(Stream& s) const {
         SerializeTransaction(*this, s);
     }
-
 
     template <typename Stream>
     inline void Unserialize(Stream& s) {

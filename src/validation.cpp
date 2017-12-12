@@ -3349,7 +3349,7 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
     }
     if (fNewBlock) *fNewBlock = true;
 
-    LogPrintf("DEBUG: Bool Flags: fAlreadyHave=%d fHasMoreOrSameWork=%d fTooFarAhead=%d pindex.nHeight=%d chainActive.Height=%d\n", fAlreadyHave, fHasMoreOrSameWork, fTooFarAhead, pindex->nHeight, chainActive.Height());
+    //LogPrintf("DEBUG: Bool Flags: fAlreadyHave=%d fHasMoreOrSameWork=%d fTooFarAhead=%d pindex.nHeight=%d chainActive.Height=%d\n", fAlreadyHave, fHasMoreOrSameWork, fTooFarAhead, pindex->nHeight, chainActive.Height());
 
     if (!CheckBlock(block, state, chainparams.GetConsensus()) ||
         !ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev)) {
