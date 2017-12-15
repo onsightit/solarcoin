@@ -109,7 +109,8 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
 
     int64_t nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
     if (nActualSpacing < 0) {
-        LogPrintf("GetNextTargetRequired(): Negative nActualSpacing=%d at nHeight=%d\n", nActualSpacing, pindexPrev->nHeight);
+        if (fDebug)
+            LogPrintf("GetNextTargetRequired(): Negative nActualSpacing=%d at nHeight=%d\n", nActualSpacing, pindexPrev->nHeight);
         nActualSpacing = params.nTargetSpacing;
     }
 

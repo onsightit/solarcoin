@@ -30,8 +30,8 @@ class CBlockHeader
 public:
     // header
     static const int LEGACY_VERSION_2 = 2;
-    static const int LEGACY_VERSION_3 = 3; // SolarCoin: Transitional version for Legacy nodes. TODO: Need to bump CURRENT_VERSION to 4.
-    static const int CURRENT_VERSION = 3;
+    static const int LEGACY_VERSION_3 = 3; // SolarCoin: Transitional version for Legacy nodes with a bug in 'getheaders'.
+    static const int CURRENT_VERSION = 4;  // SolarCoin 3.15.1.0
     int nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
@@ -98,6 +98,14 @@ public:
     std::vector<unsigned char> vchBlockSig;
 
     // memory only
+    mutable std::vector<uint256> vMerkleTree;
+
+    // TODO: This has been re-worked in bitcoin core
+    // Denial-of-service detection:
+    mutable int nDoS;
+    bool DoS(int nDoSIn, bool fIn) const { nDoS += nDoSIn; return fIn; }
+
+    // memory only
     mutable bool fChecked;
 
     CBlock()
@@ -118,9 +126,9 @@ public:
         const bool fHeaderOnly = (s.GetType() & SER_BLOCKHEADERONLY);
         READWRITE(*(CBlockHeader*)this);
         // PoST: ConnectBlock depends on vtx following header to generate CDiskTxPos
-        if (!fHeaderOnly || this->nVersion == CBlockHeader::LEGACY_VERSION_3) {
+        if (!fHeaderOnly || this->nVersion >= CBlockHeader::LEGACY_VERSION_3) {
             READWRITE(vtx);
-            if (!fHeaderOnly && this->nVersion >= CBlockHeader::CURRENT_VERSION) {
+            if (!fHeaderOnly && this->nVersion >= CBlockHeader::LEGACY_VERSION_3) {
                 READWRITE(vchBlockSig);
             }
         } else {
@@ -136,6 +144,8 @@ public:
         CBlockHeader::SetNull();
         vtx.clear();
         vchBlockSig.clear();
+        vMerkleTree.clear();
+        nDoS = 0;
         fChecked = false;
     }
 

@@ -196,10 +196,11 @@ class CTransaction
 {
 public:
     // Legacy transaction versions.
+    static const int LEGACY_VERSION_1 = 1;
     static const int LEGACY_VERSION_2 = 2;
-    static const int LEGACY_VERSION_3 = 3;
+    static const int LEGACY_VERSION_3 = 3; // V3 - Includes nTime
     // Default transaction version.
-    static const int CURRENT_VERSION = 4; // V4 - Includes nTime in tx hash
+    static const int CURRENT_VERSION  = 4; // V4 - Includes nTime in tx hash
 
     // Changing the default transaction version requires a two step process: first
     // adapting relay policy by bumping MAX_STANDARD_VERSION, and then later date
@@ -217,7 +218,7 @@ public:
     const std::vector<CTxIn> vin;
     const std::vector<CTxOut> vout;
     const unsigned int nLockTime;
-    std::string strTxComment;
+    const std::string strTxComment;
 
 private:
     /** Memory only. */
@@ -325,8 +326,6 @@ public:
  */
 template<typename Stream, typename TxType>
 inline void UnserializeTransaction(TxType& tx, Stream& s) {
-    const bool fSerializeTime = (!(s.GetType() & (SER_GETHASH|SER_LEGACYPROTOCOL)) || tx.nVersion > CTransaction::LEGACY_VERSION_3 || s.GetType() & SER_DISK);
-
     tx.nVersion = CTransaction::CURRENT_VERSION;
     tx.nTime = 0;
     tx.vin.clear();
@@ -335,27 +334,29 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
     tx.strTxComment.clear();
 
     s >> tx.nVersion;
-    if (fSerializeTime) {
+    if (!(s.GetType() & (SER_GETHASH|SER_LEGACYPROTOCOL)) || tx.nVersion > CTransaction::LEGACY_VERSION_3 || (s.GetType() & SER_DISK)) {
         s >> tx.nTime;
     }
     s >> tx.vin;
     s >> tx.vout;
     s >> tx.nLockTime;
-    s >> tx.strTxComment;
+    if (tx.nVersion > CTransaction::LEGACY_VERSION_1) {
+        s >> tx.strTxComment;
+    }
 }
 
 template<typename Stream, typename TxType>
 inline void SerializeTransaction(const TxType& tx, Stream& s) {
-    const bool fSerializeTime = (!(s.GetType() & (SER_GETHASH|SER_LEGACYPROTOCOL)) || tx.nVersion > CTransaction::LEGACY_VERSION_3 || s.GetType() & SER_DISK);
-
     s << tx.nVersion;
-    if (fSerializeTime) {
+    if (!(s.GetType() & (SER_GETHASH|SER_LEGACYPROTOCOL)) || tx.nVersion > CTransaction::LEGACY_VERSION_3 || (s.GetType() & SER_DISK)) {
         s << tx.nTime;
     }
     s << tx.vin;
     s << tx.vout;
     s << tx.nLockTime;
-    s << tx.strTxComment;
+    if (tx.nVersion > CTransaction::LEGACY_VERSION_1) {
+        s << tx.strTxComment;
+    }
 }
 
 /** A mutable version of CTransaction. */
@@ -375,7 +376,6 @@ struct CMutableTransaction
     inline void Serialize(Stream& s) const {
         SerializeTransaction(*this, s);
     }
-
 
     template <typename Stream>
     inline void Unserialize(Stream& s) {

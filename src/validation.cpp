@@ -926,7 +926,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 }
 
 /** Return transaction in txOut, and if it was found inside a block, its hash is placed in hashBlock */
-bool GetTransaction(const uint256 &hash, CTransactionRef &txOut, const Consensus::Params& consensusParams, uint256 &hashBlock, bool fAllowSlow)
+// SolarCoin: Modified to return nTxOffset into block.
+bool GetTransaction(const uint256 &hash, CTransactionRef &txOut, unsigned int &nTxOffset, const Consensus::Params& consensusParams, uint256 &hashBlock, bool fAllowSlow)
 {
     CBlockIndex *pindexSlow = nullptr;
 
@@ -945,6 +946,10 @@ bool GetTransaction(const uint256 &hash, CTransactionRef &txOut, const Consensus
             CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
             if (file.IsNull())
                 return error("%s: OpenBlockFile failed", __func__);
+
+            // SolarCoin: Return nTxOffset into block
+            nTxOffset = postx.nTxOffset;
+
             CBlockHeader header;
             try {
                 file >> header;
@@ -1017,7 +1022,7 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus:
     block.SetNull();
 
     // Open history file to read
-    CAutoFile filein(OpenBlockFile(pos, true), fReadTxns ? SER_DISK : SER_DISK | SER_BLOCKHEADERONLY, CLIENT_VERSION);
+    CAutoFile filein(OpenBlockFile(pos, true), fReadTxns ? SER_DISK : SER_DISK|SER_BLOCKHEADERONLY, CLIENT_VERSION);
     if (filein.IsNull())
         return error("ReadBlockFromDisk: OpenBlockFile failed for %s", pos.ToString());
 
@@ -2714,7 +2719,6 @@ static CBlockIndex* AddToBlockIndex(const CBlockHeader& block, const CChainParam
         if (mi != mapProofOfStake.end())
         {
             pindexNew->hashProofOfStake = (*mi).second;
-            LogPrintf("DEBUG: AddToBlockIndex() : pindexNew->hashProofOfStake=%s\n", pindexNew->hashProofOfStake.ToString().c_str());
         }
         else
         {
@@ -2938,10 +2942,11 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase/coinstake");
 
     // Check transactions
-    for (const auto& tx : block.vtx)
+    for (const auto& tx : block.vtx) {
         if (!CheckTransaction(*tx, state, false))
             return state.Invalid(false, state.GetRejectCode(), state.GetRejectReason(),
                                  strprintf("Transaction check failed (tx hash %s) %s", tx->GetHash().ToString(), state.GetDebugMessage()));
+    }
 
     unsigned int nSigOps = 0;
     for (const auto& tx : block.vtx)
@@ -3060,11 +3065,13 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
     if (block.GetBlockTime() > nAdjustedTime + MAX_FUTURE_BLOCK_TIME)
         return state.Invalid(false, REJECT_INVALID, "time-too-new", "block timestamp too far in the future");
 
-    // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
-    // check for version 2, 3 and 4 upgrades
-    if(block.nVersion < CBlockHeader::CURRENT_VERSION && nHeight > consensusParams.LAST_POW_BLOCK)
+    // SolarCoin: Legacy block version rules
+    if (block.nVersion < CBlockHeader::LEGACY_VERSION_3) {
+        if (nHeight > consensusParams.LAST_POW_BLOCK) {
             return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
-                                 strprintf("rejected nVersion=0x%08x block", block.nVersion));
+                                 strprintf("rejected nVersion=0x%08x block after PoW", block.nVersion));
+        }
+    }
 
     return true;
 }
@@ -3147,7 +3154,59 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-weight", false, strprintf("%s : weight limit failed", __func__));
     }
 
+    // SolarCoin: Legacy block version rules
+    // Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
+    if (block.nVersion < CBlockHeader::LEGACY_VERSION_2)
+    {
+        if ((!fTestNet && IsSuperMajority(CBlockHeader::LEGACY_VERSION_2, pindexPrev, 950, 1000)) ||
+            (fTestNet && IsSuperMajority(CBlockHeader::LEGACY_VERSION_2, pindexPrev, 75, 100)))
+        {
+            return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
+                                strprintf("rejected nVersion=0x%08x block", block.nVersion));
+        }
+    }
+    else
+    {
+        // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
+        if (block.nVersion == CBlockHeader::LEGACY_VERSION_2)
+        {
+            // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
+            if ((!fTestNet && IsSuperMajority(CBlockHeader::LEGACY_VERSION_2, pindexPrev, 750, 1000)) ||
+                (fTestNet && IsSuperMajority(CBlockHeader::LEGACY_VERSION_2, pindexPrev, 51, 100)))
+            {
+                CScript expect = CScript() << nHeight;
+                const CTransaction& tx = *block.vtx[0];
+                if (tx.vin[0].scriptSig.size() < expect.size() ||
+                    !std::equal(expect.begin(), expect.end(), tx.vin[0].scriptSig.begin()))
+                    return state.Invalid(false, REJECT_OBSOLETE, "block height mismatch in coinbase",
+                                        strprintf("rejected nVersion=0x%08x block at height=%d", block.nVersion, nHeight));
+            }
+        }
+        else
+        {
+            CScript expect = CScript() << nHeight;
+            const CTransaction& tx = *block.vtx[0];
+            if (tx.vin[0].scriptSig.size() < expect.size() ||
+                !std::equal(expect.begin(), expect.end(), tx.vin[0].scriptSig.begin()))
+                return state.Invalid(false, REJECT_OBSOLETE, "block height mismatch in coinbase",
+                                    strprintf("rejected nVersion=0x%08x block at height=%d", block.nVersion, nHeight));
+        }
+    }
+
     return true;
+}
+
+// SolarCoin: Legacy block version check
+bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRequired, unsigned int nToCheck)
+{
+    unsigned int nFound = 0;
+    for (unsigned int i = 0; i < nToCheck && nFound < nRequired && pstart != NULL; i++)
+    {
+        if (pstart->nVersion >= minVersion)
+            ++nFound;
+        pstart = pstart->pprev;
+    }
+    return (nFound >= nRequired);
 }
 
 static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex)
@@ -3251,8 +3310,6 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
     CBlockIndex *pindexDummy = nullptr;
     CBlockIndex *&pindex = ppindex ? *ppindex : pindexDummy;
 
-    LogPrintf("DEBUG: AcceptBlock() : IsProofOfStake()=%d\n", pblock->IsProofOfStake());
-
     if (!AcceptBlockHeader(block, state, chainparams, &pindex))
         return false;
 
@@ -3266,7 +3323,7 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
     // blocks which are too close in height to the tip.  Apply this test
     // regardless of whether pruning is enabled; it should generally be safe to
     // not process unrequested blocks.
-    // DEBUG: //bool fTooFarAhead = (pindex->nHeight > int(chainActive.Height() + MIN_BLOCKS_TO_KEEP));
+    // DEBUG: TODO: Test this. //bool fTooFarAhead = (pindex->nHeight > int(chainActive.Height() + MIN_BLOCKS_TO_KEEP));
     bool fTooFarAhead = false;
 
     // TODO: Decouple this function from the block download logic by removing fRequested
@@ -3287,13 +3344,12 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
         // low-work blocks on a fake chain that we would never
         // request; don't process these.
         if (pindex->nChainWork < nMinimumChainWork) {
-            LogPrintf("DEBUG: Returning because pindex->nChainWork=%08x %s  <  nMinimumChainWork=%08x %s\n", pindex->nChainWork.GetCompact(), pindex->nChainWork.GetHex(), nMinimumChainWork.GetCompact(), nMinimumChainWork.GetHex());
             return true;
         }
     }
     if (fNewBlock) *fNewBlock = true;
 
-    LogPrintf("DEBUG: Bool Flags: fAlreadyHave=%d fHasMoreOrSameWork=%d fTooFarAhead=%d pindex.nHeight=%d chainActive.Height=%d\n", fAlreadyHave, fHasMoreOrSameWork, fTooFarAhead, pindex->nHeight, chainActive.Height());
+    //LogPrintf("DEBUG: Bool Flags: fAlreadyHave=%d fHasMoreOrSameWork=%d fTooFarAhead=%d pindex.nHeight=%d chainActive.Height=%d\n", fAlreadyHave, fHasMoreOrSameWork, fTooFarAhead, pindex->nHeight, chainActive.Height());
 
     if (!CheckBlock(block, state, chainparams.GetConsensus()) ||
         !ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev)) {
@@ -3311,7 +3367,6 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
 
     int nHeight = pindex->nHeight;
 
-    LogPrintf("DEBUG: AcceptBlock() : Writing block to history file.\n");
     // Write block to history file
     try {
         unsigned int nBlockSize = ::GetSerializeSize(block, SER_DISK, CLIENT_VERSION);
@@ -3350,16 +3405,13 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         if (ret) {
             // ppcoin: verify hash target and signature of coinstake tx
             // if we have the previous block and we are not downloading
-            if (!IsInitialBlockDownload()) {
-                LogPrintf("DEBUG: ProcessNewBlock() : IsProofOfStake()=%d\n", pblock->IsProofOfStake());
+            if (pblock->IsProofOfStake() && mapBlockIndex.count(pblock->hashPrevBlock))
+            {
                 uint256 hash = pblock->GetHash();
                 uint256 hashProofOfStake, targetProofOfStake;
-                if (pblock->IsProofOfStake() && mapBlockIndex.count(pblock->hashPrevBlock))
-                {
-                    if (!CheckProofOfStake(*pblock->vtx[1], pblock->nBits, hashProofOfStake, targetProofOfStake, chainparams.GetConsensus())) {
-                        LogPrintf("WARNING: ProcessNewBlock() : CheckProofOfStake() failed for block=%s\n", hash.ToString().c_str());
-                        return false; // do not error here as we expect this during initial block download
-                    }
+                if (!CheckProofOfStake(*pblock->vtx[1], pblock->nBits, hashProofOfStake, targetProofOfStake, chainparams.GetConsensus())) {
+                    LogPrintf("WARNING: ProcessNewBlock() : CheckProofOfStake() failed for block=%s\n", hash.ToString().c_str());
+                    return false; // do not error here as we expect this during initial block download
                 }
                 HashMap::iterator mi = mapProofOfStake.find(hash);
                 if (mi == mapProofOfStake.end())

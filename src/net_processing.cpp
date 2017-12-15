@@ -1368,7 +1368,6 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
         // If this set of headers is valid and ends in a block with at least as
         // much work as our tip, download as much as possible.
         if (fCanDirectFetch && pindexLast->IsValid(BLOCK_VALID_TREE) && chainActive.Tip()->nChainWork <= pindexLast->nChainWork) {
-            LogPrintf("DEBUG: DirectFetching to peer=%d (startheight:%d)\n", pfrom->GetId(), pfrom->nStartingHeight);
             std::vector<const CBlockIndex*> vToFetch;
             const CBlockIndex *pindexWalk = pindexLast;
             // Calculate all the blocks we'd need to switch to pindexLast, up to a limit.
@@ -1851,7 +1850,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     // legacy protocol version 70005.
                     if (pfrom->nVersion == LEGACY_PROTOCOL_VERSION) {
                         pfrom->AskFor(inv);
-                        LogPrintf("DEBUG: AskFor(inv) peer=%d for block=%s\n", pfrom->GetId(), inv.hash.ToString());
+                        //LogPrintf("DEBUG: AskFor(inv) peer=%d for block=%s\n", pfrom->GetId(), inv.hash.ToString());
                     } else {
                         connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), inv.hash));
                         LogPrint(BCLog::NET, "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, inv.hash.ToString(), pfrom->GetId());
@@ -2549,12 +2548,11 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
     else if (strCommand == NetMsgType::HEADERS && !fImporting && !fReindex) // Ignore headers received while importing
     {
+        // SolarCoin: This is a "fix" for headers coming from legacy nodes that have a non-canonical size
         if (pfrom->nVersion == LEGACY_PROTOCOL_VERSION) {
-            // SolarCoin: Use CBlock instead, since 2.1.8 is sending more than just the header!
+            // Use CBlock instead, since 2.1.8 is sending more than just the header!
             std::vector<CBlock> blocks;
             std::vector<CBlockHeader> headers;
-            // SolarCoin: Only serialize the header
-            vRecv.SetType(vRecv.GetType()|SER_BLOCKHEADERONLY);
 
             // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
             unsigned int nCount = ReadCompactSize(vRecv);
@@ -2564,21 +2562,20 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 return error("headers message size = %u", nCount);
             }
 
+            // Only deserialize the block header
+            int nType = vRecv.GetType();
+            vRecv.SetType(nType|SER_BLOCKHEADERONLY);
             blocks.resize(nCount);
             headers.resize(nCount);
-            int nType = SER_BLOCKHEADERONLY;
-            CDataStream ss(nType, PROTOCOL_VERSION);
-            ss.reserve(MAX_BLOCK_SERIALIZED_SIZE);
             for (unsigned int n = 0; n < nCount; n++) {
                 vRecv >> blocks[n];
-                ss << blocks[n];
-                ss >> headers[n];
-                ss.clear();
-                //LogPrintf("DEBUG: HEADER : n=%d header=%s\n", n, headers[n].ToString());
+                headers[n] = blocks[n].GetBlockHeader();
+                //LogPrintf("DEBUG: Incoming block from getheaders=%s\n", blocks[n].ToString());
                 if (n < nCount - 1) // Don't call if we just processed the last header
                     ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
             }
             blocks.clear();
+            vRecv.SetType(nType);
 
             // Headers received via a HEADERS message should be valid, and reflect
             // the chain the peer is on. If we receive a known-invalid header,
@@ -2616,7 +2613,12 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     else if (strCommand == NetMsgType::BLOCK && !fImporting && !fReindex) // Ignore blocks received while importing
     {
         std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
+        //int nType = vRecv.GetType();
+        //vRecv.SetType(nType|SER_BLOCKHEADERONLY);
+
         vRecv >> *pblock;
+
+        //vRecv.SetType(nType);
 
         LogPrint(BCLog::NET, "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom->GetId());
 
@@ -3648,7 +3650,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
             NodeId staller = -1;
             FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller, consensusParams);
             for (const CBlockIndex *pindex : vToDownload) {
-                LogPrintf("DEBUG: Sending request for block=%s peer=%d\n", pindex->GetBlockHash().ToString(), pto->GetId());
+                //LogPrintf("DEBUG: Sending request for block=%s peer=%d\n", pindex->GetBlockHash().ToString(), pto->GetId());
                 uint32_t nFetchFlags = GetFetchFlags(pto);
                 vGetData.push_back(CInv(MSG_BLOCK | nFetchFlags, pindex->GetBlockHash()));
                 MarkBlockAsInFlight(pto->GetId(), pindex->GetBlockHash(), pindex);
@@ -3669,7 +3671,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
         while (!pto->mapAskFor.empty() && (*pto->mapAskFor.begin()).first <= nNow)
         {
             const CInv& inv = (*pto->mapAskFor.begin()).second;
-            LogPrintf("DEBUG: Sending getdata=%s peer=%d\n", inv.ToString(), pto->GetId());
+            //LogPrintf("DEBUG: Sending getdata=%s peer=%d\n", inv.ToString(), pto->GetId());
             if (!AlreadyHave(inv))
             {
                 LogPrint(BCLog::NET, "Requesting %s peer=%d\n", inv.ToString(), pto->GetId());
