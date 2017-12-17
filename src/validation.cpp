@@ -62,6 +62,7 @@ CCriticalSection cs_main;
 
 // SolarCoin: PoST
 HashMap mapProofOfStake;
+std::set<std::pair<COutPoint, unsigned int> > setStakeSeen;
 
 BlockMap mapBlockIndex;
 CChain chainActive;
@@ -2709,8 +2710,8 @@ static CBlockIndex* AddToBlockIndex(const CBlockHeader& block, const CChainParam
     pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + GetBlockProof(*pindexNew);
 
     // ppcoin: compute stake entropy bit for stake modifier
-    if (!pindexNew->SetStakeEntropyBit(pindexNew->GetStakeEntropyBit()))
-        LogPrintf("AddToBlockIndex() : SetStakeEntropyBit() failed at nHeight=%d\n", pindexNew->nHeight);
+    if (!pindexNew->SetStakeEntropyBit(block.GetStakeEntropyBit(pindexNew->nTime)))
+        LogPrintf("%s: SetStakeEntropyBit() failed at nHeight=%d\n", __func__, pindexNew->nHeight);
 
     // ppcoin: record proof-of-stake hash value
     if (pindexNew->IsProofOfStake())
@@ -2722,7 +2723,7 @@ static CBlockIndex* AddToBlockIndex(const CBlockHeader& block, const CChainParam
         }
         else
         {
-            LogPrintf("WARNING: AddToBlockIndex() : hashProofOfStake not found in map at nHeight=%d for block=%s\n", pindexNew->nHeight, hash.ToString().c_str());
+            LogPrintf("WARNING: %s: hashProofOfStake not found in map at nHeight=%d for block=%s\n", __func__, pindexNew->nHeight, hash.ToString().c_str());
         }
     }
 
@@ -2730,13 +2731,16 @@ static CBlockIndex* AddToBlockIndex(const CBlockHeader& block, const CChainParam
     uint64_t nStakeModifier = 0;
     bool fGeneratedStakeModifier = false;
     if (!ComputeNextStakeModifier(pindexNew, nStakeModifier, fGeneratedStakeModifier, chainparams.GetConsensus()))
-        LogPrintf("AddToBlockIndex() : ComputeNextStakeModifier() failed at nHeight=%d\n", pindexNew->nHeight);
+        LogPrintf("%s: ComputeNextStakeModifier() failed at nHeight=%d\n", __func__, pindexNew->nHeight);
 
     pindexNew->SetStakeModifier(nStakeModifier, fGeneratedStakeModifier);
     pindexNew->nStakeModifierChecksum = GetStakeModifierChecksum(pindexNew, chainparams.GetConsensus());
     if (pindexNew->nHeight > 0)
         if (!fTestNet && !CheckStakeModifierCheckpoints(pindexNew->nHeight, pindexNew->nStakeModifierChecksum))
-            LogPrintf("AddToBlockIndex() : Rejected by stake modifier checkpoint height=%d, modifier=%x\n", pindexNew->nHeight, nStakeModifier);
+            LogPrintf("%s: Rejected by stake modifier checkpoint height=%d, modifier=%016x\n", __func__, pindexNew->nHeight, nStakeModifier);
+    if (pindexNew->IsProofOfStake())
+        setStakeSeen.insert(std::make_pair(pindexNew->prevoutStake, pindexNew->nStakeTime));
+
 
     pindexNew->RaiseValidity(BLOCK_VALID_TREE);
     if (pindexBestHeader == nullptr || pindexBestHeader->nChainWork < pindexNew->nChainWork)
@@ -3263,6 +3267,7 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
             }
         }
     }
+
     if (pindex == nullptr)
         pindex = AddToBlockIndex(block, chainparams);
 
@@ -3323,8 +3328,7 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
     // blocks which are too close in height to the tip.  Apply this test
     // regardless of whether pruning is enabled; it should generally be safe to
     // not process unrequested blocks.
-    // DEBUG: TODO: Test this. //bool fTooFarAhead = (pindex->nHeight > int(chainActive.Height() + MIN_BLOCKS_TO_KEEP));
-    bool fTooFarAhead = false;
+    bool fTooFarAhead = (pindex->nHeight > int(chainActive.Height() + MIN_BLOCKS_TO_KEEP));
 
     // TODO: Decouple this function from the block download logic by removing fRequested
     // This requires some new chain data structure to efficiently look up if a
@@ -3343,13 +3347,10 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
         // If our tip is behind, a peer could try to send us
         // low-work blocks on a fake chain that we would never
         // request; don't process these.
-        if (pindex->nChainWork < nMinimumChainWork) {
+        if (pindex->nChainWork < nMinimumChainWork)
             return true;
-        }
     }
     if (fNewBlock) *fNewBlock = true;
-
-    //LogPrintf("DEBUG: Bool Flags: fAlreadyHave=%d fHasMoreOrSameWork=%d fTooFarAhead=%d pindex.nHeight=%d chainActive.Height=%d\n", fAlreadyHave, fHasMoreOrSameWork, fTooFarAhead, pindex->nHeight, chainActive.Height());
 
     if (!CheckBlock(block, state, chainparams.GetConsensus()) ||
         !ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev)) {
@@ -3403,11 +3404,20 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         LOCK(cs_main);
 
         if (ret) {
+            uint256 hash = pblock->GetHash();
+            // ppcoin: check proof-of-stake
+            // Limited duplicity on stake: prevents block flood attack
+            if (pblock->IsProofOfStake())
+            {
+                if (setStakeSeen.count(pblock->GetProofOfStake()))
+                    return error("%s: duplicate proof-of-stake (%s, %d) for block %s", __func__,
+                        pblock->GetProofOfStake().first.ToString(), pblock->GetProofOfStake().second,
+                        hash.ToString());
+            }
             // ppcoin: verify hash target and signature of coinstake tx
             // if we have the previous block and we are not downloading
             if (pblock->IsProofOfStake() && mapBlockIndex.count(pblock->hashPrevBlock))
             {
-                uint256 hash = pblock->GetHash();
                 uint256 hashProofOfStake, targetProofOfStake;
                 if (!CheckProofOfStake(*pblock->vtx[1], pblock->nBits, hashProofOfStake, targetProofOfStake, chainparams.GetConsensus())) {
                     LogPrintf("WARNING: ProcessNewBlock() : CheckProofOfStake() failed for block=%s\n", hash.ToString().c_str());
@@ -3700,6 +3710,13 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams)
         CBlockIndex* pindex = item.second;
         pindex->nChainWork = (pindex->pprev ? pindex->pprev->nChainWork : 0) + GetBlockProof(*pindex);
         pindex->nTimeMax = (pindex->pprev ? std::max(pindex->pprev->nTimeMax, pindex->nTime) : pindex->nTime);
+        // SolarCoin: calculate stake modifier checksum
+        if (pindex->nHeight > 0) {
+            pindex->nStakeModifierChecksum = GetStakeModifierChecksum(pindex, chainparams.GetConsensus());
+            if (!fTestNet && !CheckStakeModifierCheckpoints(pindex->nHeight, pindex->nStakeModifierChecksum))
+                return false;
+        }
+
         // We can link the chain of blocks for which we've received transactions at some point.
         // Pruned nodes may have deleted the block.
         if (pindex->nTx > 0) {

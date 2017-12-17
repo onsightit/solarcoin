@@ -118,7 +118,6 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
     // ppcoin: retarget with exponential moving toward target spacing
     arith_uint256 bnNew;
     bnNew.SetCompact(pindexPrev->nBits);
-    //LogPrintf("DEBUG: GetNextTargetRequired(): pindexLast->nHeight=%d bnNew=%08x %s\n", pindexLast->nHeight, bnNew.GetCompact(), ArithToUint256(bnNew).ToString().c_str());
     int64_t nInterval = params.nTargetTimespan / params.nTargetSpacing;
     bnNew *= ((nInterval - 1) * params.nTargetSpacing + nActualSpacing + nActualSpacing);
     bnNew /= ((nInterval + 1) * params.nTargetSpacing);
@@ -270,7 +269,7 @@ unsigned int static GetNextWorkRequired_V1(const CBlockIndex* pindexLast, const 
             {
                 // Return the last non-special-min-difficulty-rules-block
                 const CBlockIndex* pindex = pindexLast;
-                while (pindex->pprev && pindex->nHeight % nInterval != 0 && pindex->nBits == nProofOfWorkLimit)
+                while (pindex && pindex->pprev && pindex->nHeight % nInterval != 0 && pindex->nBits == nProofOfWorkLimit)
                     pindex = pindex->pprev;
                 return pindex->nBits;
             }

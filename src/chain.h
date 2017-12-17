@@ -219,7 +219,7 @@ public:
     };
 
     uint64_t nStakeModifier; // hash modifier for proof-of-stake
-    unsigned int nStakeModifierChecksum; // checksum of index; in-memeory only
+    unsigned int nStakeModifierChecksum; // checksum of index; in-memory only
 
     // proof-of-stake specific fields
     COutPoint prevoutStake;
@@ -413,7 +413,6 @@ public:
         if (fGeneratedStakeModifier)
             nFlags |= BLOCK_STAKE_MODIFIER;
     }
-
 
 
     std::string ToString() const

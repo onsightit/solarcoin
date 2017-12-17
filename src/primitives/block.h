@@ -77,6 +77,16 @@ public:
         return Hash(BEGIN(nVersion), END(nNonce));
     }
 
+    // ppcoin: entropy bit for stake modifier if chosen by modifier
+    unsigned int GetStakeEntropyBit(unsigned int nTime) const
+    {
+        // Take last bit of block hash as entropy bit
+        unsigned int nEntropyBit = ((GetHash().GetUint64(0)) & 1llu);
+        if (fDebug && gArgs.GetBoolArg("-printstakemodifier", false))
+            LogPrintf("GetStakeEntropyBit: nTime=%u hashBlock=%s nEntropyBit=%u\n", nTime, GetHash().ToString().c_str(), nEntropyBit);
+        return nEntropyBit;
+    }
+
     int64_t GetBlockTime() const
     {
         return (int64_t)nTime;
@@ -170,16 +180,6 @@ public:
         uint256 thash;
         scrypt_1024_1_1_256(BEGIN(nVersion), BEGIN(thash));
         return thash;
-    }
-
-    // ppcoin: entropy bit for stake modifier if chosen by modifier
-    unsigned int GetStakeEntropyBit(unsigned int nTime) const
-    {
-        // Take last bit of block hash as entropy bit
-        unsigned int nEntropyBit = ((GetHash().GetUint64(0)) & 1llu);
-        if (gArgs.GetBoolArg("-printstakemodifier", false))
-            LogPrintf("GetStakeEntropyBit: nTime=%u hashBlock=%s nEntropyBit=%u\n", nTime, GetHash().ToString().c_str(), nEntropyBit);
-        return nEntropyBit;
     }
 
     // ppcoin: two types of block: proof-of-work or proof-of-stake
