@@ -12,6 +12,7 @@
 #include <uint256.h>
 #include <util.h>
 #include <ui_interface.h>
+#include <validation.h>
 #include <init.h>
 
 #include <stdint.h>
@@ -303,6 +304,10 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                 // We opt instead to simply trust the data that is on your local disk.
                 //if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, Params().GetConsensus()))
                 //    return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindexNew->ToString());
+
+                // SolarCoin: buid setStakeSeen
+                if (pindexNew->IsProofOfStake())
+                    setStakeSeen.insert(std::make_pair(pindexNew->prevoutStake, pindexNew->nStakeTime));
 
                 pcursor->Next();
             } else {

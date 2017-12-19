@@ -157,6 +157,7 @@ struct BlockHasher
 // SolarCoin: PoST
 typedef std::unordered_map<uint256, uint256, BlockHasher> HashMap;
 extern HashMap mapProofOfStake;
+extern std::set<std::pair<COutPoint, unsigned int> > setStakeSeen;
 
 extern CScript COINBASE_FLAGS;
 extern CCriticalSection cs_main;

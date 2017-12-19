@@ -46,7 +46,7 @@ std::string GetWarnings(const std::string& strFor)
 
     LOCK(cs_warnings);
 
-    // DEBUG: Lazy hack
+    // DEBUG: Lazy hack until ready to release. :)
     //if (!CLIENT_VERSION_IS_RELEASE) {
     if (true) {
         strStatusBar = "This is a pre-release test build - use at your own risk - do not use for mining or merchant applications";
