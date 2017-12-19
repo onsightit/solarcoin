@@ -309,11 +309,6 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                 if (pindexNew->IsProofOfStake())
                     setStakeSeen.insert(std::make_pair(pindexNew->prevoutStake, pindexNew->nStakeTime));
 
-                // DEBUG:
-                if (pindexNew->nHeight == 819178) {
-                    LogPrintf("DEBUG: %s: Block 819178 nStakeModifier=%016x\n", __func__, pindexNew->nStakeModifier);
-                }
-
                 pcursor->Next();
             } else {
                 return error("%s: failed to read value", __func__);

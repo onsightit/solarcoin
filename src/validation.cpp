@@ -2738,9 +2738,9 @@ static CBlockIndex* AddToBlockIndex(const CBlockHeader& block, const CChainParam
     if (pindexNew->nHeight > 0)
         if (!fTestNet && !CheckStakeModifierCheckpoints(pindexNew->nHeight, pindexNew->nStakeModifierChecksum))
             LogPrintf("%s: Rejected by stake modifier checkpoint height=%d, modifier=%016x\n", __func__, pindexNew->nHeight, nStakeModifier);
+
     if (pindexNew->IsProofOfStake())
         setStakeSeen.insert(std::make_pair(pindexNew->prevoutStake, pindexNew->nStakeTime));
-
 
     pindexNew->RaiseValidity(BLOCK_VALID_TREE);
     if (pindexBestHeader == nullptr || pindexBestHeader->nChainWork < pindexNew->nChainWork)
@@ -3294,8 +3294,7 @@ bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, CValidatio
                 if (first_invalid) *first_invalid = header;
                 return false;
             }
-            // SolarCoin: This appears to be a bug in bitcoin core. "if (ppindex) {"
-            if (ppindex && pindex) {
+            if (ppindex) {
                 *ppindex = pindex;
             }
         }

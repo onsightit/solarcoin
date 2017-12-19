@@ -54,7 +54,6 @@ static bool GetLastStakeModifier(const CBlockIndex* pindex, uint64_t& nStakeModi
         return error("GetLastStakeModifier: non generated stake modifier found");
     nStakeModifier = pindex->nStakeModifier;
     nModifierTime = pindex->GetBlockTime();
-    LogPrintf("DEBUG: Got Last Stake Modifier %016x at modifier height %d\n", nStakeModifier, pindex->nHeight);
     return true;
 }
 
@@ -85,8 +84,10 @@ static bool SelectBlockFromCandidates(vector<pair<int64_t, uint256> >& vSortedBy
     *pindexSelected = (const CBlockIndex*) 0;
     for (const PAIRTYPE(int64_t, uint256)& item : vSortedByTimestamp)
     {
-        if (!mapBlockIndex.count(item.second))
-            return error("SelectBlockFromCandidates: failed to find block index for candidate block %s", item.second.ToString().c_str());
+        if (!mapBlockIndex.count(item.second)) {
+            LogPrintf("%s: failed to find block index for candidate block %s\n", __func__, item.second.ToString().c_str());
+            return false;
+        }
         const CBlockIndex* pindex = mapBlockIndex[item.second];
         if (fSelected && pindex->GetBlockTime() > nSelectionIntervalStop)
             break;
@@ -101,10 +102,9 @@ static bool SelectBlockFromCandidates(vector<pair<int64_t, uint256> >& vSortedBy
         // the selection hash is divided by 2**32 so that proof-of-stake block
         // is always favored over proof-of-work block. this is to preserve
         // the energy efficiency property
-        if (pindex->IsProofOfStake()) {
+        if (pindex->IsProofOfStake())
             hashSelection = ArithToUint256(UintToArith256(hashSelection) >>= 32);
-        }
-        if (fSelected && hashSelection < hashBest)
+        if (fSelected && UintToArith256(hashSelection) < UintToArith256(hashBest))
         {
             hashBest = hashSelection;
             *pindexSelected = (const CBlockIndex*) pindex;
@@ -150,7 +150,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     // if it's not old enough, return the same stake modifier
     int64_t nModifierTime = 0;
     if (!GetLastStakeModifier(pindexPrev, nStakeModifier, nModifierTime)) {
-        LogPrintf("%s: unable to get last modifier", __func__);
+        LogPrintf("%s: unable to get last modifier\n", __func__);
         return false;
     }
 
@@ -172,7 +172,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     int64_t nSelectionInterval = GetStakeModifierSelectionInterval(params);
     int64_t nSelectionIntervalStart = (pindexPrev->GetBlockTime() / params.nModifierInterval) * params.nModifierInterval - nSelectionInterval;
     const CBlockIndex* pindex = pindexPrev;
-    while (pindex && pindex->GetBlockTime() >= nSelectionIntervalStart)
+    while (pindex && pindex->pprev && pindex->GetBlockTime() >= nSelectionIntervalStart)
     {
         vSortedByTimestamp.push_back(make_pair(pindex->GetBlockTime(), pindex->GetBlockHash()));
         pindex = pindex->pprev;
@@ -195,12 +195,13 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
             return false;
         }
         // write the entropy bit of the selected block
-        nStakeModifierNew |= (((uint64_t)pindex->GetStakeEntropyBit()) << nRound);
+        uint64_t nEntropyBit = (uint64_t)pindex->GetStakeEntropyBit();
+        nStakeModifierNew |= (nEntropyBit << nRound);
 
         // add the selected block from candidates to selected list
         mapSelectedBlocks.insert(make_pair(pindex->GetBlockHash(), pindex));
-        if (gArgs.GetBoolArg("-printstakemodifier", false))
-            LogPrintf("%s(): selected modifier=%016x round %d stop=%ld height=%d bit=%d\n", __func__, nStakeModifierNew, nRound, nSelectionIntervalStop, pindex->nHeight, pindex->GetStakeEntropyBit());
+        if (fDebug && gArgs.GetBoolArg("-printstakemodifier", false))
+            LogPrintf("%s(): selected modifier=0x%016x round %d stop=%ld height=%d entropybit=%d\n", __func__, nStakeModifierNew, nRound, nSelectionIntervalStop, pindex->nHeight, pindex->GetStakeEntropyBit());
     }
 
     // Print selection map for visualization of the selected blocks
@@ -210,7 +211,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
         // '-' indicates proof-of-work blocks not selected
         strSelectionMap.insert(0, pindexPrev->nHeight - nHeightFirstCandidate + 1, '-');
         pindex = pindexPrev;
-        while (pindex && pindex->nHeight >= nHeightFirstCandidate)
+        while (pindex && pindex->pprev && pindex->nHeight >= nHeightFirstCandidate)
         {
             // '=' indicates proof-of-stake blocks not selected
             if (pindex->IsProofOfStake())
@@ -226,10 +227,9 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
         LogPrintf("%s(): selection height [%d, %d] map %s\n", __func__, nHeightFirstCandidate, pindexPrev->nHeight, strSelectionMap.c_str());
     }
 
-    LogPrintf("DEBUG: nStakeModifierNew=%016x\n", nStakeModifierNew);
-
     nStakeModifier = nStakeModifierNew;
     fGeneratedStakeModifier = true;
+
     return true;
 }
 
@@ -278,7 +278,6 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
         }
     }
     nStakeModifier = pindex->nStakeModifier;
-    LogPrintf("DEBUG: Got nStakeModifier=%016x nStakeModifierHeight=%d nStakeModifierTime=%d\n", nStakeModifier, nStakeModifierHeight, nStakeModifierTime);
     return true;
 }
 
@@ -325,10 +324,7 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     // Stake Time factored weight
     int64_t factoredTimeWeight = GetStakeTimeFactoredWeight(timeWeight, bnCoinDayWeight, pindexPrev, params);
     arith_uint256 bnStakeTimeWeight = arith_uint256(nValueIn) * factoredTimeWeight / COIN / (24 * 60 * 60);
-    int64_t stakeTimeWeight = ArithToUint256(bnStakeTimeWeight).GetUint64(0); // DEBUG: Verify (0) is correct parm
     targetProofOfStake = ArithToUint256(bnStakeTimeWeight * bnTargetPerCoinDay);
-
-    LogPrintf("DEBUG: stakeTimeWeight=%d timeWeight=%d nValueIn=%d (bnCoinDayWeight=%s * bnTargetPerCoinDay=%s) => targetProofOfStake=%s\n", stakeTimeWeight, timeWeight, nValueIn, bnCoinDayWeight.ToString(), bnTargetPerCoinDay.ToString(), targetProofOfStake.GetHex());
 
     // Calculate hash
     CDataStream ss(SER_GETHASH, 0);
@@ -343,16 +339,6 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
 
     ss << nTimeBlockFrom << nTxOffset << txPrev.nTime << prevout.n << nTimeTx;
     hashProofOfStake = Hash(ss.begin(), ss.end());
-
-    // DEBUG:
-    if (heightBlockFrom == 736776 || heightBlockFrom == 819178 || heightBlockFrom == 372901) {
-        LogPrintf("DEBUG: \n");
-        LogPrintf("DEBUG: heightBlockFrom=%d : nStakeModifier=%016x nStakeModifierHeight=%d nTimeBlockFrom=%u nTxOffset=%u txPrev.nTime=%u prevout.n=%u nTimeTx=%u hashProofOfStake=%s targetProofOfStake=%s\n",
-            heightBlockFrom, nStakeModifier, nStakeModifierHeight,
-            nTimeBlockFrom, nTxOffset, txPrev.nTime, prevout.n, nTimeTx,
-            hashProofOfStake.ToString().c_str(), targetProofOfStake.ToString().c_str()); // DEBUG: Added targetProofOfStake
-        LogPrintf("DEBUG: \n");
-    }
 
     if (fPrintProofOfStake)
     {
@@ -466,7 +452,7 @@ bool CheckStakeModifierCheckpoints(int nHeight, unsigned int nStakeModifierCheck
 int64_t GetStakeTimeFactoredWeight(int64_t timeWeight, arith_uint256 bnCoinDayWeight, CBlockIndex* pindexPrev, const Consensus::Params& params)
 {
     int64_t factoredTimeWeight;
-    int64_t nCoinDayWeigth = ArithToUint256(bnCoinDayWeight).GetUint64(0); // DEBUG: Verify (0) is correct parm
+    int64_t nCoinDayWeigth = ArithToUint256(bnCoinDayWeight).GetUint64(0);
 
     double weightFraction = (nCoinDayWeigth+1) / GetAverageStakeWeight(pindexPrev, params);
     if (weightFraction > 0.45)
