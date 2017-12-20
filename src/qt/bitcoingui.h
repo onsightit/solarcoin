@@ -112,6 +112,9 @@ private:
     QAction *openAction;
     QAction *showHelpMessageAction;
 
+    QAction *lockWalletAction;
+    QAction *unlockWalletAction;
+
     QSystemTrayIcon *trayIcon;
     QMenu *trayIconMenu;
     Notificator *notificator;

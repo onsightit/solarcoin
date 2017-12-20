@@ -35,6 +35,10 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/thread.hpp>
 
+// optional setting to unlock wallet for staking only
+
+bool fWalletUnlockStakingOnly = true;
+
 std::vector<CWalletRef> vpwallets;
 /** Transaction fee set by the user */
 CFeeRate payTxFee(DEFAULT_TRANSACTION_FEE);

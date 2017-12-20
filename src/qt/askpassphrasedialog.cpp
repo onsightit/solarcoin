@@ -18,6 +18,8 @@
 #include <QMessageBox>
 #include <QPushButton>
 
+extern bool fWalletUnlockStakingOnly;
+
 AskPassphraseDialog::AskPassphraseDialog(Mode _mode, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AskPassphraseDialog),
@@ -43,30 +45,45 @@ AskPassphraseDialog::AskPassphraseDialog(Mode _mode, QWidget *parent) :
     switch(mode)
     {
         case Encrypt: // Ask passphrase x2
-            ui->warningLabel->setText(tr("Enter the new passphrase to the wallet.<br/>Please use a passphrase of <b>ten or more random characters</b>, or <b>eight or more words</b>."));
             ui->passLabel1->hide();
             ui->passEdit1->hide();
-            setWindowTitle(tr("Encrypt wallet"));
+            ui->stakingCheckBox->hide();
+            ui->warningLabel->setText(tr("Enter a new password for the wallet.<br/>Please use a password of <b>10 or more random characters</b>, or <b>eight or more words</b>."));
+            setWindowTitle(tr("Encrypt Wallet"));
             break;
-        case Unlock: // Ask passphrase
-            ui->warningLabel->setText(tr("This operation needs your wallet passphrase to unlock the wallet."));
+        case Lock: // Ask passphrase / Turn off staking
+            ui->warningLabel->setText(tr("Click OK to turn off staking."));
+            ui->passLabel1->hide();
+            ui->passEdit1->hide();
             ui->passLabel2->hide();
             ui->passEdit2->hide();
             ui->passLabel3->hide();
             ui->passEdit3->hide();
-            setWindowTitle(tr("Unlock wallet"));
+            ui->stakingCheckBox->hide();
+            setWindowTitle(tr("Staking off"));
+            break;
+        case Unlock: // Ask passphrase / Option For staking only
+            ui->warningLabel->setText(tr("Enter your wallet password."));
+            ui->passLabel2->hide();
+            ui->passEdit2->hide();
+            ui->passLabel3->hide();
+            ui->passEdit3->hide();
+            ui->stakingCheckBox->show();
+            setWindowTitle(tr("Enter Password"));
             break;
         case Decrypt:   // Ask passphrase
-            ui->warningLabel->setText(tr("This operation needs your wallet passphrase to decrypt the wallet."));
+            ui->warningLabel->setText(tr("Enter your wallet password"));
             ui->passLabel2->hide();
             ui->passEdit2->hide();
             ui->passLabel3->hide();
             ui->passEdit3->hide();
-            setWindowTitle(tr("Decrypt wallet"));
+            ui->stakingCheckBox->hide();
+            setWindowTitle(tr("Decrypt Wallet"));
             break;
         case ChangePass: // Ask old passphrase + new passphrase x2
-            setWindowTitle(tr("Change passphrase"));
-            ui->warningLabel->setText(tr("Enter the old passphrase and new passphrase to the wallet."));
+            ui->warningLabel->setText(tr("Enter the old and new password to the wallet."));
+            ui->stakingCheckBox->hide();
+            setWindowTitle(tr("Change Passphrase"));
             break;
     }
     textChanged();
@@ -84,6 +101,21 @@ AskPassphraseDialog::~AskPassphraseDialog()
 void AskPassphraseDialog::setModel(WalletModel *_model)
 {
     this->model = _model;
+
+    switch(mode)
+    {
+        case Encrypt: // Ask passphrase x2
+            break;
+        case Lock: // Ask passphrase
+            ui->passEdit1->setText("password"); // Real password not required to Lock.
+            break;
+        case Unlock: // Ask passphrase
+            break;
+        case Decrypt:   // Ask passphrase
+            break;
+        case ChangePass: // Ask old passphrase + new passphrase x2
+            break;
+    }
 }
 
 void AskPassphraseDialog::accept()
@@ -151,6 +183,17 @@ void AskPassphraseDialog::accept()
             QDialog::reject(); // Cancelled
         }
         } break;
+    case Lock:
+        if(!model->setWalletLocked(true, oldpass))
+        {
+            QMessageBox::critical(this, tr("Wallet Lock failed"),
+                                  tr("The password entered for the wallet was incorrect."));
+        }
+        else
+        {
+            QDialog::accept(); // Success
+        }
+        break;
     case Unlock:
         if(!model->setWalletLocked(false, oldpass))
         {
@@ -159,6 +202,7 @@ void AskPassphraseDialog::accept()
         }
         else
         {
+            fWalletUnlockStakingOnly = ui->stakingCheckBox->isChecked();
             QDialog::accept(); // Success
         }
         break;
@@ -206,6 +250,7 @@ void AskPassphraseDialog::textChanged()
     case Encrypt: // New passphrase x2
         acceptable = !ui->passEdit2->text().isEmpty() && !ui->passEdit3->text().isEmpty();
         break;
+    case Lock:
     case Unlock: // Old passphrase x1
     case Decrypt:
         acceptable = !ui->passEdit1->text().isEmpty();
