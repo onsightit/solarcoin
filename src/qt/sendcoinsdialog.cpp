@@ -10,6 +10,7 @@
 #include <qt/clientmodel.h>
 #include <qt/coincontroldialog.h>
 #include <qt/guiutil.h>
+#include <qt/guiconstants.h>
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
 #include <qt/sendcoinsentry.h>
@@ -33,6 +34,7 @@
 
 static const std::array<int, 9> confTargets = { {2, 4, 6, 12, 24, 48, 144, 504, 1008} };
 int getConfTargetForIndex(int index) {
+
     if (index+1 > static_cast<int>(confTargets.size())) {
         return confTargets.back();
     }
@@ -59,7 +61,18 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
     fFeeMinimized(true),
     platformStyle(_platformStyle)
 {
+    // Setup header and styles
+    if (GUIUtil::fNoHeaders)
+        GUIUtil::header(this, QString(""));
+    else if (GUIUtil::fSmallHeaders)
+        GUIUtil::header(this, QString(":images/headerSendSmall"));
+    else
+        GUIUtil::header(this, QString(":images/headerSend"));
+
     ui->setupUi(this);
+    this->layout()->setContentsMargins(10, 10 + GUIUtil::HEADER_HEIGHT, 10, 10);
+
+    ui->labelCoinControlFeatures->setFont(qFontBold);
 
     if (!_platformStyle->getImagesOnButtons()) {
         ui->addButton->setIcon(QIcon());

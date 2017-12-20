@@ -16,6 +16,7 @@
 #include <QString>
 #include <QTableView>
 #include <QLabel>
+#include <QGraphicsView>
 
 class QValidatedLineEdit;
 class SendCoinsRecipient;
@@ -33,6 +34,32 @@ QT_END_NAMESPACE
  */
 namespace GUIUtil
 {
+    extern bool fNoHeaders;
+    extern bool fSmallHeaders;
+    extern int TOOLBAR_WIDTH;
+    extern int TOOLBAR_ICON_WIDTH;
+    extern int TOOLBAR_ICON_HEIGHT;
+    extern int HEADER_WIDTH;
+    extern int HEADER_HEIGHT;
+    extern int BUTTON_WIDTH;
+    extern int BUTTON_HEIGHT;
+    extern int FRAMEBLOCKS_LABEL_WIDTH;
+    extern int WINDOW_MIN_WIDTH;
+    extern int WINDOW_MIN_HEIGHT;
+    extern int STATUSBAR_ICONSIZE;
+    extern int STATUSBAR_MARGIN;
+    extern int STATUSBAR_HEIGHT;
+    
+    // Common stylesheets
+    extern QString veriStyleSheet;
+    extern QString veriAskPassphrasePageStyleSheet;
+    extern QGraphicsView *header(QWidget *parent, QString backgroundImage);
+
+    void refactorGUI(QRect screenSize);
+    int pointsToPixels(int points);
+    void setFontPixelSize(QFont *font);
+    void setFontPixelSizes();
+
     // Create human-readable string from date
     QString dateTimeStr(const QDateTime &datetime);
     QString dateTimeStr(qint64 nTime);
