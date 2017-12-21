@@ -113,8 +113,6 @@ void WalletView::setBitcoinGUI(BitcoinGUI *gui)
         // Connect HD enabled state signal 
         connect(this, SIGNAL(hdEnabledStatusChanged(int)), gui, SLOT(setHDStatus(int)));
 
-        connect(this, SIGNAL(setLockWalletFeatures(bool)), gui, SLOT(lockWalletFeatures(bool)));
-
         connect(askPassphrasePage, SIGNAL(lockWalletFeatures(bool)), gui, SLOT(lockWalletFeatures(bool)));
         connect(encryptWalletPage, SIGNAL(lockWalletFeatures(bool)), gui, SLOT(lockWalletFeatures(bool)));
     }
