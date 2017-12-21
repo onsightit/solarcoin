@@ -57,6 +57,7 @@
 #include <QToolBar>
 #include <QVBoxLayout>
 #include <QFontDatabase>
+#include <QTextStream>
 
 #if QT_VERSION < 0x050000
 #include <QTextDocument>
@@ -475,7 +476,7 @@ void BitcoinGUI::createMenuBar()
         settings->setFont(qFont);
         settings->addAction(encryptWalletAction);
         settings->addAction(changePassphraseAction);
-        settings->addSeparator();
+
         settings->addAction(lockWalletAction);
         settings->addAction(unlockWalletAction);
         settings->addSeparator();
@@ -498,7 +499,7 @@ void BitcoinGUI::createToolBars()
 {
     if(walletFrame)
     {
-        QToolBar *toolbar = addToolBar(tr("Tabs toolbar"));
+        toolbar = addToolBar(tr("Tabs toolbar"));
         toolbar->setMovable(false);
 
         addToolBar(Qt::LeftToolBarArea, toolbar);
@@ -594,7 +595,9 @@ bool BitcoinGUI::setCurrentWallet(const QString& name)
 {
     if(!walletFrame)
         return false;
-    return walletFrame->setCurrentWallet(name);
+    bool result = walletFrame->setCurrentWallet(name);
+    lockWalletFeatures(true);
+    return result;
 }
 
 void BitcoinGUI::removeAllWallets()
@@ -747,6 +750,20 @@ void BitcoinGUI::openClicked()
     }
 }
 
+void BitcoinGUI::gotoAskPassphrasePage()
+{
+    overviewAction->setChecked(false);
+    if (walletFrame) walletFrame->gotoAskPassphrasePage();
+}
+
+void BitcoinGUI::gotoEncryptWalletPage()
+{
+    //fEncrypt = true; TODO: figure this out
+
+    overviewAction->setChecked(false);
+    if (walletFrame) walletFrame->gotoAskPassphrasePage();
+}
+
 void BitcoinGUI::gotoOverviewPage()
 {
     overviewAction->setChecked(true);
@@ -779,6 +796,41 @@ void BitcoinGUI::gotoSignMessageTab(QString addr)
 void BitcoinGUI::gotoVerifyMessageTab(QString addr)
 {
     if (walletFrame) walletFrame->gotoVerifyMessageTab(addr);
+}
+
+void BitcoinGUI::lockWalletFeatures(bool lock)
+{
+    if (lock && !fTestNet)
+    {
+        appMenuBar->setVisible(false);
+        toolbar->setVisible(false);
+        statusBar()->setVisible(false);
+
+        this->setWindowState(Qt::WindowNoState); // Fix for window maximized state
+        resizeGUI();
+
+        gotoAskPassphrasePage(); //probably should be renamed cause it's now both encrypt and askpass 
+    }
+    else
+    {
+        gotoOverviewPage();
+
+        QSettings settings("SolarCoin", "SolarCoin-Qt");
+        restoreGeometry(settings.value("geometry").toByteArray());
+        restoreState(settings.value("windowState").toByteArray());
+
+        appMenuBar->setVisible(true);
+        toolbar->setVisible(true);
+        statusBar()->setVisible(true);
+    }
+
+    // Hide/Show every action in tray but Exit
+    QList<QAction *> trayActionItems = trayIconMenu->actions();
+    Q_FOREACH (QAction* ai, trayActionItems) {
+        ai->setVisible(lock == false);
+    }
+    toggleHideAction->setVisible(true);
+    quitAction->setVisible(true);
 }
 #endif // ENABLE_WALLET
 

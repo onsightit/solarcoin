@@ -121,6 +121,7 @@ private:
     RPCConsole *rpcConsole;
     HelpMessageDialog *helpMessageDialog;
     ModalOverlay *modalOverlay;
+    QToolBar *toolbar;
 
     /** Keep track of previous number of blocks, to detect progress */
     int prevBlocks;
@@ -190,6 +191,9 @@ public Q_SLOTS:
 
     /** Show incoming transaction notification for new transactions. */
     void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label);
+
+    /** Lock Wallet */
+    void lockWalletFeatures(bool lock);
 #endif // ENABLE_WALLET
 
 private Q_SLOTS:
@@ -207,6 +211,11 @@ private Q_SLOTS:
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
+
+    /** Switch to askpassphrase page */
+    void gotoAskPassphrasePage();
+    /** Switch to encryptwallet page */
+    void gotoEncryptWalletPage();
 
     /** Show open dialog */
     void openClicked();

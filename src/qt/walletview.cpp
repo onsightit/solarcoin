@@ -9,6 +9,7 @@
 #include <qt/bitcoingui.h>
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
+#include <qt/askpassphrasepage.h>
 #include <qt/optionsmodel.h>
 #include <qt/overviewpage.h>
 #include <qt/platformstyle.h>
@@ -28,6 +29,9 @@
 #include <QProgressDialog>
 #include <QPushButton>
 #include <QVBoxLayout>
+#include <QTextStream>
+
+extern bool fWalletUnlockStakingOnly;
 
 WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     QStackedWidget(parent),
@@ -56,6 +60,10 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     receiveCoinsPage = new ReceiveCoinsDialog(platformStyle);
     sendCoinsPage = new SendCoinsDialog(platformStyle);
 
+    // Create AskPassphrase Page
+    askPassphrasePage = new AskPassphrasePage(AskPassphrasePage::Unlock, this);
+    encryptWalletPage = new AskPassphrasePage(AskPassphrasePage::Encrypt, this);
+
     usedSendingAddressesPage = new AddressBookPage(platformStyle, AddressBookPage::ForEditing, AddressBookPage::SendingTab, this);
     usedReceivingAddressesPage = new AddressBookPage(platformStyle, AddressBookPage::ForEditing, AddressBookPage::ReceivingTab, this);
 
@@ -63,6 +71,8 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     addWidget(transactionsPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
+    addWidget(askPassphrasePage);
+    addWidget(encryptWalletPage);
 
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
     connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), transactionView, SLOT(focusTransaction(QModelIndex)));
@@ -102,6 +112,11 @@ void WalletView::setBitcoinGUI(BitcoinGUI *gui)
 
         // Connect HD enabled state signal 
         connect(this, SIGNAL(hdEnabledStatusChanged(int)), gui, SLOT(setHDStatus(int)));
+
+        connect(this, SIGNAL(setLockWalletFeatures(bool)), gui, SLOT(lockWalletFeatures(bool)));
+
+        connect(askPassphrasePage, SIGNAL(lockWalletFeatures(bool)), gui, SLOT(lockWalletFeatures(bool)));
+        connect(encryptWalletPage, SIGNAL(lockWalletFeatures(bool)), gui, SLOT(lockWalletFeatures(bool)));
     }
 }
 
@@ -124,6 +139,8 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
     sendCoinsPage->setModel(_walletModel);
     usedReceivingAddressesPage->setModel(_walletModel->getAddressTableModel());
     usedSendingAddressesPage->setModel(_walletModel->getAddressTableModel());
+    askPassphrasePage->setModel(_walletModel);
+    encryptWalletPage->setModel(_walletModel);
 
     if (_walletModel)
     {
@@ -216,6 +233,14 @@ void WalletView::gotoVerifyMessageTab(QString addr)
         signVerifyMessageDialog->setAddress_VM(addr);
 }
 
+void WalletView::gotoAskPassphrasePage()
+{
+    if (walletModel && walletModel->getEncryptionStatus() == WalletModel::Unencrypted)
+        setCurrentWidget(encryptWalletPage);
+    else
+        setCurrentWidget(askPassphrasePage);
+}
+
 bool WalletView::handlePaymentRequest(const SendCoinsRecipient& recipient)
 {
     return sendCoinsPage->handlePaymentRequest(recipient);
@@ -273,7 +298,7 @@ void WalletView::unlockWallet()
     if(!walletModel)
         return;
     // Unlock wallet when requested by wallet model
-    if (walletModel->getEncryptionStatus() == WalletModel::Locked)
+    if (walletModel->getEncryptionStatus() == WalletModel::Locked && !fWalletUnlockStakingOnly)
     {
         AskPassphraseDialog dlg(AskPassphraseDialog::Unlock, this);
         dlg.setModel(walletModel);

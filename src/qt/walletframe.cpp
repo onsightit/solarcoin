@@ -11,6 +11,7 @@
 
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QTextStream>
 
 WalletFrame::WalletFrame(const PlatformStyle *_platformStyle, BitcoinGUI *_gui) :
     QFrame(_gui),
@@ -148,6 +149,14 @@ void WalletFrame::gotoVerifyMessageTab(QString addr)
     WalletView *walletView = currentWalletView();
     if (walletView)
         walletView->gotoVerifyMessageTab(addr);
+}
+
+void WalletFrame::gotoAskPassphrasePage()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView){
+        walletView->gotoAskPassphrasePage();
+    }
 }
 
 void WalletFrame::encryptWallet(bool status)
