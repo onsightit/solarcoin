@@ -1192,6 +1192,7 @@ void BitcoinGUI::setEncryptionStatus(int status)
         encryptWalletAction->setChecked(true);
         changePassphraseAction->setEnabled(true);
         encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
+        encryptWalletAction->setVisible(false);
         if (fWalletUnlockStakingOnly)
         {
             lockWalletAction->setEnabled(true);
@@ -1212,6 +1213,7 @@ void BitcoinGUI::setEncryptionStatus(int status)
         encryptWalletAction->setChecked(true);
         changePassphraseAction->setEnabled(true);
         encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
+        encryptWalletAction->setVisible(false);
         lockWalletAction->setVisible(false);
         unlockWalletAction->setEnabled(true);
         unlockWalletAction->setVisible(true);
