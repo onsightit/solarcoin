@@ -61,8 +61,8 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     sendCoinsPage = new SendCoinsDialog(platformStyle);
 
     // Create AskPassphrase Page
-    askPassphrasePage = new AskPassphrasePage(AskPassphrasePage::Unlock, this);
-    encryptWalletPage = new AskPassphrasePage(AskPassphrasePage::Encrypt, this);
+    askPassphrasePage = new AskPassphrasePage(AskPassphrasePage::Unlock);
+    encryptWalletPage = new AskPassphrasePage(AskPassphrasePage::Encrypt);
 
     usedSendingAddressesPage = new AddressBookPage(platformStyle, AddressBookPage::ForEditing, AddressBookPage::SendingTab, this);
     usedReceivingAddressesPage = new AddressBookPage(platformStyle, AddressBookPage::ForEditing, AddressBookPage::ReceivingTab, this);
