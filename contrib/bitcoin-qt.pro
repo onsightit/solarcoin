@@ -2,6 +2,7 @@ FORMS += \
     ../src/qt/forms/aboutdialog.ui \
     ../src/qt/forms/addressbookpage.ui \
     ../src/qt/forms/askpassphrasedialog.ui \
+    ../src/qt/forms/askpassphrasepage.ui \
     ../src/qt/forms/coincontroldialog.ui \
     ../src/qt/forms/editaddressdialog.ui \
     ../src/qt/forms/helpmessagedialog.ui \

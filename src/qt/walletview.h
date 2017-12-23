@@ -9,6 +9,7 @@
 
 #include <QStackedWidget>
 
+class AskPassphrasePage;
 class BitcoinGUI;
 class ClientModel;
 class OverviewPage;
@@ -65,6 +66,9 @@ private:
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
 
+    AskPassphrasePage *askPassphrasePage;
+    AskPassphrasePage *encryptWalletPage;
+
     TransactionView *transactionView;
 
     QProgressDialog *progressDialog;
@@ -79,6 +83,9 @@ public Q_SLOTS:
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
+
+    /** Switch to passphrase page */
+    void gotoAskPassphrasePage();
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
