@@ -22,6 +22,9 @@ SolarCoin [SLR] is a lite version of Bitcoin using scrypt as a proof-of-work alg
 
 Harforks: 
 Block 310,000 (Implemented block reduction & Patched KGW retargeting algorithm)
+Block xxx,xxx (reduction of POW from 100 SLR/min to 1 SLR/min)
+Block xxx,xxx (Change of consensys from POW to POST {proof of stake time} protocol.)
+Block xxx,xxx (Change of min TX fee to better support future IOT efforts)
 
 QR Code Support
 
@@ -43,11 +46,8 @@ regularly to indicate new official, stable release versions of SolarCoin Core.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-The developer [mailing list](https://groups.google.com/forum/#!forum/solarcoin-dev)
-should be used to discuss complicated or controversial changes before working
-on a patch set.
+The developer tools for communication are generally located in the SolarCoin-group slack, electricchain.org slack and solarcoin channel on telegram
 
-Developer IRC can be found on Freenode at #solarcoin-dev.
 
 Testing
 -------
