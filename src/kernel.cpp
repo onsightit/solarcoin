@@ -76,19 +76,20 @@ int64_t GetStakeModifierSelectionInterval(const Consensus::Params& params)
 // select a block from the candidate blocks in vSortedByTimestamp, excluding
 // already selected blocks in vSelectedBlocks, and with timestamp up to
 // nSelectionIntervalStop.
-static bool SelectBlockFromCandidates(vector<pair<int64_t, uint256> >& vSortedByTimestamp, map<uint256, const CBlockIndex*>& mapSelectedBlocks,
+static bool SelectBlockFromCandidates(vector<pair<int64_t, arith_uint256> >& vSortedByTimestamp, map<uint256, const CBlockIndex*>& mapSelectedBlocks,
     int64_t nSelectionIntervalStop, uint64_t nStakeModifierPrev, const CBlockIndex** pindexSelected)
 {
     bool fSelected = false;
     uint256 hashBest = uint256();
     *pindexSelected = (const CBlockIndex*) 0;
-    for (const PAIRTYPE(int64_t, uint256)& item : vSortedByTimestamp)
+    for (const PAIRTYPE(int64_t, arith_uint256)& item : vSortedByTimestamp)
     {
-        if (!mapBlockIndex.count(item.second)) {
-            LogPrintf("%s: failed to find block index for candidate block %s\n", __func__, item.second.ToString().c_str());
+        uint256 hash = ArithToUint256(item.second);
+        if (!mapBlockIndex.count(hash)) {
+            LogPrintf("%s: failed to find block index for candidate block %s\n", __func__, hash.ToString().c_str());
             return false;
         }
-        const CBlockIndex* pindex = mapBlockIndex[item.second];
+        const CBlockIndex* pindex = mapBlockIndex[hash];
         if (fSelected && pindex->GetBlockTime() > nSelectionIntervalStop)
             break;
         if (mapSelectedBlocks.count(pindex->GetBlockHash()) > 0)
@@ -167,14 +168,18 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     }
 
     // Sort candidate blocks by timestamp
-    vector<pair<int64_t, uint256> > vSortedByTimestamp;
+    vector<pair<int64_t, arith_uint256> > vSortedByTimestamp;
     vSortedByTimestamp.reserve(64 * params.nModifierInterval / params.nTargetSpacing);
     int64_t nSelectionInterval = GetStakeModifierSelectionInterval(params);
     int64_t nSelectionIntervalStart = (pindexPrev->GetBlockTime() / params.nModifierInterval) * params.nModifierInterval - nSelectionInterval;
     const CBlockIndex* pindex = pindexPrev;
-    while (pindex && pindex->pprev && pindex->GetBlockTime() >= nSelectionIntervalStart)
+    while (pindex && pindex->GetBlockTime() >= nSelectionIntervalStart)
     {
-        vSortedByTimestamp.push_back(make_pair(pindex->GetBlockTime(), pindex->GetBlockHash()));
+        // SolarCoin: The 'sort' function in bitcoin core behaves differently than it did in the legacy code.
+        // If two blocks have the same timestamp (should not have happened but it did at 63967 and 63968 for example),
+        // the hash is sorted "as an ascii string" data type instead of an arith_uint256 data type as in bitcoin core.
+        // To solve this, I converted the vector uint256 hash to an arith_uint256 so we can do a valid sort comparison.
+        vSortedByTimestamp.push_back(make_pair(pindex->GetBlockTime(), UintToArith256(pindex->GetBlockHash())));
         pindex = pindex->pprev;
     }
     int nHeightFirstCandidate = pindex ? (pindex->nHeight + 1) : 0;
@@ -185,7 +190,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     uint64_t nStakeModifierNew = 0;
     int64_t nSelectionIntervalStop = nSelectionIntervalStart;
     map<uint256, const CBlockIndex*> mapSelectedBlocks;
-    for (int nRound=0; nRound<min(64, (int)vSortedByTimestamp.size()); nRound++)
+    for (int nRound=0; nRound < min(64, (int)vSortedByTimestamp.size()); nRound++)
     {
         // add an interval section to the current selection round
         nSelectionIntervalStop += GetStakeModifierSelectionIntervalSection(nRound, params);
@@ -205,13 +210,13 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     }
 
     // Print selection map for visualization of the selected blocks
-    if (fDebug && gArgs.GetBoolArg("-printstakemodifier", false))
+    if (fDebug || gArgs.GetBoolArg("-printstakemodifier", false))
     {
         string strSelectionMap = "";
         // '-' indicates proof-of-work blocks not selected
         strSelectionMap.insert(0, pindexPrev->nHeight - nHeightFirstCandidate + 1, '-');
         pindex = pindexPrev;
-        while (pindex && pindex->pprev && pindex->nHeight >= nHeightFirstCandidate)
+        while (pindex && pindex->nHeight >= nHeightFirstCandidate)
         {
             // '=' indicates proof-of-stake blocks not selected
             if (pindex->IsProofOfStake())
@@ -342,36 +347,25 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
 
     if (fPrintProofOfStake)
     {
-        LogPrintf("%s(): using modifier %u at height=%d timestamp=%u for block from height=%d timestamp=%u\n timeWeight=%d coinDayWeight=%s\n", __func__,
+        LogPrintf("%s(): using modifier %016x at height=%d timestamp=%u for block from height=%d timestamp=%u\n timeWeight=%d coinDayWeight=%s\n", __func__,
             nStakeModifier, nStakeModifierHeight,
             nStakeModifierTime,
             heightBlockFrom,
             blockFrom.GetBlockTime(),
             timeWeight, bnCoinDayWeight.ToString());
-        LogPrintf("%s(): check modifier=%u nTimeBlockFrom=%u nTxOffset=%u nTimeTxPrev=%u nPrevout=%u nTimeTx=%u hashProof=%s\n", __func__,
+        LogPrintf("%s(): check modifier=%016x nTimeBlockFrom=%u nTxOffset=%u nTimeTxPrev=%u nPrevout=%u nTimeTx=%u hashProof=%s targetProof=%s\n", __func__,
             nStakeModifier,
             nTimeBlockFrom, nTxOffset, txPrev.nTime, prevout.n, nTimeTx,
-            hashProofOfStake.ToString().c_str());
+            hashProofOfStake.ToString().c_str(), targetProofOfStake.ToString().c_str());
     }
 
     // Now check if proof-of-stake hash meets target protocol
     if (UintToArith256(hashProofOfStake) > UintToArith256(targetProofOfStake))
         return false;
 
-    if (fDebug && !fPrintProofOfStake)
-    {
-        LogPrintf("%s(): using modifier %u at height=%d timestamp=%u for block from height=%d timestamp=%u\n", __func__,
-            nStakeModifier, nStakeModifierHeight,
-            nStakeModifierTime,
-            heightBlockFrom,
-            blockFrom.GetBlockTime());
-        LogPrintf("%s(): pass modifier=%u nTimeBlockFrom=%u nTxOffset=%u nTimeTxPrev=%u nPrevout=%u nTimeTx=%u hashProof=%s\n", __func__,
-            nStakeModifier,
-            nTimeBlockFrom, nTxOffset, txPrev.nTime, prevout.n, nTimeTx,
-            hashProofOfStake.ToString().c_str());
-    }
     return true;
 }
+
 
 // TODO: This need to be called when processing a block
 // Check kernel hash target and coinstake signature

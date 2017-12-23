@@ -1747,6 +1747,13 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
                 //  least as good as the expected chain.
                 fScriptChecks = (GetBlockProofEquivalentTime(*pindexBestHeader, *pindex, *pindexBestHeader, chainparams.GetConsensus()) <= 60 * 60 * 24 * 7 * 2);
             }
+        } else {
+            // SolarCoin: See fScriptChecks TODO below. Note: CheckStakeTimeKernelHash verifies scripts.
+            // If downloading headers we may not have the hashAssumeValid yet
+            // DEBUG: This is experimental still
+            if (pindexBestHeader->nTime - pindex->nTime > 60 * 60 * 24 * 7 * 2) {
+                fScriptChecks = false;
+            }
         }
     }
 
@@ -1805,6 +1812,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
     CBlockUndo blockundo;
 
+    // TODO: Verify scriptcheckqueue (Fails at 347 during IBD)
     CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : nullptr);
 
     std::vector<int> prevheights;
@@ -2735,6 +2743,7 @@ static CBlockIndex* AddToBlockIndex(const CBlockHeader& block, const CChainParam
 
     pindexNew->SetStakeModifier(nStakeModifier, fGeneratedStakeModifier);
     pindexNew->nStakeModifierChecksum = GetStakeModifierChecksum(pindexNew, chainparams.GetConsensus());
+
     if (pindexNew->nHeight > 0)
         if (!fTestNet && !CheckStakeModifierCheckpoints(pindexNew->nHeight, pindexNew->nStakeModifierChecksum))
             LogPrintf("%s: Rejected by stake modifier checkpoint height=%d, modifier=%016x\n", __func__, pindexNew->nHeight, nStakeModifier);

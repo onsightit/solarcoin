@@ -82,7 +82,7 @@ public:
     {
         // Take last bit of block hash as entropy bit
         unsigned int nEntropyBit = ((GetHash().GetUint64(0)) & 1llu);
-        if (fDebug && gArgs.GetBoolArg("-printstakemodifier", false))
+        if (fDebug || gArgs.GetBoolArg("-printstakemodifier", false))
             LogPrintf("GetStakeEntropyBit: nTime=%u hashBlock=%s nEntropyBit=%u\n", nTime, GetHash().ToString().c_str(), nEntropyBit);
         return nEntropyBit;
     }
