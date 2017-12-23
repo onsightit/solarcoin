@@ -8,6 +8,7 @@
 #include <qt/bitcoinunits.h>
 #include <qt/qvalidatedlineedit.h>
 #include <qt/walletmodel.h>
+#include <qt/guiconstants.h>
 
 #include <fs.h>
 #include <primitives/transaction.h>
@@ -76,6 +77,160 @@ extern double NSAppKitVersionNumber;
 #endif
 
 namespace GUIUtil {
+
+bool fNoHeaders = false;
+bool fSmallHeaders = false;
+int TOOLBAR_WIDTH = 100;
+int TOOLBAR_ICON_WIDTH = TOOLBAR_WIDTH;
+int TOOLBAR_ICON_HEIGHT = 48;
+int HEADER_WIDTH = 1040;
+int HEADER_HEIGHT = 160;
+int BUTTON_WIDTH = 140;
+int BUTTON_HEIGHT = 27;
+int FRAMEBLOCKS_LABEL_WIDTH = 100;
+int WINDOW_MIN_WIDTH = TOOLBAR_WIDTH + HEADER_WIDTH;
+#ifdef Q_OS_WIN
+int WINDOW_MIN_HEIGHT = 710;
+#else
+#ifdef Q_OS_MAC
+int WINDOW_MIN_HEIGHT = 700;
+#else
+int WINDOW_MIN_HEIGHT = 714;
+#endif
+#endif
+int STATUSBAR_ICONSIZE = 16;
+int STATUSBAR_MARGIN = 10;
+int STATUSBAR_HEIGHT = 32;
+
+void refactorGUI(QRect screenSize)
+{
+    // Set the new geometry
+#ifdef Q_OS_WIN
+    int newHeight = screenSize.height() - 40;
+#else
+#ifdef Q_OS_MAC
+    int newHeight = screenSize.height() - 30;
+#else
+    int newHeight = screenSize.height() - 25;
+#endif
+#endif
+    int newWidth = WINDOW_MIN_WIDTH;
+    if (screenSize.width() < newWidth - 2)
+    {
+        newWidth = screenSize.width() - 2;
+        STATUSBAR_MARGIN = 0;
+        TOOLBAR_WIDTH = 90;
+        TOOLBAR_ICON_WIDTH = TOOLBAR_WIDTH;
+        HEADER_WIDTH = newWidth - TOOLBAR_WIDTH;
+    }
+    if (screenSize.height() <= 600)
+    {
+        TOOLBAR_ICON_HEIGHT = 32;
+        HEADER_HEIGHT = 0;
+        fNoHeaders = true;
+    }
+    else if (screenSize.height() < 728) // 728px if OS taskbar is not hidden
+    {
+        TOOLBAR_ICON_HEIGHT = 32;
+        HEADER_HEIGHT = 32;
+        fNoHeaders = true;
+    }
+    else // Default small wallet at 728px to 768px
+    {
+        TOOLBAR_ICON_HEIGHT = 34;
+        HEADER_HEIGHT = 85;
+        fSmallHeaders = true;
+    }
+
+    WINDOW_MIN_WIDTH = TOOLBAR_WIDTH + HEADER_WIDTH;
+    WINDOW_MIN_HEIGHT = newHeight;
+}
+
+int pointsToPixels(int points) { return(points * 4 / 3); }
+
+void setFontPixelSize(QFont *font)
+{
+    font->setPixelSize(pointsToPixels(font->pointSize()));
+}
+
+void setFontPixelSizes()
+{
+    setFontPixelSize((QFont *)&qFontSmallest);
+    setFontPixelSize((QFont *)&qFontSmaller);
+    setFontPixelSize((QFont *)&qFontSmall);
+    setFontPixelSize((QFont *)&qFont);
+    setFontPixelSize((QFont *)&qFontLarge);
+    setFontPixelSize((QFont *)&qFontLarger);
+    setFontPixelSize((QFont *)&qFontSmallerBold);
+    setFontPixelSize((QFont *)&qFontSmallBold);
+    setFontPixelSize((QFont *)&qFontBold);
+    setFontPixelSize((QFont *)&qFontLargeBold);
+    setFontPixelSize((QFont *)&qFontLargerBold);
+}
+
+
+// Common SolarCoin stylesheets
+QString veriCentralWidgetStyleSheet = QString("QStackedWidget { background: white; } ");
+QString veriTabWidgetStyleSheet = QString("QTabWidget::pane { background: white; color: " + STR_FONT_COLOR + "; border: 1px; }");
+
+QString veriPushButtonStyleSheet = QString("QPushButton { background: " + STR_COLOR + "; width: %1px; height: %2px; border: none; color: white} \
+                            QPushButton:disabled { background: #EBEBEB; color: #666666; } \
+                            QPushButton:hover { background: " + STR_COLOR_LT + "; } \
+                            QPushButton:pressed { background: " + STR_COLOR_LT + "; } ").arg(BUTTON_WIDTH).arg(BUTTON_HEIGHT);
+
+QString veriToolBarStyleSheet = QString("QToolBar { background: " + STR_COLOR + "; color: white; border: none; } \
+                            QToolButton { background: " + STR_COLOR + "; color: white; border: none; font-family: Lato; font-style: normal; font-weight: normal; font-size: 12px; } \
+                            QToolButton:hover { background: " + STR_COLOR_HOVER + "; color: white; border: none; } \
+                            QToolButton:pressed { background: " + STR_COLOR_LT + "; color: white; border: none; } \
+                            QToolButton:checked { background: " + STR_COLOR_LT + "; color: white; border: none; } ");
+
+QString veriToolTipStyleSheet = QString("QToolTip { background-color: " + STR_COLOR_TTBG + "; color: white; border: 1px solid #EBEBEB; border-radius: 3px; margin: 0; padding: 4px; white-space: nowrap; } ");
+
+QString veriMiscStyleSheet = QString("QStatusBar { background: " + STR_COLOR + "; color: white; } QStatusBar::item { border: none; } QDialog { background: white; color: " + STR_FONT_COLOR + "; } QTableView::item:hover { background: #EBEBEB; color: " + STR_FONT_COLOR + "; } ");
+
+QString veriMenuStyleSheet = QString("QMenuBar { background-color: " + STR_COLOR + "; color: white; } \
+                            QMenuBar::item { background-color: transparent; margin: 0px; padding: 4px 16px 4px 16px; } \
+                            QMenuBar::item:selected { background-color: " + STR_COLOR_LT + "; color: white; } \
+                            QMenu { background-color: " + STR_COLOR + "; color: white; } \
+                            QMenu::item { background-color: transparent; margin: 0px 0px 4px 4px; padding: 4px 8px 4px 24px; } \
+                            QMenu::item:selected { background-color: " + STR_COLOR_LT + "; color: white; }");
+
+// Put them all together
+QString veriStyleSheet = veriCentralWidgetStyleSheet + veriPushButtonStyleSheet + veriToolBarStyleSheet + veriToolTipStyleSheet + veriMiscStyleSheet + veriMenuStyleSheet;
+
+// Special styling for AskPassphrasePage
+QString veriAskPassphrasePushButtonStyleSheet = QString("QPushButton { background: " + STR_COLOR_LT + "; width: %1px; height: %2px; border: none; color: white} \
+                            QPushButton:disabled { background: #EBEBEB; color: #666666; } \
+                            QPushButton:hover { background: " + STR_COLOR_LT + "; } \
+                            QPushButton:pressed { background: " + STR_COLOR_LT + "; } ").arg(BUTTON_WIDTH).arg(BUTTON_HEIGHT);
+
+QString veriAskPassphrasePageStyleSheet = QString("QDialog { border-image: url(:images/askPassphraseBackground) repeat 0px 0px; background-color: " + STR_COLOR + "; } QLabel { color: #333333; } QLineEdit { background: white; color: " + STR_FONT_COLOR + "; } ") + veriAskPassphrasePushButtonStyleSheet + veriToolTipStyleSheet;
+
+// Setup header and styles
+QGraphicsView *header(QWidget *parent, QString backgroundImage)
+{
+    QGraphicsView *h = new QGraphicsView(parent);
+    h->setStyleSheet("QGraphicsView { background: url(" + backgroundImage + ") no-repeat 0px 0px; border: none; background-color: " + STR_COLOR + "; }");
+    h->setObjectName(QStringLiteral("header"));
+    h->setContentsMargins(0,0,0,0);
+    QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
+    sizePolicy.setHorizontalStretch(0);
+    sizePolicy.setVerticalStretch(0);
+    sizePolicy.setHeightForWidth(h->sizePolicy().hasHeightForWidth());
+    h->setSizePolicy(sizePolicy);
+    h->setMinimumSize(QSize(16777215, HEADER_HEIGHT));
+    h->setMaximumSize(QSize(16777215, HEADER_HEIGHT));
+    h->setAutoFillBackground(true);
+    h->setFrameShape(QFrame::NoFrame);
+    h->setFrameShadow(QFrame::Plain);
+    h->setLineWidth(0);
+    h->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    h->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    h->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop);
+    h->setCacheMode(QGraphicsView::CacheBackground);
+    return h;
+}
+
 
 QString dateTimeStr(const QDateTime &date)
 {

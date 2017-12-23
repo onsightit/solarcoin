@@ -48,7 +48,18 @@ CoinControlDialog::CoinControlDialog(const PlatformStyle *_platformStyle, QWidge
     model(0),
     platformStyle(_platformStyle)
 {
+    // Setup header and styles
+    if (GUIUtil::fNoHeaders)
+        GUIUtil::header(this, QString(""));
+    else if (GUIUtil::fSmallHeaders)
+        GUIUtil::header(this, QString(":images/headerSendSmall"));
+    else
+        GUIUtil::header(this, QString(":images/headerSend"));
+
     ui->setupUi(this);
+
+    this->layout()->setContentsMargins(10, 10 + GUIUtil::HEADER_HEIGHT, 10, 10);
+    this->resize(GUIUtil::HEADER_WIDTH, GUIUtil::WINDOW_MIN_HEIGHT - GUIUtil::HEADER_HEIGHT - GUIUtil::STATUSBAR_HEIGHT);
 
     // context menu actions
     QAction *copyAddressAction = new QAction(tr("Copy address"), this);

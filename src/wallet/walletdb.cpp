@@ -20,6 +20,8 @@
 
 #include <boost/thread.hpp>
 
+extern bool fWalletUnlockStakingOnly;
+
 //
 // CWalletDB
 //
