@@ -41,6 +41,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     QWidget(parent), model(0), transactionProxyModel(0),
     transactionView(0), abandonAction(0), bumpFeeAction(0), columnResizingFixer(0)
 {
+    
     // Setup header and styles
     if (GUIUtil::fNoHeaders)
         GUIUtil::header(this, QString(""));
@@ -48,11 +49,11 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
         GUIUtil::header(this, QString(":images/headerHistorySmall"));
     else
         GUIUtil::header(this, QString(":images/headerHistory"));
-
+    
     setContentsMargins(10, 10 + GUIUtil::HEADER_HEIGHT, 10, 10);
 
     QHBoxLayout *hlayout = new QHBoxLayout();
-    hlayout->setContentsMargins(0,0,0,0);
+    //hlayout->setContentsMargins(10, 20 + GUIUtil::HEADER_HEIGHT, 10, 10);
 
     if (platformStyle->getUseExtraSpacing()) {
         hlayout->setSpacing(5);
