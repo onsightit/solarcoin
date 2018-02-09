@@ -41,7 +41,8 @@ To get the bash shell, you must first activate the feature in Windows.
   * Create a new UNIX user account (this is a separate account from your Windows account)
 
 Note: If you have spaces in your Windows PATH, edit .profile and add this command before the PATH= command:
-export PATH=`echo $PATH|sed -e 's/ /\\\ /g'`
+
+    export PATH=`echo $PATH|sed -e 's/ /\\\ /g'`
 
 After the bash shell is active, you can follow the instructions below, starting
 with the "Cross-compilation" section. Compiling the 64-bit version is
