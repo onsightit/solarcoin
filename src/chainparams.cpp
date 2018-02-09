@@ -315,7 +315,8 @@ public:
         consensus.nMinimumChainWork = uint256S("0x00");
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x00");
+        // SolarCoin: Init to null
+        consensus.defaultAssumeValid = uint256();
 
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;
