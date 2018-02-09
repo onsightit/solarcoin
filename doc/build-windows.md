@@ -40,6 +40,9 @@ To get the bash shell, you must first activate the feature in Windows.
   * Accept the license
   * Create a new UNIX user account (this is a separate account from your Windows account)
 
+Note: If you have spaces in your Windows PATH, edit .profile and add this command before the PATH= command:
+export PATH=`echo $PATH|sed -e 's/ /\\\ /g'`
+
 After the bash shell is active, you can follow the instructions below, starting
 with the "Cross-compilation" section. Compiling the 64-bit version is
 recommended but it is possible to compile the 32-bit version.
@@ -71,7 +74,7 @@ Then build using:
     make HOST=x86_64-w64-mingw32
     cd ..
     ./autogen.sh # not required when building from tarball
-    CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
+    CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=`pwd`/depends/x86_64-w64-mingw32
     make
 
 ## Building for 32-bit Windows
@@ -86,7 +89,7 @@ Then build using:
     make HOST=i686-w64-mingw32
     cd ..
     ./autogen.sh # not required when building from tarball
-    CONFIG_SITE=$PWD/depends/i686-w64-mingw32/share/config.site ./configure --prefix=/
+    CONFIG_SITE=$PWD/depends/i686-w64-mingw32/share/config.site ./configure --prefix=`pwd`/depends/i686-w64-mingw32
     make
 
 ## Depends system
