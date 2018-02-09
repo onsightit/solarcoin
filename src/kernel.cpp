@@ -77,7 +77,7 @@ int64_t GetStakeModifierSelectionInterval(const Consensus::Params& params)
 // already selected blocks in vSelectedBlocks, and with timestamp up to
 // nSelectionIntervalStop.
 static bool SelectBlockFromCandidates(vector<pair<int64_t, arith_uint256> >& vSortedByTimestamp, map<uint256, const CBlockIndex*>& mapSelectedBlocks,
-    int64_t nSelectionIntervalStop, uint64_t nStakeModifierPrev, const CBlockIndex** pindexSelected)
+    int64_t nSelectionIntervalStop, uint64_t nStakeModifierPrev, const CBlockIndex** pindexSelected, const Consensus::Params& params)
 {
     bool fSelected = false;
     uint256 hashBest = uint256();
@@ -96,14 +96,16 @@ static bool SelectBlockFromCandidates(vector<pair<int64_t, arith_uint256> >& vSo
             continue;
         // compute the selection hash by hashing its proof-hash and the
         // previous proof-of-stake modifier
-        uint256 hashProof = pindex->IsProofOfStake() ? pindex->hashProofOfStake : pindex->GetBlockHash();
+        // SolarCoin: CBlockIndex::IsProofOfStake is not valid during header download. Use height instead.
+        uint256 hashProof = pindex->nHeight > params.LAST_POW_BLOCK ? pindex->hashProofOfStake : pindex->GetBlockHash();
         CDataStream ss(SER_GETHASH, 0);
         ss << hashProof << nStakeModifierPrev;
         uint256 hashSelection = Hash(ss.begin(), ss.end());
         // the selection hash is divided by 2**32 so that proof-of-stake block
         // is always favored over proof-of-work block. this is to preserve
         // the energy efficiency property
-        if (pindex->IsProofOfStake())
+        // SolarCoin: CBlockIndex::IsProofOfStake is not valid during header download. Use height instead.
+        if (pindex->nHeight > params.LAST_POW_BLOCK)
             hashSelection = ArithToUint256(UintToArith256(hashSelection) >>= 32);
         if (fSelected && UintToArith256(hashSelection) < UintToArith256(hashBest))
         {
@@ -195,7 +197,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
         // add an interval section to the current selection round
         nSelectionIntervalStop += GetStakeModifierSelectionIntervalSection(nRound, params);
         // select a block from the candidates of current round (pindex is returned)
-        if (!SelectBlockFromCandidates(vSortedByTimestamp, mapSelectedBlocks, nSelectionIntervalStop, nStakeModifier, &pindex)) {
+        if (!SelectBlockFromCandidates(vSortedByTimestamp, mapSelectedBlocks, nSelectionIntervalStop, nStakeModifier, &pindex, params)) {
             LogPrintf("%s: unable to select block at round %d", __func__, nRound);
             return false;
         }
@@ -219,7 +221,8 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
         while (pindex && pindex->nHeight >= nHeightFirstCandidate)
         {
             // '=' indicates proof-of-stake blocks not selected
-            if (pindex->IsProofOfStake())
+            // SolarCoin: CBlockIndex::IsProofOfStake is not valid during header download. Use height instead.
+            if (pindex->nHeight > params.LAST_POW_BLOCK)
                 strSelectionMap.replace(pindex->nHeight - nHeightFirstCandidate, 1, "=");
             pindex = pindex->pprev;
         }
@@ -227,7 +230,8 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
         {
             // 'S' indicates selected proof-of-stake blocks
             // 'W' indicates selected proof-of-work blocks
-            strSelectionMap.replace(item.second->nHeight - nHeightFirstCandidate, 1, item.second->IsProofOfStake()? "S" : "W");
+            // SolarCoin: CBlockIndex::IsProofOfStake is not valid during header download. Use height instead.
+            strSelectionMap.replace(item.second->nHeight - nHeightFirstCandidate, 1, item.second->nHeight > params.LAST_POW_BLOCK ? "S" : "W");
         }
         LogPrintf("%s(): selection height [%d, %d] map %s\n", __func__, nHeightFirstCandidate, pindexPrev->nHeight, strSelectionMap.c_str());
     }
@@ -309,12 +313,16 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
 //
 bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsigned int nTxOffset, const CTransaction& txPrev, const COutPoint& prevout, unsigned int nTimeTx, uint256& hashProofOfStake, uint256& targetProofOfStake, CBlockIndex* pindexPrev, bool fPrintProofOfStake, const Consensus::Params& params)
 {
-    if (nTimeTx < txPrev.nTime)  // Transaction timestamp violation
-        return error("CheckStakeTimeKernelHash() : nTime violation");
+    if (nTimeTx < txPrev.nTime) {  // Transaction timestamp violation
+        LogPrintf("%s(): nTime violation\n", __func__);
+        return false;
+    }
 
     unsigned int nTimeBlockFrom = blockFrom.GetBlockTime();
-    if (nTimeBlockFrom + params.nStakeMinAge > nTimeTx) // Min age requirement
-        return error("CheckStakeTimeKernelHash() : min age violation");
+    if (nTimeBlockFrom + params.nStakeMinAge > nTimeTx) { // Min age requirement
+        LogPrintf("%s(): min age violation\n", __func__);
+        return false;
+    }
 
     arith_uint256 bnTargetPerCoinDay;
     bnTargetPerCoinDay.SetCompact(nBits);
@@ -324,10 +332,10 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     CBlockIndex* pindexFrom = mapBlockIndex[hashBlockFrom];
     int heightBlockFrom = pindexFrom->nHeight;
     int64_t timeWeight = GetWeight((int64_t)txPrev.nTime, (int64_t)nTimeTx, params);
-    arith_uint256 bnCoinDayWeight = arith_uint256(nValueIn) * timeWeight / COIN / (24 * 60 * 60);
+    int64_t nCoinDayWeight = nValueIn * timeWeight / COIN / (24 * 60 * 60);
 
     // Stake Time factored weight
-    int64_t factoredTimeWeight = GetStakeTimeFactoredWeight(timeWeight, bnCoinDayWeight, pindexPrev, params);
+    int64_t factoredTimeWeight = GetStakeTimeFactoredWeight(timeWeight, nCoinDayWeight, pindexPrev, params);
     arith_uint256 bnStakeTimeWeight = arith_uint256(nValueIn) * factoredTimeWeight / COIN / (24 * 60 * 60);
     targetProofOfStake = ArithToUint256(bnStakeTimeWeight * bnTargetPerCoinDay);
 
@@ -337,8 +345,10 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     int nStakeModifierHeight = 0;
     int64_t nStakeModifierTime = 0;
 
-    if (!GetKernelStakeModifier(hashBlockFrom, nStakeModifier, nStakeModifierHeight, nStakeModifierTime, fPrintProofOfStake, params))
+    if (!GetKernelStakeModifier(hashBlockFrom, nStakeModifier, nStakeModifierHeight, nStakeModifierTime, fPrintProofOfStake, params)) {
+        LogPrintf("%s(): GetKernelStakeModifier failed\n", __func__);
         return false;
+    }
 
     ss << nStakeModifier;
 
@@ -347,12 +357,12 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
 
     if (fPrintProofOfStake)
     {
-        LogPrintf("%s(): using modifier %016x at height=%d timestamp=%u for block from height=%d timestamp=%u\n timeWeight=%d coinDayWeight=%s\n", __func__,
+        LogPrintf("%s(): using modifier %016x at height=%d timestamp=%u for block from height=%d timestamp=%u\n timeWeight=%d coinDayWeight=%d\n", __func__,
             nStakeModifier, nStakeModifierHeight,
             nStakeModifierTime,
             heightBlockFrom,
             blockFrom.GetBlockTime(),
-            timeWeight, bnCoinDayWeight.ToString());
+            timeWeight, nCoinDayWeight);
         LogPrintf("%s(): check modifier=%016x nTimeBlockFrom=%u nTxOffset=%u nTimeTxPrev=%u nPrevout=%u nTimeTx=%u hashProof=%s targetProof=%s\n", __func__,
             nStakeModifier,
             nTimeBlockFrom, nTxOffset, txPrev.nTime, prevout.n, nTimeTx,
@@ -360,14 +370,18 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     }
 
     // Now check if proof-of-stake hash meets target protocol
-    if (UintToArith256(hashProofOfStake) > UintToArith256(targetProofOfStake))
-        return false;
+    if (UintToArith256(hashProofOfStake) > UintToArith256(targetProofOfStake)) {
+        LogPrintf("DEBUG: BUG: hashProofOfStake=%s > targetProofOfStake=%s (%08x > %08x) at height=%d\n", hashProofOfStake.ToString(), targetProofOfStake.ToString(), UintToArith256(hashProofOfStake).GetCompact(), UintToArith256(targetProofOfStake).GetCompact(), pindexFrom->nHeight);
+        // SolarCoin (alpha): TODO: Version 2.1.8 has the same values for hashProofOfStake and targetProofOfStake,
+        // but it did not fail the comparison. Version 3.15.1 fails the comparison in PoST at 835217.
+        if (chainActive.Tip()->nHeight <= params.LAST_POW_BLOCK) {
+            return false;
+        }
+    }
 
     return true;
 }
 
-
-// TODO: This need to be called when processing a block
 // Check kernel hash target and coinstake signature
 bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hashProofOfStake, uint256& targetProofOfStake, const Consensus::Params& params)
 {
@@ -382,7 +396,7 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
 
     // First try finding the previous transaction in database
     unsigned int nTxOffset = 0;
-    if (!GetTransaction(hashTx, txPrevRef, nTxOffset, Params().GetConsensus(), hashBlock, true)) {
+    if (!GetTransaction(hashTx, txPrevRef, nTxOffset, params, hashBlock, true)) {
         LogPrintf("%s(): INFO: read txPrev failed\n", __func__);  // previous transaction not in main chain, may occur during initial download
         return false;
     }
@@ -391,8 +405,7 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
 
     const CTransaction& txPrev = *txPrevRef;
 
-    // Verify signature (TODO: Add SolarCoin script function.)
-    //LogPrintf("DEBUG: Calling VerifySignature.\n");
+    // TODO: Verify signature is handled in validation.cpp
     //if (!VerifySignature(txPrev, tx, 0, 0)) {
     //    LogPrintf("%s(): VerifySignature failed on coinstake %s", __func__, tx.GetHash().ToString().c_str());
     //    return false;
@@ -401,12 +414,12 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
     // Read block header
     CBlock block;
     CBlockIndex* pblockindex = mapBlockIndex[hashBlock];
-    if(!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus(), false)) {
+    if(!ReadBlockFromDisk(block, pblockindex, params, false)) {
         return fDebug ? error("CheckProofOfStake() : read block failed") : false; // unable to read block of previous transaction
     }
 
     if (!CheckStakeTimeKernelHash(nBits, block, nTxOffset, txPrev, txIn.prevout, tx.nTime, hashProofOfStake, targetProofOfStake, chainActive.Tip()->pprev, fDebug, params)) {
-        LogPrintf("%s(): INFO: check kernel failed on coinstake %s, hashProof=%s\n", __func__, tx.GetHash().ToString().c_str(), hashProofOfStake.ToString().c_str()); // may occur during initial download or if behind on block chain sync
+        LogPrintf("%s(): INFO: check kernel failed on coinstake %s, hashProof=%s\n", __func__, tx.GetHash().ToString(), hashProofOfStake.ToString()); // may occur during initial download or if behind on block chain sync
         return false;
     }
     return true;
@@ -443,12 +456,10 @@ bool CheckStakeModifierCheckpoints(int nHeight, unsigned int nStakeModifierCheck
 }
 
 // get stake time factored weight for reward and hash PoST
-int64_t GetStakeTimeFactoredWeight(int64_t timeWeight, arith_uint256 bnCoinDayWeight, CBlockIndex* pindexPrev, const Consensus::Params& params)
+int64_t GetStakeTimeFactoredWeight(int64_t timeWeight, int64_t nCoinDayWeight, CBlockIndex* pindexPrev, const Consensus::Params& params)
 {
     int64_t factoredTimeWeight;
-    int64_t nCoinDayWeigth = ArithToUint256(bnCoinDayWeight).GetUint64(0);
-
-    double weightFraction = (nCoinDayWeigth+1) / GetAverageStakeWeight(pindexPrev, params);
+    double weightFraction = (nCoinDayWeight+1) / GetAverageStakeWeight(pindexPrev, params);
     if (weightFraction > 0.45)
     {
         factoredTimeWeight = params.nStakeMinAge+1;
@@ -491,6 +502,128 @@ double GetAverageStakeWeight(CBlockIndex* pindexPrev, const Consensus::Params& p
     return weightAve;
 }
 
+// ppcoin: total coin age spent in transaction, in the unit of coin-days.
+// Only those coins meeting minimum age requirement counts. As those
+// transactions not in main chain are not currently indexed so we
+// might not find out about their coin age. Older transactions are 
+// guaranteed to be in main chain by sync-checkpoint. This rule is
+// introduced to help nodes establish a consistent view of the coin
+// age (trust score) of competing branches.
+bool GetCoinAge(const CTransaction& tx, uint64_t& nCoinAge, const Consensus::Params& params)
+{
+    arith_uint256 bnCentSecond = 0;  // coin age in the unit of cent-seconds
+    nCoinAge = 0;
+
+    if (tx.IsCoinBase())
+        return true;
+
+    for (unsigned int i=0; i < tx.vin.size(); i++) {
+        const CTxIn& txIn = tx.vin[i];
+        const uint256& hashTx = txIn.prevout.hash;
+        uint256 hashBlock;
+        CTransactionRef txPrevRef;
+
+        // First try finding the previous transaction in database
+        unsigned int nTxOffset = 0;
+        if (!GetTransaction(hashTx, txPrevRef, nTxOffset, params, hashBlock, true)) {
+            LogPrintf("%s(): INFO: read txPrev failed\n", __func__);  // previous transaction not in main chain, may occur during initial download
+            return false;
+        }
+
+        const CTransaction& txPrev = *txPrevRef;
+
+        if (tx.nTime < txPrev.nTime)
+            return false;  // Transaction timestamp violation
+
+        // Read block header
+        CBlock block;
+        CBlockIndex* pblockindex = mapBlockIndex[hashBlock];
+        if(!ReadBlockFromDisk(block, pblockindex, params, false)) {
+            return fDebug ? error("GetStakeTime() : read block failed") : false; // unable to read block of previous transaction
+        }
+
+        if (block.GetBlockTime() + params.nStakeMinAge > tx.nTime)
+            continue; // only count coins meeting min age requirement
+
+        int64_t nValueIn = txPrev.vout[txIn.prevout.n].nValue;
+        bnCentSecond += arith_uint256(nValueIn) * (tx.nTime - txPrev.nTime) / CENT;
+
+        if (fDebug || gArgs.GetBoolArg("-printcoinage", false))
+            LogPrintf("coin age nValueIn=%ld nTimeDiff=%ld bnCentSecond=%s\n", nValueIn, tx.nTime - txPrev.nTime, bnCentSecond.ToString());
+    }
+
+    arith_uint256 bnCoinDay = bnCentSecond * CENT / COIN / (24 * 60 * 60);
+    if (fDebug || gArgs.GetBoolArg("-printcoinage", false))
+        LogPrintf("coin age bnCoinDay=%s\n", bnCoinDay.ToString());
+
+    nCoinAge = ArithToUint256(bnCoinDay).GetUint64(0);
+    return true;
+}
+
+// SolarCoin: total stake time spent in transaction that is accepted by the network, in the unit of coin-days.
+// Only those coins meeting minimum age requirement counts. As those
+// transactions not in main chain are not currently indexed so we
+// might not find out about their coin age. Older transactions are
+// guaranteed to be in main chain by sync-checkpoint. This rule is
+// introduced to help nodes establish a consistent view of the coin
+// age (trust score) of competing branches. PoST
+bool GetStakeTime(const CTransaction& tx, uint64_t& nStakeTime, CBlockIndex* pindexPrev, const Consensus::Params& params)
+{
+    arith_uint256 bnStakeTime = 0;  // coin age in the unit of cent-seconds
+    nStakeTime = 0;
+
+    if (tx.IsCoinBase())
+        return true;
+
+    for (unsigned int i=0; i < tx.vin.size(); i++) {
+        const CTxIn& txIn = tx.vin[i];
+        const uint256& hashTx = txIn.prevout.hash;
+        uint256 hashBlock;
+        CTransactionRef txPrevRef;
+
+        // First try finding the previous transaction in database
+        unsigned int nTxOffset = 0;
+        if (!GetTransaction(hashTx, txPrevRef, nTxOffset, params, hashBlock, true)) {
+            LogPrintf("%s(): INFO: read txPrev failed\n", __func__);  // previous transaction not in main chain, may occur during initial download
+            return false;
+        }
+
+        const CTransaction& txPrev = *txPrevRef;
+
+        if (tx.nTime < txPrev.nTime)
+            return false;  // Transaction timestamp violation
+
+        // Read block header
+        CBlock block;
+        CBlockIndex* pblockindex = mapBlockIndex[hashBlock];
+        if(!ReadBlockFromDisk(block, pblockindex, params, false)) {
+            return fDebug ? error("GetStakeTime() : read block failed") : false; // unable to read block of previous transaction
+        }
+
+        if (block.GetBlockTime() + params.nStakeMinAge > tx.nTime)
+            continue; // only count coins meeting min age requirement
+
+        int64_t nValueIn = txPrev.vout[txIn.prevout.n].nValue;
+        int64_t timeWeight = tx.nTime - txPrev.nTime;
+
+        // Prevent really large stake weights by maxing at 30 days weight (2.0.2 restriction)
+        if (timeWeight > 30 * (24 * 60 * 60))
+            timeWeight = 30 * (24 * 60 * 60);
+
+        int64_t CoinDay = nValueIn * timeWeight / COIN / (24 * 60 * 60);
+        int64_t factoredTimeWeight = GetStakeTimeFactoredWeight(timeWeight, CoinDay, pindexPrev, params);
+        bnStakeTime += arith_uint256(nValueIn) * factoredTimeWeight / COIN / (24 * 60 * 60);
+        if (fDebug || gArgs.GetBoolArg("-printcoinage", false))
+            LogPrintf("  nValueIn=%ld timeWeight=%ld CoinDay=%ld factoredTimeWeight=%ld\n",
+               nValueIn, timeWeight, CoinDay, factoredTimeWeight);
+    }
+    if (fDebug || gArgs.GetBoolArg("-printcoinage", false))
+        LogPrintf("stake time bnStakeTime=%s\n", bnStakeTime.ToString());
+
+    nStakeTime = ArithToUint256(bnStakeTime).GetUint64(0);
+    return true;
+}
+
 double GetPoSKernelPS(CBlockIndex* pindexPrev, const Consensus::Params& params)
 {
     int nPoSInterval = 72;
@@ -501,7 +634,8 @@ double GetPoSKernelPS(CBlockIndex* pindexPrev, const Consensus::Params& params)
 
     while (pindexPrev && nStakesHandled < nPoSInterval)
     {
-        if (pindexPrev->IsProofOfStake())
+        // SolarCoin: CBlockIndex::IsProofOfStake is not valid during header download. Use height instead.
+        if (pindexPrev->nHeight > params.LAST_POW_BLOCK)
         {
             dStakeKernelsTriedAvg += GetDifficulty(pindexPrev) * 4294967296.0;
             if (pindexPrev->nHeight >= params.FORK_HEIGHT_2)

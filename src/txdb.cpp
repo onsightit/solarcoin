@@ -305,9 +305,12 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                 //if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, Params().GetConsensus()))
                 //    return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindexNew->ToString());
 
-                // SolarCoin: buid setStakeSeen
-                if (pindexNew->IsProofOfStake())
-                    setStakeSeen.insert(std::make_pair(pindexNew->prevoutStake, pindexNew->nStakeTime));
+                // SolarCoin: CBlockIndex::IsProofOfStake is not valid during header download. Use height instead.
+                if (pindexNew->nHeight > consensusParams.LAST_POW_BLOCK) {
+                    // DEBUG:
+                    if (pindexNew->nHeight <= consensusParams.LAST_POW_BLOCK + 20)
+                        LogPrintf("DEBUG: height=%d hashProofOfStake=%s\n", pindexNew->nHeight, pindexNew->hashProofOfStake.ToString());
+                }
 
                 pcursor->Next();
             } else {

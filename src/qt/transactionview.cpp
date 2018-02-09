@@ -49,7 +49,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
         GUIUtil::header(this, QString(":images/headerHistorySmall"));
     else
         GUIUtil::header(this, QString(":images/headerHistory"));
-    
+
     setContentsMargins(10, 10 + GUIUtil::HEADER_HEIGHT, 10, 10);
 
     QHBoxLayout *hlayout = new QHBoxLayout();

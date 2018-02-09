@@ -21,7 +21,9 @@ bool CheckStakeModifierCheckpoints(int nHeight, unsigned int nStakeModifierCheck
 double GetAverageStakeWeight(CBlockIndex* pindexPrev, const Consensus::Params& params);
 int64_t GetStakeModifierSelectionIntervalSection(int nSection, const Consensus::Params& params);
 int64_t GetStakeModifierSelectionInterval(const Consensus::Params& params);
-int64_t GetStakeTimeFactoredWeight(int64_t timeWeight, arith_uint256 bnCoinDayWeight, CBlockIndex* pindexPrev, const Consensus::Params& params);
+int64_t GetStakeTimeFactoredWeight(int64_t timeWeight, int64_t bnCoinDayWeight, CBlockIndex* pindexPrev, const Consensus::Params& params);
+bool GetCoinAge(const CTransaction& tx, uint64_t& nCoinAge, const Consensus::Params& params);
+bool GetStakeTime(const CTransaction& tx, uint64_t& nStakeTime, CBlockIndex* pindexPrev, const Consensus::Params& params);
 double GetPoSKernelPS(CBlockIndex* pindexPrev, const Consensus::Params& params);
 
 // This is needed because the foreach macro can't get over the comma in pair<t1, t2>

@@ -2939,6 +2939,11 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
     //
     bool fMoreWork = false;
 
+    // DEBUG: Only connect to 2.1.8 nodes
+    if (pfrom->cleanSubVer != "" && std::string(pfrom->cleanSubVer).find("2.1.8") == std::string::npos) {
+        return false;
+    }
+
     if (!pfrom->vRecvGetData.empty())
         ProcessGetData(pfrom, chainparams.GetConsensus(), connman, interruptMsgProc);
 
