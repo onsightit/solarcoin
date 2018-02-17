@@ -58,6 +58,7 @@ installing the toolchain will be different.
 First, install the general dependencies:
 
     sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl xutils-dev
+    sudo update-alternatives --config x86_64-w64-mingw32-g++
 
 A host toolchain (`build-essential`) is necessary because some dependency
 packages (such as `protobuf`) need to build host utilities that are used in the
