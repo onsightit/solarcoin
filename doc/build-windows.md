@@ -58,7 +58,6 @@ installing the toolchain will be different.
 First, install the general dependencies:
 
     sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl xutils-dev
-    sudo update-alternatives --config x86_64-w64-mingw32-g++
 
 A host toolchain (`build-essential`) is necessary because some dependency
 packages (such as `protobuf`) need to build host utilities that are used in the
@@ -69,11 +68,12 @@ build process.
 To build executables for Windows 64-bit, install the following dependencies:
 
     sudo apt-get install g++-mingw-w64-x86-64 mingw-w64-x86-64-dev
+    sudo update-alternatives --config x86_64-w64-mingw32-g++ # Switch to Posix
 
 Then build using:
 
     cd depends
-    make HOST=x86_64-w64-mingw32
+    make HOST=x86_64-w64-mingw32 # If this fails, cd into work/.../openssl and run: make depend
     cd ..
     ./autogen.sh # not required when building from tarball
     CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=`pwd`/depends/x86_64-w64-mingw32
