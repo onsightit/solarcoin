@@ -51,11 +51,12 @@ recommended but it is possible to compile the 32-bit version.
 Cross-compilation
 -------------------
 
-These steps can be performed on, for example, an Ubuntu VM. The depends system
+These steps can be performed on, for example, an Ubuntu 14.04 VM. The depends system
 will also work on other Linux distributions, however the commands for
-installing the toolchain will be different.
+installing the toolchain will be different. (Note: Ubuntu 16+ does not compile due to
+threading issues in mingw.)
 
-First, install the general dependencies:
+First, install the general dependencies (Also install any dependencies found in build-unix.md.):
 
     sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl xutils-dev
 
@@ -68,12 +69,11 @@ build process.
 To build executables for Windows 64-bit, install the following dependencies:
 
     sudo apt-get install g++-mingw-w64-x86-64 mingw-w64-x86-64-dev
-    sudo update-alternatives --config x86_64-w64-mingw32-g++ # Switch to Posix
 
 Then build using:
 
     cd depends
-    make HOST=x86_64-w64-mingw32 # If this fails, cd into work/.../openssl and run: make depend
+    make HOST=x86_64-w64-mingw32
     cd ..
     ./autogen.sh # not required when building from tarball
     CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=`pwd`/depends/x86_64-w64-mingw32
