@@ -53,8 +53,12 @@ Cross-compilation
 
 These steps can be performed on, for example, an Ubuntu 14.04 VM. The depends system
 will also work on other Linux distributions, however the commands for
-installing the toolchain will be different. (Note: Ubuntu 16+ does not compile due to
-threading issues in mingw.)
+installing the toolchain will be different.
+
+Note: Ubuntu 16+ does not compile due to a threading issue in mingw32 for win32.
+You can try the Posix compiler, instead:
+
+    sudo update-alternatives --config x86_64-w64-mingw32-g++  # Select the Posix manual mode.
 
 First, install the general dependencies (Also install any dependencies found in build-unix.md.):
 
