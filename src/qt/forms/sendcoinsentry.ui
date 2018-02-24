@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>729</width>
-    <height>150</height>
+    <width>730</width>
+    <height>180</height>
    </rect>
   </property>
   <property name="focusPolicy">
@@ -24,18 +24,24 @@
     <enum>QFrame::NoFrame</enum>
    </property>
    <layout class="QGridLayout" name="gridLayout">
-    <property name="topMargin">
-     <number>8</number>
-    </property>
-    <property name="bottomMargin">
-     <number>4</number>
-    </property>
-    <property name="horizontalSpacing">
-     <number>12</number>
-    </property>
-    <property name="verticalSpacing">
-     <number>8</number>
-    </property>
+    <property name="sizeConstraint">
+    <enum>QLayout::SetMinAndMaxSize</enum>
+     </property>
+     <property name="leftMargin">
+      <number>22</number>
+     </property>
+     <property name="topMargin">
+      <number>10</number>
+     </property>
+     <property name="rightMargin">
+      <number>10</number>
+     </property>
+     <property name="bottomMargin">
+      <number>10</number>
+     </property>
+     <property name="spacing">
+      <number>10</number>
+     </property>
     <item row="0" column="0">
      <widget class="QLabel" name="payToLabel">
       <property name="text">
@@ -50,85 +56,124 @@
      </widget>
     </item>
     <item row="0" column="1">
-     <layout class="QHBoxLayout" name="payToLayout">
-      <property name="spacing">
-       <number>0</number>
-      </property>
-      <item>
-       <widget class="QValidatedLineEdit" name="payTo">
-        <property name="toolTip">
-         <string>The SolarCoin address to send the payment to</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QToolButton" name="addressBookButton">
-        <property name="toolTip">
-         <string>Choose previously used address</string>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-        <property name="icon">
-         <iconset resource="../bitcoin.qrc">
-          <normaloff>:/icons/address-book</normaloff>:/icons/address-book</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>22</width>
-          <height>22</height>
-         </size>
-        </property>
-        <property name="shortcut">
-         <string>Alt+A</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QToolButton" name="pasteButton">
-        <property name="toolTip">
-         <string>Paste address from clipboard</string>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-        <property name="icon">
-         <iconset resource="../bitcoin.qrc">
-          <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>22</width>
-          <height>22</height>
-         </size>
-        </property>
-        <property name="shortcut">
-         <string>Alt+P</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QToolButton" name="deleteButton">
-        <property name="toolTip">
-         <string>Remove this entry</string>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-        <property name="icon">
-         <iconset resource="../bitcoin.qrc">
-          <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>22</width>
-          <height>22</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
+    <layout class="QHBoxLayout" name="payToLayout">
+     <property name="spacing">
+      <number>6</number>
+     </property>
+     <item>
+      <widget class="QValidatedLineEdit" name="payTo">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The address to send the payment to  (e.g. 8UFH6jMFxKAP73wQqfLiDY2LN4RgUbTa9A)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="maxLength">
+        <number>34</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="addressBookButton">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>38</width>
+         <height>27</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Choose address from address book</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../bitcoin.qrc">
+         <normaloff>:/icons/address-book</normaloff>:/icons/address-book</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>18</width>
+         <height>18</height>
+        </size>
+       </property>
+       <property name="shortcut">
+        <string>Alt+A</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pasteButton">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>38</width>
+         <height>27</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Paste address from clipboard</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../bitcoin.qrc">
+         <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>12</width>
+         <height>12</height>
+        </size>
+       </property>
+       <property name="shortcut">
+        <string>Alt+P</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="deleteButton">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>38</width>
+         <height>27</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Remove this recipient</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../bitcoin.qrc">
+         <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>12</width>
+         <height>16</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
     <item row="1" column="0">
      <widget class="QLabel" name="labellLabel">
       <property name="text">

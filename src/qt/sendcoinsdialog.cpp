@@ -74,6 +74,11 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
 
     ui->labelCoinControlFeatures->setFont(qFontBold);
 
+    #if QT_VERSION >= 0x040700
+    /* Do not move this to the XML file, Qt before 4.7 will choke on it */
+    ui->editTxComment->setPlaceholderText(tr("Enter a transaction comment (Note: This information is public)"));
+#endif
+
     if (!_platformStyle->getImagesOnButtons()) {
         ui->addButton->setIcon(QIcon());
         ui->clearButton->setIcon(QIcon());
@@ -235,6 +240,8 @@ void SendCoinsDialog::on_sendButton_clicked()
     QList<SendCoinsRecipient> recipients;
     bool valid = true;
 
+    QString txcomment = ui->editTxComment->text();
+
     for(int i = 0; i < ui->entries->count(); ++i)
     {
         SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
@@ -276,6 +283,7 @@ void SendCoinsDialog::on_sendButton_clicked()
 
     updateCoinControlState(ctrl);
 
+    //prepareStatus = model->prepareTransaction(txcomment, currentTransaction, ctrl);
     prepareStatus = model->prepareTransaction(currentTransaction, ctrl);
 
     // process prepareStatus and on error generate message shown to user
@@ -389,6 +397,8 @@ void SendCoinsDialog::on_sendButton_clicked()
 
 void SendCoinsDialog::clear()
 {
+    ui->editTxComment->clear();
+
     // Remove entries until only one left
     while(ui->entries->count())
     {
@@ -450,8 +460,12 @@ void SendCoinsDialog::removeEntry(SendCoinsEntry* entry)
     updateTabsAndLabels();
 }
 
+
 QWidget *SendCoinsDialog::setupTabChain(QWidget *prev)
 {
+    QWidget::setTabOrder(prev, ui->editTxComment);
+    prev = ui->editTxComment;
+
     for(int i = 0; i < ui->entries->count(); ++i)
     {
         SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
@@ -460,10 +474,9 @@ QWidget *SendCoinsDialog::setupTabChain(QWidget *prev)
             prev = entry->setupTabChain(prev);
         }
     }
-    QWidget::setTabOrder(prev, ui->sendButton);
-    QWidget::setTabOrder(ui->sendButton, ui->clearButton);
-    QWidget::setTabOrder(ui->clearButton, ui->addButton);
-    return ui->addButton;
+    QWidget::setTabOrder(prev, ui->addButton);
+    QWidget::setTabOrder(ui->addButton, ui->sendButton);
+    return ui->sendButton;
 }
 
 void SendCoinsDialog::setAddress(const QString &address)

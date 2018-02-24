@@ -31,11 +31,22 @@ SendCoinsEntry::SendCoinsEntry(const PlatformStyle *_platformStyle, QWidget *par
 
     setCurrentWidget(ui->SendCoins);
 
+
+    #ifdef Q_OS_MAC
+        ui->payToLayout->setSpacing(4);
+    #endif
+    #if QT_VERSION >= 0x040700
+        /* Do not move this to the XML file, Qt before 4.7 will choke on it */
+        ui->payTo->setPlaceholderText(tr("Enter a SolarCoin address (e.g. 8UFH6jMFxKAP73wQqfLiDY2LN4RgUbTa9A)"));
+        ui->addAsLabel->setPlaceholderText(tr("Enter a label for this address to add it to your address book"));
+    #endif
+
     if (platformStyle->getUseExtraSpacing())
         ui->payToLayout->setSpacing(4);
-#if QT_VERSION >= 0x040700
-    ui->addAsLabel->setPlaceholderText(tr("Enter a label for this address to add it to your address book"));
-#endif
+
+    ui->addressBookButton->setFixedSize(38,27);
+    ui->pasteButton->setFixedSize(38,27);
+    ui->deleteButton->setFixedSize(38,27);
 
     // normal bitcoin address field
     GUIUtil::setupAddressWidget(ui->payTo, this);

@@ -154,6 +154,7 @@ public:
     };
 
     // prepare transaction for getting txfee before sending coins
+    //SendCoinsReturn prepareTransaction(const QString &txcomment, WalletModelTransaction &transaction, const CCoinControl& coinControl);
     SendCoinsReturn prepareTransaction(WalletModelTransaction &transaction, const CCoinControl& coinControl);
 
     // Send coins to a list of recipients
