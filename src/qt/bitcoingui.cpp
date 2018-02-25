@@ -118,6 +118,7 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
     aboutQtAction(0),
     openRPCConsoleAction(0),
     openAction(0),
+    exportAction(0),
     showHelpMessageAction(0),
     trayIcon(0),
     trayIconMenu(0),
@@ -409,6 +410,10 @@ void BitcoinGUI::createActions()
     openAction = new QAction(platformStyle->SingleColorIcon(":/icons/open"), tr("Open &URI..."), this);
     openAction->setStatusTip(tr("Open a solarcoin: URI or payment request"));
 
+    exportAction = new QAction(platformStyle->SingleColorIcon(":/icons/export"), tr("&Export Data..."), this);
+    exportAction->setStatusTip(tr("Export the data in the current tab to a file"));
+
+
     showHelpMessageAction = new QAction(platformStyle->SingleColorIcon(":/icons/about"), tr("&Command-line options"), this);
     showHelpMessageAction->setMenuRole(QAction::NoRole);
     showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible SolarCoin command-line options").arg(tr(PACKAGE_NAME)));
@@ -462,6 +467,7 @@ void BitcoinGUI::createMenuBar()
     {
         file->setFont(qFont);
         file->addAction(openAction);
+        file->addAction(exportAction);
         file->addAction(backupWalletAction);
         file->addAction(signMessageAction);
         file->addAction(verifyMessageAction);
@@ -634,6 +640,7 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
         unlockWalletAction->setEnabled(enabled);
     }
     openAction->setEnabled(enabled);
+    exportAction->setEnabled(enabled);
 }
 
 void BitcoinGUI::createTrayIcon(const NetworkStyle *networkStyle)
@@ -757,6 +764,9 @@ void BitcoinGUI::gotoAskPassphrasePage()
 {
     overviewAction->setChecked(false);
     if (walletFrame) walletFrame->gotoAskPassphrasePage();
+
+    exportAction->setEnabled(false);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
 }
 
 void BitcoinGUI::gotoEncryptWalletPage()
@@ -765,30 +775,47 @@ void BitcoinGUI::gotoEncryptWalletPage()
 
     overviewAction->setChecked(false);
     if (walletFrame) walletFrame->gotoAskPassphrasePage();
+
+    exportAction->setEnabled(false);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
 }
 
 void BitcoinGUI::gotoOverviewPage()
 {
     overviewAction->setChecked(true);
     if (walletFrame) walletFrame->gotoOverviewPage();
+
+    exportAction->setEnabled(false);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
 }
 
 void BitcoinGUI::gotoHistoryPage()
 {
     historyAction->setChecked(true);
     if (walletFrame) walletFrame->gotoHistoryPage();
+
+    exportAction->setEnabled(true);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+    connect(exportAction, SIGNAL(triggered()), walletFrame, SLOT(exportTransactions()));
 }
 
 void BitcoinGUI::gotoReceiveCoinsPage()
 {
     receiveCoinsAction->setChecked(true);
     if (walletFrame) walletFrame->gotoReceiveCoinsPage();
+
+    exportAction->setEnabled(true);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+    connect(exportAction, SIGNAL(triggered()), walletFrame, SLOT(exportAddresses()));
 }
 
 void BitcoinGUI::gotoSendCoinsPage(QString addr)
 {
     sendCoinsAction->setChecked(true);
     if (walletFrame) walletFrame->gotoSendCoinsPage(addr);
+
+    exportAction->setEnabled(false);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
 }
 
 void BitcoinGUI::gotoSignMessageTab(QString addr)

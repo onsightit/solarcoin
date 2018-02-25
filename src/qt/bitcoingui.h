@@ -110,6 +110,7 @@ private:
     QAction *aboutQtAction;
     QAction *openRPCConsoleAction;
     QAction *openAction;
+    QAction *exportAction;
     QAction *showHelpMessageAction;
 
     QAction *lockWalletAction;

@@ -86,10 +86,18 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     // Clicking on "Export" allows to export the transaction list
     connect(exportButton, SIGNAL(clicked()), transactionView, SLOT(exportClicked()));
 
+    //
+
     // Pass through messages from sendCoinsPage
     connect(sendCoinsPage, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
     // Pass through messages from transactionView
     connect(transactionView, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
+
+    //Export transactions when requested
+    connect(this, SIGNAL(transactionExportClicked()), transactionView, SLOT(exportClicked()));
+
+    //Export addresses when requested
+    connect(this, SIGNAL(addressExportClicked()), usedReceivingAddressesPage, SLOT(on_exportButton_clicked()));
 }
 
 WalletView::~WalletView()
@@ -365,4 +373,14 @@ void WalletView::showProgress(const QString &title, int nProgress)
 void WalletView::requestedSyncWarningInfo()
 {
     Q_EMIT outOfSyncWarningClicked();
+}
+
+void WalletView::requestedTransactionExport()
+{
+    Q_EMIT transactionExportClicked();
+}
+
+void WalletView::requestedAddressExport()
+{
+    Q_EMIT addressExportClicked();
 }
