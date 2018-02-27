@@ -120,6 +120,9 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
     openAction(0),
     exportAction(0),
     showHelpMessageAction(0),
+    lockWalletAction(0),
+    unlockWalletAction(0),
+    logoutAction(0),
     trayIcon(0),
     trayIconMenu(0),
     notificator(0),
@@ -128,8 +131,6 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
     modalOverlay(0),
     prevBlocks(0),
     spinnerFrame(0),
-    lockWalletAction(0),
-    unlockWalletAction(0),
     platformStyle(_platformStyle)
 {
     QSettings settings;
@@ -304,6 +305,15 @@ BitcoinGUI::~BitcoinGUI()
     delete rpcConsole;
 }
 
+void BitcoinGUI::logout()
+{
+    walletFrame->lockWallet();
+    //if (WalletModel::getEncryptionStatus() == WalletModel::Locked)
+    //{
+    lockWalletFeatures(true);
+    //}
+}
+
 void BitcoinGUI::createActions()
 {
     QActionGroup *tabGroup = new QActionGroup(this);
@@ -372,6 +382,10 @@ void BitcoinGUI::createActions()
     aboutQtAction = new QAction(platformStyle->SingleColorIcon(":/icons/about_qt"), tr("About &Qt"), this);
     aboutQtAction->setStatusTip(tr("Show information about Qt"));
     aboutQtAction->setMenuRole(QAction::AboutQtRole);
+
+    logoutAction = new QAction(platformStyle->SingleColorIcon(":/icons/logout"), tr("&Logout"), this);
+    logoutAction->setStatusTip(tr("Logout and stop staking"));
+    logoutAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_L));
     
     lockWalletAction = new QAction(platformStyle->SingleColorIcon(":/icons/stake100"), tr("&Disable Staking"), this);
     lockWalletAction->setToolTip(tr("Turn staking off"));
@@ -419,6 +433,7 @@ void BitcoinGUI::createActions()
     showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible SolarCoin command-line options").arg(tr(PACKAGE_NAME)));
 
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
+    connect(logoutAction, SIGNAL(triggered()), this, SLOT(logout()));
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
     connect(aboutQtAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
     connect(optionsAction, SIGNAL(triggered()), this, SLOT(optionsClicked()));
@@ -476,6 +491,7 @@ void BitcoinGUI::createMenuBar()
         file->addAction(usedReceivingAddressesAction);
         file->addSeparator();
     }
+    file->addAction(logoutAction);
     file->addAction(quitAction);
 
     QMenu *settings = appMenuBar->addMenu(tr("&Settings"));

@@ -115,6 +115,7 @@ private:
 
     QAction *lockWalletAction;
     QAction *unlockWalletAction;
+    QAction *logoutAction;
 
     QSystemTrayIcon *trayIcon;
     QMenu *trayIconMenu;
@@ -233,6 +234,8 @@ private Q_SLOTS:
     void showDebugWindowActivateConsole();
     /** Show help message dialog */
     void showHelpMessageClicked();
+    /** Stop staking and log out of the wallet */
+    void logout();
 #ifndef Q_OS_MAC
     /** Handle tray icon clicked */
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
