@@ -475,6 +475,7 @@ void BitcoinGUI::createMenuBar()
     appMenuBar = menuBar();
 #endif
 
+    appMenuBar->setNativeMenuBar(true);
     appMenuBar->setFont(qFont);
     // Configure the menus
     QMenu *file = appMenuBar->addMenu(tr("&File"));
@@ -663,8 +664,7 @@ void BitcoinGUI::createTrayIcon(const NetworkStyle *networkStyle)
 {
 #ifndef Q_OS_MAC
     trayIcon = new QSystemTrayIcon(this);
-    QString toolTip = tr("%1 client").arg(tr(PACKAGE_NAME)) + " " + networkStyle->getTitleAddText();
-    trayIcon->setToolTip(toolTip);
+    trayIcon->setToolTip(tr("SolarCoin Wallet"));
     trayIcon->setIcon(networkStyle->getTrayAndWindowIcon());
     trayIcon->hide();
 #endif
