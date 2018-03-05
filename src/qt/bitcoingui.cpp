@@ -118,7 +118,11 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
     aboutQtAction(0),
     openRPCConsoleAction(0),
     openAction(0),
+    exportAction(0),
     showHelpMessageAction(0),
+    lockWalletAction(0),
+    unlockWalletAction(0),
+    logoutAction(0),
     trayIcon(0),
     trayIconMenu(0),
     notificator(0),
@@ -127,8 +131,6 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
     modalOverlay(0),
     prevBlocks(0),
     spinnerFrame(0),
-    lockWalletAction(0),
-    unlockWalletAction(0),
     platformStyle(_platformStyle)
 {
     QSettings settings;
@@ -303,6 +305,15 @@ BitcoinGUI::~BitcoinGUI()
     delete rpcConsole;
 }
 
+void BitcoinGUI::logout()
+{
+    walletFrame->lockWallet();
+    //if (WalletModel::getEncryptionStatus() == WalletModel::Locked)
+    //{
+    lockWalletFeatures(true);
+    //}
+}
+
 void BitcoinGUI::createActions()
 {
     QActionGroup *tabGroup = new QActionGroup(this);
@@ -371,6 +382,10 @@ void BitcoinGUI::createActions()
     aboutQtAction = new QAction(platformStyle->SingleColorIcon(":/icons/about_qt"), tr("About &Qt"), this);
     aboutQtAction->setStatusTip(tr("Show information about Qt"));
     aboutQtAction->setMenuRole(QAction::AboutQtRole);
+
+    logoutAction = new QAction(platformStyle->SingleColorIcon(":/icons/logout"), tr("&Logout"), this);
+    logoutAction->setStatusTip(tr("Logout and stop staking"));
+    logoutAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_L));
     
     lockWalletAction = new QAction(platformStyle->SingleColorIcon(":/icons/stake100"), tr("&Disable Staking"), this);
     lockWalletAction->setToolTip(tr("Turn staking off"));
@@ -409,11 +424,16 @@ void BitcoinGUI::createActions()
     openAction = new QAction(platformStyle->SingleColorIcon(":/icons/open"), tr("Open &URI..."), this);
     openAction->setStatusTip(tr("Open a solarcoin: URI or payment request"));
 
-    showHelpMessageAction = new QAction(platformStyle->SingleColorIcon(":/icons/info"), tr("&Command-line options"), this);
+    exportAction = new QAction(platformStyle->SingleColorIcon(":/icons/export"), tr("&Export Data..."), this);
+    exportAction->setStatusTip(tr("Export the data in the current tab to a file"));
+
+
+    showHelpMessageAction = new QAction(platformStyle->SingleColorIcon(":/icons/about"), tr("&Command-line options"), this);
     showHelpMessageAction->setMenuRole(QAction::NoRole);
     showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible SolarCoin command-line options").arg(tr(PACKAGE_NAME)));
 
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
+    connect(logoutAction, SIGNAL(triggered()), this, SLOT(logout()));
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
     connect(aboutQtAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
     connect(optionsAction, SIGNAL(triggered()), this, SLOT(optionsClicked()));
@@ -455,6 +475,7 @@ void BitcoinGUI::createMenuBar()
     appMenuBar = menuBar();
 #endif
 
+    appMenuBar->setNativeMenuBar(true);
     appMenuBar->setFont(qFont);
     // Configure the menus
     QMenu *file = appMenuBar->addMenu(tr("&File"));
@@ -462,6 +483,7 @@ void BitcoinGUI::createMenuBar()
     {
         file->setFont(qFont);
         file->addAction(openAction);
+        file->addAction(exportAction);
         file->addAction(backupWalletAction);
         file->addAction(signMessageAction);
         file->addAction(verifyMessageAction);
@@ -470,6 +492,7 @@ void BitcoinGUI::createMenuBar()
         file->addAction(usedReceivingAddressesAction);
         file->addSeparator();
     }
+    file->addAction(logoutAction);
     file->addAction(quitAction);
 
     QMenu *settings = appMenuBar->addMenu(tr("&Settings"));
@@ -634,14 +657,14 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
         unlockWalletAction->setEnabled(enabled);
     }
     openAction->setEnabled(enabled);
+    exportAction->setEnabled(enabled);
 }
 
 void BitcoinGUI::createTrayIcon(const NetworkStyle *networkStyle)
 {
 #ifndef Q_OS_MAC
     trayIcon = new QSystemTrayIcon(this);
-    QString toolTip = tr("%1 client").arg(tr(PACKAGE_NAME)) + " " + networkStyle->getTitleAddText();
-    trayIcon->setToolTip(toolTip);
+    trayIcon->setToolTip(tr("SolarCoin Wallet"));
     trayIcon->setIcon(networkStyle->getTrayAndWindowIcon());
     trayIcon->hide();
 #endif
@@ -757,6 +780,9 @@ void BitcoinGUI::gotoAskPassphrasePage()
 {
     overviewAction->setChecked(false);
     if (walletFrame) walletFrame->gotoAskPassphrasePage();
+
+    exportAction->setEnabled(false);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
 }
 
 void BitcoinGUI::gotoEncryptWalletPage()
@@ -765,30 +791,47 @@ void BitcoinGUI::gotoEncryptWalletPage()
 
     overviewAction->setChecked(false);
     if (walletFrame) walletFrame->gotoAskPassphrasePage();
+
+    exportAction->setEnabled(false);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
 }
 
 void BitcoinGUI::gotoOverviewPage()
 {
     overviewAction->setChecked(true);
     if (walletFrame) walletFrame->gotoOverviewPage();
+
+    exportAction->setEnabled(false);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
 }
 
 void BitcoinGUI::gotoHistoryPage()
 {
     historyAction->setChecked(true);
     if (walletFrame) walletFrame->gotoHistoryPage();
+
+    exportAction->setEnabled(true);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+    connect(exportAction, SIGNAL(triggered()), walletFrame, SLOT(exportTransactions()));
 }
 
 void BitcoinGUI::gotoReceiveCoinsPage()
 {
     receiveCoinsAction->setChecked(true);
     if (walletFrame) walletFrame->gotoReceiveCoinsPage();
+
+    exportAction->setEnabled(true);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+    connect(exportAction, SIGNAL(triggered()), walletFrame, SLOT(exportAddresses()));
 }
 
 void BitcoinGUI::gotoSendCoinsPage(QString addr)
 {
     sendCoinsAction->setChecked(true);
     if (walletFrame) walletFrame->gotoSendCoinsPage(addr);
+
+    exportAction->setEnabled(false);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
 }
 
 void BitcoinGUI::gotoSignMessageTab(QString addr)

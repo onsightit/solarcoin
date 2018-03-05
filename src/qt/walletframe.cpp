@@ -194,6 +194,20 @@ void WalletFrame::unlockWallet()
         walletView->unlockWallet();
 }
 
+void WalletFrame::exportTransactions()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletView->requestedTransactionExport();
+}
+
+void WalletFrame::exportAddresses()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletView->requestedAddressExport();
+}
+
 void WalletFrame::usedSendingAddresses()
 {
     WalletView *walletView = currentWalletView();

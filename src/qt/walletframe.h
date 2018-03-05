@@ -88,6 +88,10 @@ public Q_SLOTS:
     void unlockWallet();
     /** Ask for passphrase to lock wallet */
     void lockWallet();
+    /** Export transactions */
+    void exportTransactions();
+    /** Export addresses */
+    void exportAddresses();
 
     /** Show used sending addresses */
     void usedSendingAddresses();

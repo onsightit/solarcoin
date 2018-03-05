@@ -122,6 +122,12 @@ public Q_SLOTS:
     /** User has requested more information about the out of sync state */
     void requestedSyncWarningInfo();
 
+    /** Export transaction info */
+    void requestedTransactionExport();
+
+    /** Export transaction info */
+    void requestedAddressExport();
+
 Q_SIGNALS:
     /** Signal that we want to show the main window */
     void showNormalIfMinimized();
@@ -135,6 +141,10 @@ Q_SIGNALS:
     void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label);
     /** Notify that the out of sync warning icon has been pressed */
     void outOfSyncWarningClicked();
+    /** Notify that transaction export has been requested */
+    void transactionExportClicked();
+    /** Notify that address export has been requested */
+    void addressExportClicked();
 };
 
 #endif // BITCOIN_QT_WALLETVIEW_H
