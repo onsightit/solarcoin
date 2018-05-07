@@ -3,20 +3,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <chain.h>
-#include <chainparams.h>
-#include <core_io.h>
-#include <primitives/block.h>
-#include <primitives/transaction.h>
-#include <validation.h>
-#include <httpserver.h>
-#include <rpc/blockchain.h>
-#include <rpc/server.h>
-#include <streams.h>
-#include <sync.h>
-#include <txmempool.h>
-#include <utilstrencodings.h>
-#include <version.h>
+#include "chain.h"
+#include "chainparams.h"
+#include "primitives/block.h"
+#include "primitives/transaction.h"
+#include "validation.h"
+#include "httpserver.h"
+#include "rpc/server.h"
+#include "streams.h"
+#include "sync.h"
+#include "txmempool.h"
+#include "utilstrencodings.h"
+#include "version.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -42,23 +40,27 @@ static const struct {
 };
 
 struct CCoin {
+    uint32_t nTxVer; // Don't call this nVersion, that name has a special meaning inside IMPLEMENT_SERIALIZE
     uint32_t nHeight;
     CTxOut out;
 
     ADD_SERIALIZE_METHODS;
 
-    CCoin() : nHeight(0) {}
-    CCoin(Coin&& in) : nHeight(in.nHeight), out(std::move(in.out)) {}
-
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
-        uint32_t nTxVerDummy = 0;
-        READWRITE(nTxVerDummy);
+        READWRITE(nTxVer);
         READWRITE(nHeight);
         READWRITE(out);
     }
 };
+
+extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry);
+extern UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDetails = false);
+extern UniValue mempoolInfoToJSON();
+extern UniValue mempoolToJSON(bool fVerbose = false);
+extern void ScriptPubKeyToJSON(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
+extern UniValue blockheaderToJSON(const CBlockIndex* blockindex);
 
 static bool RESTERR(HTTPRequest* req, enum HTTPStatusCode status, std::string message)
 {
@@ -134,7 +136,7 @@ static bool rest_headers(HTTPRequest* req,
     if (path.size() != 2)
         return RESTERR(req, HTTP_BAD_REQUEST, "No header count specified. Use /rest/headers/<count>/<hash>.<ext>.");
 
-    long count = strtol(path[0].c_str(), nullptr, 10);
+    long count = strtol(path[0].c_str(), NULL, 10);
     if (count < 1 || count > 2000)
         return RESTERR(req, HTTP_BAD_REQUEST, "Header count out of range: " + path[0]);
 
@@ -148,8 +150,8 @@ static bool rest_headers(HTTPRequest* req,
     {
         LOCK(cs_main);
         BlockMap::const_iterator it = mapBlockIndex.find(hash);
-        const CBlockIndex *pindex = (it != mapBlockIndex.end()) ? it->second : nullptr;
-        while (pindex != nullptr && chainActive.Contains(pindex)) {
+        const CBlockIndex *pindex = (it != mapBlockIndex.end()) ? it->second : NULL;
+        while (pindex != NULL && chainActive.Contains(pindex)) {
             headers.push_back(pindex);
             if (headers.size() == (unsigned long)count)
                 break;
@@ -158,7 +160,7 @@ static bool rest_headers(HTTPRequest* req,
     }
 
     CDataStream ssHeader(SER_NETWORK, PROTOCOL_VERSION);
-    for (const CBlockIndex *pindex : headers) {
+    BOOST_FOREACH(const CBlockIndex *pindex, headers) {
         ssHeader << pindex->GetBlockHeader();
     }
 
@@ -178,7 +180,7 @@ static bool rest_headers(HTTPRequest* req,
     }
     case RF_JSON: {
         UniValue jsonHeaders(UniValue::VARR);
-        for (const CBlockIndex *pindex : headers) {
+        BOOST_FOREACH(const CBlockIndex *pindex, headers) {
             jsonHeaders.push_back(blockheaderToJSON(pindex));
         }
         std::string strJSON = jsonHeaders.write() + "\n";
@@ -209,7 +211,7 @@ static bool rest_block(HTTPRequest* req,
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
 
     CBlock block;
-    CBlockIndex* pblockindex = nullptr;
+    CBlockIndex* pblockindex = NULL;
     {
         LOCK(cs_main);
         if (mapBlockIndex.count(hash) == 0)
@@ -358,10 +360,9 @@ static bool rest_tx(HTTPRequest* req, const std::string& strURIPart)
     if (!ParseHashStr(hashStr, hash))
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
 
-    unsigned int nTxOffset = 0; // not used here
     CTransactionRef tx;
     uint256 hashBlock = uint256();
-    if (!GetTransaction(hash, tx, nTxOffset, Params().GetConsensus(), hashBlock, true))
+    if (!GetTransaction(hash, tx, Params().GetConsensus(), hashBlock, true))
         return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
 
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
@@ -384,7 +385,7 @@ static bool rest_tx(HTTPRequest* req, const std::string& strURIPart)
 
     case RF_JSON: {
         UniValue objTx(UniValue::VOBJ);
-        TxToUniv(*tx, hashBlock, objTx);
+        TxToJSON(*tx, hashBlock, objTx);
         std::string strJSON = objTx.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
         req->WriteReply(HTTP_OK, strJSON);
@@ -414,7 +415,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
         boost::split(uriParts, strUriParams, boost::is_any_of("/"));
     }
 
-    // throw exception in case of an empty request
+    // throw exception in case of a empty request
     std::string strRequestMutable = req->ReadBody();
     if (strRequestMutable.length() == 0 && uriParts.size() == 0)
         return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
@@ -513,11 +514,22 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
             view.SetBackend(viewMempool); // switch cache backend to db+mempool in case user likes to query mempool
 
         for (size_t i = 0; i < vOutPoints.size(); i++) {
+            CCoins coins;
+            uint256 hash = vOutPoints[i].hash;
             bool hit = false;
-            Coin coin;
-            if (view.GetCoin(vOutPoints[i], coin) && !mempool.isSpent(vOutPoints[i])) {
-                hit = true;
-                outs.emplace_back(std::move(coin));
+            if (view.GetCoins(hash, coins)) {
+                mempool.pruneSpent(hash, coins);
+                if (coins.IsAvailable(vOutPoints[i].n)) {
+                    hit = true;
+                    // Safe to index into vout here because IsAvailable checked if it's off the end of the array, or if
+                    // n is valid but points to an already spent output (IsNull).
+                    CCoin coin;
+                    coin.nTxVer = coins.nVersion;
+                    coin.nHeight = coins.nHeight;
+                    coin.out = coins.vout.at(vOutPoints[i].n);
+                    assert(!coin.out.IsNull());
+                    outs.push_back(coin);
+                }
             }
 
             hits.push_back(hit);
@@ -559,14 +571,15 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
         objGetUTXOResponse.push_back(Pair("bitmap", bitmapStringRepresentation));
 
         UniValue utxos(UniValue::VARR);
-        for (const CCoin& coin : outs) {
+        BOOST_FOREACH (const CCoin& coin, outs) {
             UniValue utxo(UniValue::VOBJ);
+            utxo.push_back(Pair("txvers", (int32_t)coin.nTxVer));
             utxo.push_back(Pair("height", (int32_t)coin.nHeight));
             utxo.push_back(Pair("value", ValueFromAmount(coin.out.nValue)));
 
             // include the script in a json output
             UniValue o(UniValue::VOBJ);
-            ScriptPubKeyToUniv(coin.out.scriptPubKey, o, true);
+            ScriptPubKeyToJSON(coin.out.scriptPubKey, o, true);
             utxo.push_back(Pair("scriptPubKey", o));
             utxos.push_back(utxo);
         }

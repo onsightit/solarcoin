@@ -1,5 +1,5 @@
 ---
-name: "solarcoin-linux-0.14"
+name: "solarcoin-linux-3.14"
 enable_cache: true
 suites:
 - "trusty"

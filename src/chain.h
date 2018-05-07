@@ -6,28 +6,13 @@
 #ifndef BITCOIN_CHAIN_H
 #define BITCOIN_CHAIN_H
 
-#include <arith_uint256.h>
-#include <primitives/block.h>
-#include <post.h>
-#include <tinyformat.h>
-#include <uint256.h>
-#include <utilmoneystr.h>
+#include "arith_uint256.h"
+#include "primitives/block.h"
+#include "pow.h"
+#include "tinyformat.h"
+#include "uint256.h"
 
 #include <vector>
-
-/**
- * Maximum amount of time that a block timestamp is allowed to exceed the
- * current network-adjusted time before the block will be accepted.
- */
-static const int64_t MAX_FUTURE_BLOCK_TIME = 2 * 60 * 60;
-
-/**
- * Timestamp window used as a grace period by code that compares external
- * timestamps (such as timestamps passed to RPCs, or wallet key creation times)
- * to block timestamps. This should be set at least as high as
- * MAX_FUTURE_BLOCK_TIME.
- */
-static const int64_t TIMESTAMP_WINDOW = MAX_FUTURE_BLOCK_TIME;
 
 class CBlockFileInfo
 {
@@ -205,26 +190,7 @@ public:
     unsigned int nChainTx;
 
     //! Verification status of this block. See enum BlockStatus
-    uint32_t nStatus;
-
-    int64_t nMint;
-    int64_t nMoneySupply;
-
-    unsigned int nFlags;  // ppcoin: block index flags
-    enum  
-    {
-        BLOCK_PROOF_OF_STAKE = (1 << 0), // is proof-of-stake block
-        BLOCK_STAKE_ENTROPY  = (1 << 1), // entropy bit for stake modifier
-        BLOCK_STAKE_MODIFIER = (1 << 2), // regenerated stake modifier
-    };
-
-    uint64_t nStakeModifier; // hash modifier for proof-of-stake
-    unsigned int nStakeModifierChecksum; // checksum of index; in-memory only
-
-    // proof-of-stake specific fields
-    COutPoint prevoutStake;
-    unsigned int nStakeTime;
-    uint256 hashProofOfStake;
+    unsigned int nStatus;
 
     //! block header
     int nVersion;
@@ -236,14 +202,14 @@ public:
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     int32_t nSequenceId;
 
-    //! (memory only) Maximum nTime in the chain up to and including this block.
+    //! (memory only) Maximum nTime in the chain upto and including this block.
     unsigned int nTimeMax;
 
     void SetNull()
     {
-        phashBlock = nullptr;
-        pprev = nullptr;
-        pnext = nullptr;
+        phashBlock = NULL;
+        pprev = NULL;
+        pnext = NULL;
         nHeight = 0;
         nFile = 0;
         nDataPos = 0;
@@ -492,9 +458,9 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
-        int _nVersion = s.GetVersion();
+        int nVersion = s.GetVersion();
         if (!(s.GetType() & SER_GETHASH))
-            READWRITE(VARINT(_nVersion));
+            READWRITE(VARINT(nVersion));
 
         READWRITE(VARINT(nHeight));
         READWRITE(VARINT(nStatus));
@@ -562,20 +528,20 @@ private:
     std::vector<CBlockIndex*> vChain;
 
 public:
-    /** Returns the index entry for the genesis block of this chain, or nullptr if none. */
+    /** Returns the index entry for the genesis block of this chain, or NULL if none. */
     CBlockIndex *Genesis() const {
-        return vChain.size() > 0 ? vChain[0] : nullptr;
+        return vChain.size() > 0 ? vChain[0] : NULL;
     }
 
-    /** Returns the index entry for the tip of this chain, or nullptr if none. */
+    /** Returns the index entry for the tip of this chain, or NULL if none. */
     CBlockIndex *Tip() const {
-        return vChain.size() > 0 ? vChain[vChain.size() - 1] : nullptr;
+        return vChain.size() > 0 ? vChain[vChain.size() - 1] : NULL;
     }
 
-    /** Returns the index entry at a particular height in this chain, or nullptr if no such height exists. */
+    /** Returns the index entry at a particular height in this chain, or NULL if no such height exists. */
     CBlockIndex *operator[](int nHeight) const {
         if (nHeight < 0 || nHeight >= (int)vChain.size())
-            return nullptr;
+            return NULL;
         return vChain[nHeight];
     }
 
@@ -590,12 +556,12 @@ public:
         return (*this)[pindex->nHeight] == pindex;
     }
 
-    /** Find the successor of a block in this chain, or nullptr if the given index is not found or is the tip. */
+    /** Find the successor of a block in this chain, or NULL if the given index is not found or is the tip. */
     CBlockIndex *Next(const CBlockIndex *pindex) const {
         if (Contains(pindex))
             return (*this)[pindex->nHeight + 1];
         else
-            return nullptr;
+            return NULL;
     }
 
     /** Return the maximal height in the chain. Is equal to chain.Tip() ? chain.Tip()->nHeight : -1. */
@@ -607,7 +573,7 @@ public:
     void SetTip(CBlockIndex *pindex);
 
     /** Return a CBlockLocator that refers to a block in this chain (by default the tip). */
-    CBlockLocator GetLocator(const CBlockIndex *pindex = nullptr) const;
+    CBlockLocator GetLocator(const CBlockIndex *pindex = NULL) const;
 
     /** Find the last common block between this chain and a block index entry. */
     const CBlockIndex *FindFork(const CBlockIndex *pindex) const;

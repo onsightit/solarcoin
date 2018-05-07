@@ -6,12 +6,12 @@
 #define BITCOIN_NETBASE_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include "config/bitcoin-config.h"
 #endif
 
-#include <compat.h>
-#include <netaddress.h>
-#include <serialize.h>
+#include "compat.h"
+#include "netaddress.h"
+#include "serialize.h"
 
 #include <stdint.h>
 #include <string>
@@ -39,6 +39,7 @@ public:
 
 enum Network ParseNetwork(std::string net);
 std::string GetNetworkName(enum Network net);
+void SplitHostPort(std::string in, int &portOut, std::string &hostOut);
 bool SetProxy(enum Network net, const proxyType &addrProxy);
 bool GetProxy(enum Network net, proxyType &proxyInfoOut);
 bool IsProxy(const CNetAddr &addr);
@@ -57,9 +58,7 @@ std::string NetworkErrorString(int err);
 /** Close socket and set hSocket to INVALID_SOCKET */
 bool CloseSocket(SOCKET& hSocket);
 /** Disable or enable blocking-mode for a socket */
-bool SetSocketNonBlocking(const SOCKET& hSocket, bool fNonBlocking);
-/** Set the TCP_NODELAY flag on a socket */
-bool SetSocketNoDelay(const SOCKET& hSocket);
+bool SetSocketNonBlocking(SOCKET& hSocket, bool fNonBlocking);
 /**
  * Convert milliseconds to a struct timeval for e.g. select.
  */

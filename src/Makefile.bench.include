@@ -25,10 +25,9 @@ bench_bench_solarcoin_SOURCES = \
   bench/base58.cpp \
   bench/lockedpool.cpp \
   bench/perf.cpp \
-  bench/perf.h \
-  bench/prevector_destructor.cpp
+  bench/perf.h
 
-nodist_bench_bench_solarcoin_SOURCES = $(GENERATED_BENCH_FILES)
+nodist_bench_bench_solarcoin_SOURCES = $(GENERATED_TEST_FILES)
 
 bench_bench_solarcoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
 bench_bench_solarcoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -39,7 +38,6 @@ bench_bench_solarcoin_LDADD = \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBLEVELDB) \
-  $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
   $(LIBUNIVALUE)

@@ -11,7 +11,6 @@
 #include <string.h>
 
 #include <iterator>
-#include <type_traits>
 
 #pragma pack(push, 1)
 /** Implements a drop-in replacement for std::vector<T> which stores up to N
@@ -132,7 +131,7 @@ public:
         typedef const T* pointer;
         typedef const T& reference;
         typedef std::bidirectional_iterator_tag iterator_category;
-        const_reverse_iterator(const T* ptr_) : ptr(ptr_) {}
+        const_reverse_iterator(T* ptr_) : ptr(ptr_) {}
         const_reverse_iterator(reverse_iterator x) : ptr(&(*x)) {}
         const T& operator*() const { return *ptr; }
         const T* operator->() const { return ptr; }
@@ -220,7 +219,7 @@ public:
         }
     }
 
-    prevector() : _size(0), _union{{}} {}
+    prevector() : _size(0) {}
 
     explicit prevector(size_type n) : _size(0) {
         resize(n);
@@ -387,22 +386,12 @@ public:
     }
 
     iterator erase(iterator first, iterator last) {
-        // Erase is not allowed to the change the object's capacity. That means
-        // that when starting with an indirectly allocated prevector with
-        // size and capacity > N, the result may be a still indirectly allocated
-        // prevector with size <= N and capacity > N. A shrink_to_fit() call is
-        // necessary to switch to the (more efficient) directly allocated
-        // representation (with capacity N and size <= N).
         iterator p = first;
         char* endp = (char*)&(*end());
-        if (!std::is_trivially_destructible<T>::value) {
-            while (p != last) {
-                (*p).~T();
-                _size--;
-                ++p;
-            }
-        } else {
-            _size -= last - p;
+        while (p != last) {
+            (*p).~T();
+            _size--;
+            ++p;
         }
         memmove(&(*first), &(*last), endp - ((char*)(&(*last))));
         return first;
@@ -443,12 +432,10 @@ public:
     }
 
     ~prevector() {
-        if (!std::is_trivially_destructible<T>::value) {
-            clear();
-        }
+        clear();
         if (!is_direct()) {
             free(_union.indirect);
-            _union.indirect = nullptr;
+            _union.indirect = NULL;
         }
     }
 

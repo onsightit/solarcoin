@@ -3,16 +3,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <primitives/block.h>
-#include <chain.h>
-#include <primitives/transaction.h>
-#include <key.h>
-#include <tinyformat.h>
-#include <utilstrencodings.h>
-#include <stdlib.h>
-#include <timedata.h>
+#include "primitives/block.h"
 
-typedef std::vector<unsigned char> valtype;
+#include "hash.h"
+#include "tinyformat.h"
+#include "utilstrencodings.h"
+#include "crypto/common.h"
 
 void CBlockHeader::UpdateTime(const CBlockIndex* pindexPrev)
 {

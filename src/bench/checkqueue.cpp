@@ -2,14 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <bench/bench.h>
-#include <util.h>
-#include <validation.h>
-#include <checkqueue.h>
-#include <prevector.h>
+#include "bench.h"
+#include "util.h"
+#include "validation.h"
+#include "checkqueue.h"
+#include "prevector.h"
 #include <vector>
 #include <boost/thread/thread.hpp>
-#include <random.h>
+#include "random.h"
 
 
 // This Benchmark tests the CheckQueue with the lightest
@@ -67,8 +67,8 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::State& state)
         prevector<PREVECTOR_SIZE, uint8_t> p;
         PrevectorJob(){
         }
-        explicit PrevectorJob(FastRandomContext& insecure_rand){
-            p.resize(insecure_rand.randrange(PREVECTOR_SIZE*2));
+        PrevectorJob(FastRandomContext& insecure_rand){
+            p.resize(insecure_rand.rand32() % (PREVECTOR_SIZE*2));
         }
         bool operator()()
         {

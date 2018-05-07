@@ -2,23 +2,24 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <bloom.h>
+#include "bloom.h"
 
-#include <primitives/transaction.h>
-#include <hash.h>
-#include <script/script.h>
-#include <script/standard.h>
-#include <random.h>
-#include <streams.h>
+#include "primitives/transaction.h"
+#include "hash.h"
+#include "script/script.h"
+#include "script/standard.h"
+#include "random.h"
+#include "streams.h"
 
 #include <math.h>
 #include <stdlib.h>
 
+#include <boost/foreach.hpp>
 
 #define LN2SQUARED 0.4804530139182014246671025263266649717305529515945455
 #define LN2 0.6931471805599453094172321214581765680755001343602552
 
-CBloomFilter::CBloomFilter(const unsigned int nElements, const double nFPRate, const unsigned int nTweakIn, unsigned char nFlagsIn) :
+CBloomFilter::CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweakIn, unsigned char nFlagsIn) :
     /**
      * The ideal size for a bloom filter with a given number of elements and false positive rate is:
      * - nElements * log(fp rate) / ln(2)^2
@@ -39,7 +40,7 @@ CBloomFilter::CBloomFilter(const unsigned int nElements, const double nFPRate, c
 }
 
 // Private constructor used by CRollingBloomFilter
-CBloomFilter::CBloomFilter(const unsigned int nElements, const double nFPRate, const unsigned int nTweakIn) :
+CBloomFilter::CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweakIn) :
     vData((unsigned int)(-1  / LN2SQUARED * nElements * log(nFPRate)) / 8),
     isFull(false),
     isEmpty(true),
@@ -119,7 +120,7 @@ void CBloomFilter::clear()
     isEmpty = true;
 }
 
-void CBloomFilter::reset(const unsigned int nNewTweak)
+void CBloomFilter::reset(unsigned int nNewTweak)
 {
     clear();
     nTweak = nNewTweak;
@@ -178,7 +179,7 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
     if (fFound)
         return true;
 
-    for (const CTxIn& txin : tx.vin)
+    BOOST_FOREACH(const CTxIn& txin, tx.vin)
     {
         // Match if the filter contains an outpoint tx spends
         if (contains(txin.prevout))
@@ -213,7 +214,7 @@ void CBloomFilter::UpdateEmptyFull()
     isEmpty = empty;
 }
 
-CRollingBloomFilter::CRollingBloomFilter(const unsigned int nElements, const double fpRate)
+CRollingBloomFilter::CRollingBloomFilter(unsigned int nElements, double fpRate)
 {
     double logFpRate = log(fpRate);
     /* The optimal number of hash functions is log(fpRate) / log(0.5), but
@@ -253,8 +254,8 @@ void CRollingBloomFilter::insert(const std::vector<unsigned char>& vKey)
         if (nGeneration == 4) {
             nGeneration = 1;
         }
-        uint64_t nGenerationMask1 = 0 - (uint64_t)(nGeneration & 1);
-        uint64_t nGenerationMask2 = 0 - (uint64_t)(nGeneration >> 1);
+        uint64_t nGenerationMask1 = -(uint64_t)(nGeneration & 1);
+        uint64_t nGenerationMask2 = -(uint64_t)(nGeneration >> 1);
         /* Wipe old entries that used this generation number. */
         for (uint32_t p = 0; p < data.size(); p += 2) {
             uint64_t p1 = data[p], p2 = data[p + 1];

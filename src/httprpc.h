@@ -8,6 +8,8 @@
 #include <string>
 #include <map>
 
+class HTTPRequest;
+
 /** Start HTTP RPC subsystem.
  * Precondition; HTTP and RPC has been started.
  */

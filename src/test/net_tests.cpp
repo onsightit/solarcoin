@@ -1,17 +1,16 @@
 // Copyright (c) 2012-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#include <addrman.h>
-#include <test/test_bitcoin.h>
+#include "addrman.h"
+#include "test/test_bitcoin.h"
 #include <string>
 #include <boost/test/unit_test.hpp>
-#include <hash.h>
-#include <serialize.h>
-#include <streams.h>
-#include <net.h>
-#include <netbase.h>
-#include <chainparams.h>
-#include <util.h>
+#include "hash.h"
+#include "serialize.h"
+#include "streams.h"
+#include "net.h"
+#include "netbase.h"
+#include "chainparams.h"
 
 class CAddrManSerializationMock : public CAddrMan
 {
@@ -29,7 +28,7 @@ public:
 class CAddrManUncorrupted : public CAddrManSerializationMock
 {
 public:
-    void Serialize(CDataStream& s) const override
+    void Serialize(CDataStream& s) const
     {
         CAddrMan::Serialize(s);
     }
@@ -38,7 +37,7 @@ public:
 class CAddrManCorrupted : public CAddrManSerializationMock
 {
 public:
-    void Serialize(CDataStream& s) const override
+    void Serialize(CDataStream& s) const
     {
         // Produces corrupt output that claims addrman has 20 addrs when it only has one addr.
         unsigned char nVersion = 1;
@@ -72,18 +71,6 @@ CDataStream AddrmanToStream(CAddrManSerializationMock& _addrman)
 }
 
 BOOST_FIXTURE_TEST_SUITE(net_tests, BasicTestingSetup)
-
-BOOST_AUTO_TEST_CASE(cnode_listen_port)
-{
-    // test default
-    unsigned short port = GetListenPort();
-    BOOST_CHECK(port == Params().GetDefaultPort());
-    // test set port
-    unsigned short altPort = 12345;
-    gArgs.SoftSetArg("-port", std::to_string(altPort));
-    port = GetListenPort();
-    BOOST_CHECK(port == altPort);
-}
 
 BOOST_AUTO_TEST_CASE(caddrdb_read)
 {
@@ -175,12 +162,12 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     bool fInboundIn = false;
 
     // Test that fFeeler is false by default.
-    std::unique_ptr<CNode> pnode1(new CNode(id++, NODE_NETWORK, height, hSocket, addr, 0, 0, CAddress(), pszDest, fInboundIn));
+    std::unique_ptr<CNode> pnode1(new CNode(id++, NODE_NETWORK, height, hSocket, addr, 0, 0, pszDest, fInboundIn));
     BOOST_CHECK(pnode1->fInbound == false);
     BOOST_CHECK(pnode1->fFeeler == false);
 
     fInboundIn = true;
-    std::unique_ptr<CNode> pnode2(new CNode(id++, NODE_NETWORK, height, hSocket, addr, 1, 1, CAddress(), pszDest, fInboundIn));
+    std::unique_ptr<CNode> pnode2(new CNode(id++, NODE_NETWORK, height, hSocket, addr, 1, 1, pszDest, fInboundIn));
     BOOST_CHECK(pnode2->fInbound == true);
     BOOST_CHECK(pnode2->fFeeler == false);
 }

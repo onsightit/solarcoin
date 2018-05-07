@@ -3,10 +3,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <chainparamsbase.h>
+#include "chainparamsbase.h"
 
-#include <tinyformat.h>
-#include <util.h>
+#include "tinyformat.h"
+#include "util.h"
 
 #include <assert.h>
 
@@ -35,6 +35,7 @@ public:
         nRPCPort = 18181;
     }
 };
+static CBaseMainParams mainParams;
 
 /**
  * Testnet (v3)
@@ -45,9 +46,10 @@ public:
     CBaseTestNetParams()
     {
         nRPCPort = 18182;
-        strDataDir = "testnet2";
+        strDataDir = "testnet3";
     }
 };
+static CBaseTestNetParams testNetParams;
 
 /*
  * Regression test
@@ -61,36 +63,37 @@ public:
         strDataDir = "regtest";
     }
 };
+static CBaseRegTestParams regTestParams;
 
-static std::unique_ptr<CBaseChainParams> globalChainBaseParams;
+static CBaseChainParams* pCurrentBaseParams = 0;
 
 const CBaseChainParams& BaseParams()
 {
-    assert(globalChainBaseParams);
-    return *globalChainBaseParams;
+    assert(pCurrentBaseParams);
+    return *pCurrentBaseParams;
 }
 
-std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain)
+CBaseChainParams& BaseParams(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN)
-        return std::unique_ptr<CBaseChainParams>(new CBaseMainParams());
+        return mainParams;
     else if (chain == CBaseChainParams::TESTNET)
-        return std::unique_ptr<CBaseChainParams>(new CBaseTestNetParams());
+        return testNetParams;
     else if (chain == CBaseChainParams::REGTEST)
-        return std::unique_ptr<CBaseChainParams>(new CBaseRegTestParams());
+        return regTestParams;
     else
         throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
 
 void SelectBaseParams(const std::string& chain)
 {
-    globalChainBaseParams = CreateBaseChainParams(chain);
+    pCurrentBaseParams = &BaseParams(chain);
 }
 
 std::string ChainNameFromCommandLine()
 {
-    bool fRegTest = gArgs.GetBoolArg("-regtest", false);
-    bool fTestNet = gArgs.GetBoolArg("-testnet", false);
+    bool fRegTest = GetBoolArg("-regtest", false);
+    bool fTestNet = GetBoolArg("-testnet", false);
 
     if (fTestNet && fRegTest)
         throw std::runtime_error("Invalid combination of -regtest and -testnet.");
@@ -99,4 +102,9 @@ std::string ChainNameFromCommandLine()
     if (fTestNet)
         return CBaseChainParams::TESTNET;
     return CBaseChainParams::MAIN;
+}
+
+bool AreBaseParamsConfigured()
+{
+    return pCurrentBaseParams != NULL;
 }

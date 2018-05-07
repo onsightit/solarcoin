@@ -2,12 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <wallet/wallet.h>
+#include "wallet/wallet.h"
 
-#include <wallet/test/wallet_test_fixture.h>
+#include "wallet/test/wallet_test_fixture.h"
 
 #include <stdint.h>
 
+#include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
 extern CWallet* pwalletMain;
@@ -22,7 +23,7 @@ GetResults(std::map<CAmount, CAccountingEntry>& results)
     results.clear();
     BOOST_CHECK(pwalletMain->ReorderTransactions() == DB_LOAD_OK);
     pwalletMain->ListAccountCreditDebit("", aes);
-    for (CAccountingEntry& ae : aes)
+    BOOST_FOREACH(CAccountingEntry& ae, aes)
     {
         results[ae.nOrderPos] = ae;
     }

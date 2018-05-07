@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <support/lockedpool.h>
-#include <support/cleanse.h>
+#include "support/lockedpool.h"
+#include "support/cleanse.h"
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include "config/bitcoin-config.h"
 #endif
 
 #ifdef WIN32
@@ -28,7 +28,7 @@
 
 #include <algorithm>
 
-LockedPoolManager* LockedPoolManager::_instance = nullptr;
+LockedPoolManager* LockedPoolManager::_instance = NULL;
 std::once_flag LockedPoolManager::init_flag;
 
 /*******************************************************************************/
@@ -87,7 +87,7 @@ template <class Iterator, class Pair> bool extend(Iterator it, const Pair& other
 
 void Arena::free(void *ptr)
 {
-    // Freeing the nullptr pointer is OK.
+    // Freeing the NULL pointer is OK.
     if (ptr == nullptr) {
         return;
     }
@@ -148,9 +148,9 @@ class Win32LockedPageAllocator: public LockedPageAllocator
 {
 public:
     Win32LockedPageAllocator();
-    void* AllocateLocked(size_t len, bool *lockingSuccess) override;
-    void FreeLocked(void* addr, size_t len) override;
-    size_t GetLimit() override;
+    void* AllocateLocked(size_t len, bool *lockingSuccess);
+    void FreeLocked(void* addr, size_t len);
+    size_t GetLimit();
 private:
     size_t page_size;
 };
@@ -200,9 +200,9 @@ class PosixLockedPageAllocator: public LockedPageAllocator
 {
 public:
     PosixLockedPageAllocator();
-    void* AllocateLocked(size_t len, bool *lockingSuccess) override;
-    void FreeLocked(void* addr, size_t len) override;
-    size_t GetLimit() override;
+    void* AllocateLocked(size_t len, bool *lockingSuccess);
+    void FreeLocked(void* addr, size_t len);
+    size_t GetLimit();
 private:
     size_t page_size;
 };
@@ -357,8 +357,8 @@ LockedPool::LockedPageArena::~LockedPageArena()
 /*******************************************************************************/
 // Implementation: LockedPoolManager
 //
-LockedPoolManager::LockedPoolManager(std::unique_ptr<LockedPageAllocator> allocator_in):
-    LockedPool(std::move(allocator_in), &LockedPoolManager::LockingFailed)
+LockedPoolManager::LockedPoolManager(std::unique_ptr<LockedPageAllocator> allocator):
+    LockedPool(std::move(allocator), &LockedPoolManager::LockingFailed)
 {
 }
 

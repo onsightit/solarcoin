@@ -6,10 +6,10 @@
 #ifndef BITCOIN_KEY_H
 #define BITCOIN_KEY_H
 
-#include <pubkey.h>
-#include <serialize.h>
-#include <support/allocators/secure.h>
-#include <uint256.h>
+#include "pubkey.h"
+#include "serialize.h"
+#include "support/allocators/secure.h"
+#include "uint256.h"
 
 #include <stdexcept>
 #include <vector>
@@ -45,7 +45,7 @@ private:
     //! The actual byte data
     std::vector<unsigned char, secure_allocator<unsigned char> > keydata;
 
-    //! Check whether the 32-byte array pointed to by vch is valid keydata.
+    //! Check whether the 32-byte array pointed to be vch is valid keydata.
     bool static Check(const unsigned char* vch);
 
 public:
@@ -93,6 +93,9 @@ public:
 
     //! Check whether the public key corresponding to this private key is (to be) compressed.
     bool IsCompressed() const { return fCompressed; }
+
+    //! Initialize from a CPrivKey (serialized OpenSSL private key data).
+    bool SetPrivKey(const CPrivKey& vchPrivKey, bool fCompressed);
 
     //! Generate a new private key using a cryptographic PRNG.
     void MakeNewKey(bool fCompressed);
@@ -172,8 +175,6 @@ struct CExtKey {
     {
         unsigned int len = ::ReadCompactSize(s);
         unsigned char code[BIP32_EXTKEY_SIZE];
-        if (len != BIP32_EXTKEY_SIZE)
-            throw std::runtime_error("Invalid extended key size\n");
         s.read((char *)&code[0], len);
         Decode(code);
     }

@@ -10,10 +10,10 @@
 #ifndef BITCOIN_PROTOCOL_H
 #define BITCOIN_PROTOCOL_H
 
-#include <netaddress.h>
-#include <serialize.h>
-#include <uint256.h>
-#include <version.h>
+#include "netaddress.h"
+#include "serialize.h"
+#include "uint256.h"
+#include "version.h"
 
 #include <stdint.h>
 #include <string>
@@ -163,7 +163,7 @@ extern const char *PONG;
 /**
  * The notfound message is a reply to a getdata message which requested an
  * object the receiving node does not have available for relay.
- * @since protocol version 70001.
+ * @ince protocol version 70001.
  * @see https://bitcoin.org/en/developer-reference#notfound
  */
 extern const char *NOTFOUND;

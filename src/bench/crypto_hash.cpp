@@ -4,16 +4,15 @@
 
 #include <iostream>
 
-#include <bench/bench.h>
-#include <bloom.h>
-#include <hash.h>
-#include <random.h>
-#include <uint256.h>
-#include <utiltime.h>
-#include <crypto/ripemd160.h>
-#include <crypto/sha1.h>
-#include <crypto/sha256.h>
-#include <crypto/sha512.h>
+#include "bench.h"
+#include "bloom.h"
+#include "hash.h"
+#include "uint256.h"
+#include "utiltime.h"
+#include "crypto/ripemd160.h"
+#include "crypto/sha1.h"
+#include "crypto/sha256.h"
+#include "crypto/sha512.h"
 
 /* Number of bytes to hash per iteration */
 static const uint64_t BUFFER_SIZE = 1000*1000;
@@ -47,7 +46,7 @@ static void SHA256_32b(benchmark::State& state)
     std::vector<uint8_t> in(32,0);
     while (state.KeepRunning()) {
         for (int i = 0; i < 1000000; i++) {
-            CSHA256().Write(in.data(), in.size()).Finalize(in.data());
+            CSHA256().Write(in.data(), in.size()).Finalize(&in[0]);
         }
     }
 }
@@ -70,28 +69,6 @@ static void SipHash_32b(benchmark::State& state)
     }
 }
 
-static void FastRandom_32bit(benchmark::State& state)
-{
-    FastRandomContext rng(true);
-    uint32_t x = 0;
-    while (state.KeepRunning()) {
-        for (int i = 0; i < 1000000; i++) {
-            x += rng.rand32();
-        }
-    }
-}
-
-static void FastRandom_1bit(benchmark::State& state)
-{
-    FastRandomContext rng(true);
-    uint32_t x = 0;
-    while (state.KeepRunning()) {
-        for (int i = 0; i < 1000000; i++) {
-            x += rng.randbool();
-        }
-    }
-}
-
 BENCHMARK(RIPEMD160);
 BENCHMARK(SHA1);
 BENCHMARK(SHA256);
@@ -99,5 +76,3 @@ BENCHMARK(SHA512);
 
 BENCHMARK(SHA256_32b);
 BENCHMARK(SipHash_32b);
-BENCHMARK(FastRandom_32bit);
-BENCHMARK(FastRandom_1bit);

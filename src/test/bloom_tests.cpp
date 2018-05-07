@@ -2,23 +2,24 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <bloom.h>
+#include "bloom.h"
 
-#include <base58.h>
-#include <clientversion.h>
-#include <key.h>
-#include <merkleblock.h>
-#include <random.h>
-#include <serialize.h>
-#include <streams.h>
-#include <uint256.h>
-#include <util.h>
-#include <utilstrencodings.h>
-#include <test/test_bitcoin.h>
+#include "base58.h"
+#include "clientversion.h"
+#include "key.h"
+#include "merkleblock.h"
+#include "random.h"
+#include "serialize.h"
+#include "streams.h"
+#include "uint256.h"
+#include "util.h"
+#include "utilstrencodings.h"
+#include "test/test_bitcoin.h"
 
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
+#include <boost/tuple/tuple.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(bloom_tests, BasicTestingSetup)
 
@@ -462,7 +463,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_update_none)
 
 static std::vector<unsigned char> RandomData()
 {
-    uint256 r = InsecureRand256();
+    uint256 r = GetRandHash();
     return std::vector<unsigned char>(r.begin(), r.end());
 }
 

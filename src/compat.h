@@ -7,7 +7,7 @@
 #define BITCOIN_COMPAT_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include "config/bitcoin-config.h"
 #endif
 
 #ifdef WIN32
@@ -47,9 +47,11 @@
 #include <unistd.h>
 #endif
 
-#ifndef WIN32
-typedef unsigned int SOCKET;
-#include <errno.h>
+#ifdef WIN32
+#define MSG_DONTWAIT        0
+#else
+typedef u_int SOCKET;
+#include "errno.h"
 #define WSAGetLastError()   errno
 #define WSAEINVAL           EINVAL
 #define WSAEALREADY         EALREADY
@@ -72,11 +74,16 @@ typedef unsigned int SOCKET;
 #define MAX_PATH            1024
 #endif
 
+// As Solaris does not have the MSG_NOSIGNAL flag for send(2) syscall, it is defined as 0
+#if !defined(HAVE_MSG_NOSIGNAL) && !defined(MSG_NOSIGNAL)
+#define MSG_NOSIGNAL 0
+#endif
+
 #if HAVE_DECL_STRNLEN == 0
 size_t strnlen( const char *start, size_t max_len);
 #endif // HAVE_DECL_STRNLEN
 
-bool static inline IsSelectableSocket(const SOCKET& s) {
+bool static inline IsSelectableSocket(SOCKET s) {
 #ifdef WIN32
     return true;
 #else

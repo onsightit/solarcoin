@@ -57,10 +57,7 @@ static SECP256K1_INLINE void secp256k1_callback_call(const secp256k1_callback * 
 #endif
 
 /* Like assert(), but when VERIFY is defined, and side-effect safe. */
-#if defined(COVERAGE)
-#define VERIFY_CHECK(check)
-#define VERIFY_SETUP(stmt)
-#elif defined(VERIFY)
+#ifdef VERIFY
 #define VERIFY_CHECK CHECK
 #define VERIFY_SETUP(stmt) do { stmt; } while(0)
 #else

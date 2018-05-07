@@ -6,13 +6,9 @@
 #ifndef BITCOIN_CONSENSUS_PARAMS_H
 #define BITCOIN_CONSENSUS_PARAMS_H
 
-#include <uint256.h>
-#include <limits>
+#include "uint256.h"
 #include <map>
 #include <string>
-#include <primitives/block.h>
-
-class CBlockIndex;
 
 namespace Consensus {
 
@@ -52,18 +48,17 @@ struct Params {
     int BIP66Height;
     /**
      * Minimum blocks including miner confirmation of the total of 2016 blocks in a retargeting period,
-     * (nTargetTimespan / nTargetSpacing) which is also used for BIP9 deployments.
+     * (nPowTargetTimespan / nPowTargetSpacing) which is also used for BIP9 deployments.
      * Examples: 1916 for 95%, 1512 for testchains.
      */
     uint32_t nRuleChangeActivationThreshold;
     uint32_t nMinerConfirmationWindow;
     BIP9Deployment vDeployments[MAX_VERSION_BITS_DEPLOYMENTS];
-
-    /** PoW/PoSt parameters */
+    /** Proof of work parameters */
+    uint256 powLimit;
+    uint256 posLimit;
     bool fAllowMinDifficultyBlocks;
     bool fPowNoRetargeting;
-    uint256 powLimit; 
-    uint256 posLimit;
     int64_t nTargetSpacing;
     int64_t nTargetTimespan; // SolarCoin: PoST
     int64_t nTargetTimespan_Version1;

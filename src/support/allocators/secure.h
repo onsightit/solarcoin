@@ -6,8 +6,8 @@
 #ifndef BITCOIN_SUPPORT_ALLOCATORS_SECURE_H
 #define BITCOIN_SUPPORT_ALLOCATORS_SECURE_H
 
-#include <support/lockedpool.h>
-#include <support/cleanse.h>
+#include "support/lockedpool.h"
+#include "support/cleanse.h"
 
 #include <string>
 
@@ -45,7 +45,7 @@ struct secure_allocator : public std::allocator<T> {
 
     void deallocate(T* p, std::size_t n)
     {
-        if (p != nullptr) {
+        if (p != NULL) {
             memory_cleanse(p, sizeof(T) * n);
         }
         LockedPoolManager::Instance().free(p);

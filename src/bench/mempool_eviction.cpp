@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <bench/bench.h>
-#include <policy/policy.h>
-#include <txmempool.h>
+#include "bench.h"
+#include "policy/policy.h"
+#include "txmempool.h"
 
 #include <list>
 #include <vector>
@@ -12,13 +12,14 @@
 static void AddTx(const CTransaction& tx, const CAmount& nFee, CTxMemPool& pool)
 {
     int64_t nTime = 0;
+    double dPriority = 10.0;
     unsigned int nHeight = 1;
     bool spendsCoinbase = false;
     unsigned int sigOpCost = 4;
     LockPoints lp;
     pool.addUnchecked(tx.GetHash(), CTxMemPoolEntry(
-                                        MakeTransactionRef(tx), nFee, nTime, nHeight,
-                                        spendsCoinbase, sigOpCost, lp));
+                                        MakeTransactionRef(tx), nFee, nTime, dPriority, nHeight,
+                                        tx.GetValueOut(), spendsCoinbase, sigOpCost, lp));
 }
 
 // Right now this is only testing eviction performance in an extremely small
@@ -96,7 +97,7 @@ static void MempoolEviction(benchmark::State& state)
     tx7.vout[1].scriptPubKey = CScript() << OP_7 << OP_EQUAL;
     tx7.vout[1].nValue = 10 * COIN;
 
-    CTxMemPool pool;
+    CTxMemPool pool(CFeeRate(1000));
 
     while (state.KeepRunning()) {
         AddTx(tx1, 10000LL, pool);

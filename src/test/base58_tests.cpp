@@ -2,19 +2,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <base58.h>
+#include "base58.h"
 
-#include <test/data/base58_encode_decode.json.h>
-#include <test/data/base58_keys_invalid.json.h>
-#include <test/data/base58_keys_valid.json.h>
+#include "data/base58_encode_decode.json.h"
+#include "data/base58_keys_invalid.json.h"
+#include "data/base58_keys_valid.json.h"
 
-#include <key.h>
-#include <script/script.h>
-#include <uint256.h>
-#include <util.h>
-#include <utilstrencodings.h>
-#include <test/test_bitcoin.h>
+#include "key.h"
+#include "script/script.h"
+#include "uint256.h"
+#include "util.h"
+#include "utilstrencodings.h"
+#include "test/test_bitcoin.h"
 
+#include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <univalue.h>

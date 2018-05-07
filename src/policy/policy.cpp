@@ -5,54 +5,14 @@
 
 // NOTE: This file is intended to be customised by the end user, and includes only local node policy logic
 
-#include <policy/policy.h>
+#include "policy/policy.h"
 
-#include <consensus/validation.h>
-#include <validation.h>
-#include <coins.h>
-#include <tinyformat.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include "validation.h"
+#include "tinyformat.h"
+#include "util.h"
+#include "utilstrencodings.h"
 
-
-CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
-{
-    // "Dust" is defined in terms of dustRelayFee,
-    // which has units satoshis-per-kilobyte.
-    // If you'd pay more in fees than the value of the output
-    // to spend something, then we consider it dust.
-    // A typical spendable non-segwit txout is 34 bytes big, and will
-    // need a CTxIn of at least 148 bytes to spend:
-    // so dust is a spendable txout less than
-    // 182*dustRelayFee/1000 (in satoshis).
-    // 546 satoshis at the default rate of 3000 sat/kB.
-    // A typical spendable segwit txout is 31 bytes big, and will
-    // need a CTxIn of at least 67 bytes to spend:
-    // so dust is a spendable txout less than
-    // 98*dustRelayFee/1000 (in satoshis).
-    // 294 satoshis at the default rate of 3000 sat/kB.
-    if (txout.scriptPubKey.IsUnspendable())
-        return 0;
-
-    size_t nSize = GetSerializeSize(txout, SER_DISK, 0);
-    int witnessversion = 0;
-    std::vector<unsigned char> witnessprogram;
-
-    if (txout.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
-        // sum the sizes of the parts of a transaction input
-        // with 75% segwit discount applied to the script size.
-        nSize += (32 + 4 + 1 + (107 / WITNESS_SCALE_FACTOR) + 4);
-    } else {
-        nSize += (32 + 4 + 1 + 107 + 4); // the 148 mentioned above
-    }
-
-    return dustRelayFeeIn.GetFee(nSize);
-}
-
-bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
-{
-    return (txout.nValue < GetDustThreshold(txout, dustRelayFeeIn));
-}
+#include <boost/foreach.hpp>
 
     /**
      * Check transaction inputs to mitigate two
@@ -113,7 +73,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
         return false;
     }
 
-    for (const CTxIn& txin : tx.vin)
+    BOOST_FOREACH(const CTxIn& txin, tx.vin)
     {
         // Biggest 'standard' txin is a 15-of-15 P2SH multisig with compressed
         // keys (remember the 520 byte limit on redeemScript size). That works
@@ -134,7 +94,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
 
     unsigned int nDataOut = 0;
     txnouttype whichType;
-    for (const CTxOut& txout : tx.vout) {
+    BOOST_FOREACH(const CTxOut& txout, tx.vout) {
         if (!::IsStandard(txout.scriptPubKey, whichType, witnessEnabled)) {
             reason = "scriptpubkey";
             return false;
@@ -145,7 +105,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
         else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
             reason = "bare-multisig";
             return false;
-        } else if (IsDust(txout, ::dustRelayFee)) {
+        } else if (txout.IsDust(dustRelayFee)) {
             reason = "dust";
             return false;
         }
@@ -167,7 +127,7 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
-        const CTxOut& prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
+        const CTxOut& prev = mapInputs.GetOutputFor(tx.vin[i]);
 
         std::vector<std::vector<unsigned char> > vSolutions;
         txnouttype whichType;
@@ -206,7 +166,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         if (tx.vin[i].scriptWitness.IsNull())
             continue;
 
-        const CTxOut &prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
+        const CTxOut &prev = mapInputs.GetOutputFor(tx.vin[i]);
 
         // get the scriptPubKey corresponding to this input:
         CScript prevScript = prev.scriptPubKey;
