@@ -2,23 +2,22 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <qt/clientmodel.h>
+#include "clientmodel.h"
 
-#include <qt/bantablemodel.h>
-#include <qt/guiconstants.h>
-#include <qt/guiutil.h>
-#include <qt/peertablemodel.h>
+#include "bantablemodel.h"
+#include "guiconstants.h"
+#include "guiutil.h"
+#include "peertablemodel.h"
 
-#include <chain.h>
-#include <chainparams.h>
-#include <checkpoints.h>
-#include <clientversion.h>
-#include <validation.h>
-#include <net.h>
-#include <txmempool.h>
-#include <ui_interface.h>
-#include <util.h>
-#include <warnings.h>
+#include "primitives/transaction.h"
+#include "chainparams.h"
+#include "checkpoints.h"
+#include "clientversion.h"
+#include "validation.h"
+#include "net.h"
+#include "txmempool.h"
+#include "ui_interface.h"
+#include "util.h"
 
 #include <stdint.h>
 
@@ -27,6 +26,7 @@
 
 class CBlockIndex;
 
+static const int64_t nClientStartupTime = GetTime();
 static int64_t nLastHeaderTipUpdateNotification = 0;
 static int64_t nLastBlockTipUpdateNotification = 0;
 
@@ -238,7 +238,7 @@ bool ClientModel::isReleaseVersion() const
 
 QString ClientModel::formatClientStartupTime() const
 {
-    return QDateTime::fromTime_t(GetStartupTime()).toString();
+    return QDateTime::fromTime_t(nClientStartupTime).toString();
 }
 
 QString ClientModel::dataDir() const
@@ -303,7 +303,7 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, const CB
     }
     // if we are in-sync, update the UI regardless of last update time
     if (!initialSync || now - nLastUpdateNotification > MODEL_UPDATE_DELAY) {
-        //pass an async signal to the UI thread
+        //pass a async signal to the UI thread
         QMetaObject::invokeMethod(clientmodel, "numBlocksChanged", Qt::QueuedConnection,
                                   Q_ARG(int, pIndex->nHeight),
                                   Q_ARG(QDateTime, QDateTime::fromTime_t(pIndex->GetBlockTime())),

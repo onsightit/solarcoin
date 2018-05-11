@@ -6,9 +6,17 @@
 #ifndef BITCOIN_PRIMITIVES_BLOCK_H
 #define BITCOIN_PRIMITIVES_BLOCK_H
 
+#include "hash.h"
+#include "crypto/common.h"
+#include "crypto/scrypt.h"
 #include "primitives/transaction.h"
 #include "serialize.h"
 #include "uint256.h"
+#include "util.h"
+#include "utilstrencodings.h"
+
+class CBlockIndex;
+class CWallet;
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
@@ -74,7 +82,7 @@ public:
     {
         // Take last bit of block hash as entropy bit
         unsigned int nEntropyBit = ((GetHash().GetUint64(0)) & 1llu);
-        if (fDebug || gArgs.GetBoolArg("-printstakemodifier", false))
+        if (fDebug || GetBoolArg("-printstakemodifier", false))
             LogPrintf("GetStakeEntropyBit: nTime=%u hashBlock=%s nEntropyBit=%u\n", nTime, GetHash().ToString().c_str(), nEntropyBit);
         return nEntropyBit;
     }
@@ -228,5 +236,8 @@ struct CBlockLocator
         return vHave.empty();
     }
 };
+
+/** Compute the consensus-critical block weight (see BIP 141). */
+int64_t GetBlockWeight(const CBlock& tx);
 
 #endif // BITCOIN_PRIMITIVES_BLOCK_H

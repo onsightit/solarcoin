@@ -2,21 +2,21 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <qt/transactiondesc.h>
+#include "transactiondesc.h"
 
-#include <qt/bitcoinunits.h>
-#include <qt/guiutil.h>
-#include <qt/paymentserver.h>
-#include <qt/transactionrecord.h>
+#include "bitcoinunits.h"
+#include "guiutil.h"
+#include "paymentserver.h"
+#include "transactionrecord.h"
 
-#include <base58.h>
-#include <consensus/consensus.h>
-#include <validation.h>
-#include <script/script.h>
-#include <timedata.h>
-#include <util.h>
-#include <wallet/db.h>
-#include <wallet/wallet.h>
+#include "base58.h"
+#include "consensus/consensus.h"
+#include "validation.h"
+#include "script/script.h"
+#include "timedata.h"
+#include "util.h"
+#include "wallet/db.h"
+#include "wallet/wallet.h"
 
 #include <stdint.h>
 #include <string>
@@ -133,7 +133,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
         // Coinbase
         //
         CAmount nUnmatured = 0;
-        for (const CTxOut& txout : wtx.tx->vout)
+        BOOST_FOREACH(const CTxOut& txout, wtx.tx->vout)
             nUnmatured += wallet->GetCredit(txout, ISMINE_ALL);
         strHTML += "<b>" + tr("Credit") + ":</b> ";
         if (wtx.IsInMainChain())
@@ -152,14 +152,14 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
     else
     {
         isminetype fAllFromMe = ISMINE_SPENDABLE;
-        for (const CTxIn& txin : wtx.tx->vin)
+        BOOST_FOREACH(const CTxIn& txin, wtx.tx->vin)
         {
             isminetype mine = wallet->IsMine(txin);
             if(fAllFromMe > mine) fAllFromMe = mine;
         }
 
         isminetype fAllToMe = ISMINE_SPENDABLE;
-        for (const CTxOut& txout : wtx.tx->vout)
+        BOOST_FOREACH(const CTxOut& txout, wtx.tx->vout)
         {
             isminetype mine = wallet->IsMine(txout);
             if(fAllToMe > mine) fAllToMe = mine;
@@ -173,7 +173,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
             //
             // Debit
             //
-            for (const CTxOut& txout : wtx.tx->vout)
+            BOOST_FOREACH(const CTxOut& txout, wtx.tx->vout)
             {
                 // Ignore change
                 isminetype toSelf = wallet->IsMine(txout);
@@ -221,10 +221,10 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
             //
             // Mixed debit transaction
             //
-            for (const CTxIn& txin : wtx.tx->vin)
+            BOOST_FOREACH(const CTxIn& txin, wtx.tx->vin)
                 if (wallet->IsMine(txin))
                     strHTML += "<b>" + tr("Debit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -wallet->GetDebit(txin, ISMINE_ALL)) + "<br>";
-            for (const CTxOut& txout : wtx.tx->vout)
+            BOOST_FOREACH(const CTxOut& txout, wtx.tx->vout)
                 if (wallet->IsMine(txout))
                     strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, wallet->GetCredit(txout, ISMINE_ALL)) + "<br>";
         }
@@ -245,14 +245,14 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
     strHTML += "<b>" + tr("Output index") + ":</b> " + QString::number(rec->getOutputIndex()) + "<br>";
 
     // Message from normal bitcoin:URI (bitcoin:123...?message=example)
-    for (const std::pair<std::string, std::string>& r : wtx.vOrderForm)
+    Q_FOREACH (const PAIRTYPE(std::string, std::string)& r, wtx.vOrderForm)
         if (r.first == "Message")
             strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(r.second, true) + "<br>";
 
     //
     // PaymentRequest info:
     //
-    for (const std::pair<std::string, std::string>& r : wtx.vOrderForm)
+    Q_FOREACH (const PAIRTYPE(std::string, std::string)& r, wtx.vOrderForm)
     {
         if (r.first == "PaymentRequest")
         {
@@ -273,13 +273,13 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
     //
     // Debug view
     //
-    if (logCategories != BCLog::NONE)
+    if (fDebug)
     {
         strHTML += "<hr><br>" + tr("Debug information") + "<br><br>";
-        for (const CTxIn& txin : wtx.tx->vin)
+        BOOST_FOREACH(const CTxIn& txin, wtx.tx->vin)
             if(wallet->IsMine(txin))
                 strHTML += "<b>" + tr("Debit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -wallet->GetDebit(txin, ISMINE_ALL)) + "<br>";
-        for (const CTxOut& txout : wtx.tx->vout)
+        BOOST_FOREACH(const CTxOut& txout, wtx.tx->vout)
             if(wallet->IsMine(txout))
                 strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, wallet->GetCredit(txout, ISMINE_ALL)) + "<br>";
 
@@ -289,16 +289,17 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
         strHTML += "<br><b>" + tr("Inputs") + ":</b>";
         strHTML += "<ul>";
 
-        for (const CTxIn& txin : wtx.tx->vin)
+        BOOST_FOREACH(const CTxIn& txin, wtx.tx->vin)
         {
             COutPoint prevout = txin.prevout;
 
-            Coin prev;
-            if(pcoinsTip->GetCoin(prevout, prev))
+            CCoins prev;
+            if(pcoinsTip->GetCoins(prevout.hash, prev))
             {
+                if (prevout.n < prev.vout.size())
                 {
                     strHTML += "<li>";
-                    const CTxOut &vout = prev.out;
+                    const CTxOut &vout = prev.vout[prevout.n];
                     CTxDestination address;
                     if (ExtractDestination(vout.scriptPubKey, address))
                     {

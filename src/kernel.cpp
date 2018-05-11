@@ -7,11 +7,11 @@
 #include <validation.h>
 
 #include <boost/assign/list_of.hpp>
-#include <rpc/blockchain.h>
+#include <rpc/server.h>
 #include <txdb.h>
 #include <timedata.h>
 #include <kernel.h>
-#include <post.h>
+#include <pow.h>
 
 using namespace std;
 
@@ -119,7 +119,7 @@ static bool SelectBlockFromCandidates(vector<pair<int64_t, arith_uint256> >& vSo
             *pindexSelected = (const CBlockIndex*) pindex;
         }
     }
-    if (fDebug && gArgs.GetBoolArg("-printstakemodifier", false))
+    if (fDebug && GetBoolArg("-printstakemodifier", false))
         LogPrintf("%s(): selection hash=%s\n", __func__, hashBest.ToString().c_str());
     return fSelected;
 }
@@ -207,12 +207,12 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
 
         // add the selected block from candidates to selected list
         mapSelectedBlocks.insert(make_pair(pindex->GetBlockHash(), pindex));
-        if (fDebug && gArgs.GetBoolArg("-printstakemodifier", false))
+        if (fDebug && GetBoolArg("-printstakemodifier", false))
             LogPrintf("%s(): selected modifier=0x%016x round %d stop=%ld height=%d entropybit=%d\n", __func__, nStakeModifierNew, nRound, nSelectionIntervalStop, pindex->nHeight, pindex->GetStakeEntropyBit());
     }
 
     // Print selection map for visualization of the selected blocks
-    if (fDebug || gArgs.GetBoolArg("-printstakemodifier", false))
+    if (fDebug || GetBoolArg("-printstakemodifier", false))
     {
         string strSelectionMap = "";
         // '-' indicates proof-of-work blocks not selected
@@ -272,7 +272,7 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
             }
             else
             {
-                if (fDebug || gArgs.GetBoolArg("-printstakemodifier", false))
+                if (fDebug || GetBoolArg("-printstakemodifier", false))
                     LogPrintf("%s: Nothing! Ending modifier=%u height=%d time=%u target=%u\n", __func__,
                         nStakeModifier, nStakeModifierHeight, nStakeModifierTime, nStakeModifierTargetTime);
                 return false;
@@ -548,12 +548,12 @@ bool GetCoinAge(const CTransaction& tx, uint64_t& nCoinAge, const Consensus::Par
         int64_t nValueIn = txPrev.vout[txIn.prevout.n].nValue;
         bnCentSecond += arith_uint256(nValueIn) * (tx.nTime - txPrev.nTime) / CENT;
 
-        if (fDebug || gArgs.GetBoolArg("-printcoinage", false))
+        if (fDebug || GetBoolArg("-printcoinage", false))
             LogPrintf("coin age nValueIn=%ld nTimeDiff=%ld bnCentSecond=%s\n", nValueIn, tx.nTime - txPrev.nTime, bnCentSecond.ToString());
     }
 
     arith_uint256 bnCoinDay = bnCentSecond * CENT / COIN / (24 * 60 * 60);
-    if (fDebug || gArgs.GetBoolArg("-printcoinage", false))
+    if (fDebug || GetBoolArg("-printcoinage", false))
         LogPrintf("coin age bnCoinDay=%s\n", bnCoinDay.ToString());
 
     nCoinAge = ArithToUint256(bnCoinDay).GetUint64(0);
@@ -613,11 +613,11 @@ bool GetStakeTime(const CTransaction& tx, uint64_t& nStakeTime, CBlockIndex* pin
         int64_t CoinDay = nValueIn * timeWeight / COIN / (24 * 60 * 60);
         int64_t factoredTimeWeight = GetStakeTimeFactoredWeight(timeWeight, CoinDay, pindexPrev, params);
         bnStakeTime += arith_uint256(nValueIn) * factoredTimeWeight / COIN / (24 * 60 * 60);
-        if (fDebug || gArgs.GetBoolArg("-printcoinage", false))
+        if (fDebug || GetBoolArg("-printcoinage", false))
             LogPrintf("  nValueIn=%ld timeWeight=%ld CoinDay=%ld factoredTimeWeight=%ld\n",
                nValueIn, timeWeight, CoinDay, factoredTimeWeight);
     }
-    if (fDebug || gArgs.GetBoolArg("-printcoinage", false))
+    if (fDebug || GetBoolArg("-printcoinage", false))
         LogPrintf("stake time bnStakeTime=%s\n", bnStakeTime.ToString());
 
     nStakeTime = ArithToUint256(bnStakeTime).GetUint64(0);

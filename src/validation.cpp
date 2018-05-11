@@ -4,7 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "validation.h"
-
+#include "kernel.h"
 #include "arith_uint256.h"
 #include "chainparams.h"
 #include "checkpoints.h"
@@ -50,11 +50,17 @@
 # error "SolarCoin cannot be compiled without assertions."
 #endif
 
+using namespace std;
+
 /**
  * Global state
  */
 
 CCriticalSection cs_main;
+
+// SolarCoin: PoST
+HashMap mapProofOfStake;
+std::set<std::pair<COutPoint, unsigned int> > setStakeSeen;
 
 BlockMap mapBlockIndex;
 CChain chainActive;
@@ -1040,7 +1046,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 }
 
 /** Return transaction in txOut, and if it was found inside a block, its hash is placed in hashBlock */
-bool GetTransaction(const uint256 &hash, CTransactionRef &txOut, const Consensus::Params& consensusParams, uint256 &hashBlock, bool fAllowSlow)
+// SolarCoin: Modified to return nTxOffset into block.
+bool GetTransaction(const uint256 &hash, CTransactionRef &txOut, unsigned int &nTxOffset, const Consensus::Params& consensusParams, uint256 &hashBlock, bool fAllowSlow)
 {
     CBlockIndex *pindexSlow = NULL;
 
@@ -1137,12 +1144,12 @@ bool WriteBlockToDisk(const CBlock& block, CDiskBlockPos& pos, const CMessageHea
     return true;
 }
 
-bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus::Params& consensusParams)
+bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus::Params& consensusParams, bool fReadTxns)
 {
     block.SetNull();
 
     // Open history file to read
-    CAutoFile filein(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION);
+    CAutoFile filein(OpenBlockFile(pos, true), fReadTxns ? SER_DISK : SER_DISK|SER_BLOCKHEADERONLY, CLIENT_VERSION);
     if (filein.IsNull())
         return error("ReadBlockFromDisk: OpenBlockFile failed for %s", pos.ToString());
 
@@ -2782,6 +2789,8 @@ CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
     // competitive advantage.
     pindexNew->nSequenceId = 0;
     BlockMap::iterator mi = mapBlockIndex.insert(std::make_pair(hash, pindexNew)).first;
+    if (pindexNew->IsProofOfStake())
+        setStakeSeen.insert(make_pair(pindexNew->prevoutStake, pindexNew->nStakeTime));
     pindexNew->phashBlock = &((*mi).first);
     BlockMap::iterator miPrev = mapBlockIndex.find(block.hashPrevBlock);
     if (miPrev != mapBlockIndex.end())
@@ -3281,6 +3290,18 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
     return true;
 }
 
+bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRequired, unsigned int nToCheck)
+{
+    unsigned int nFound = 0;
+    for (unsigned int i = 0; i < nToCheck && nFound < nRequired && pstart != NULL; i++)
+    {
+        if (pstart->nVersion >= minVersion)
+            ++nFound;
+        pstart = pstart->pprev;
+    }
+    return (nFound >= nRequired);
+}
+
 // Exposed wrapper for AcceptBlockHeader
 bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, CValidationState& state, const CChainParams& chainparams, const CBlockIndex** ppindex)
 {
@@ -3634,6 +3655,8 @@ CBlockIndex * InsertBlockIndex(uint256 hash)
     if (!pindexNew)
         throw std::runtime_error(std::string(__func__) + ": new CBlockIndex failed");
     mi = mapBlockIndex.insert(std::make_pair(hash, pindexNew)).first;
+    if (pindexNew->IsProofOfStake())
+        setStakeSeen.insert(make_pair(pindexNew->prevoutStake, pindexNew->nStakeTime));
     pindexNew->phashBlock = &((*mi).first);
 
     return pindexNew;
@@ -3969,6 +3992,7 @@ void UnloadBlockIndex()
         delete entry.second;
     }
     mapBlockIndex.clear();
+    mapProofOfStake.clear();
     fHavePruned = false;
 }
 

@@ -86,7 +86,7 @@ int64_t GetProofOfStakeTimeReward(int64_t nStakeTime, int64_t nFees, CBlockIndex
     int64_t nInterestRate = GetCurrentInterestRate(pindexPrev, params)*CENT;
     int64_t nSubsidy = nStakeTime * nInterestRate * 33 / (365 * 33 + 8);
 
-    if (fDebug && gArgs.GetBoolArg("-printcreation", false))
+    if (fDebug && GetBoolArg("-printcreation", false))
         LogPrintf("%s(): create=%s nStakeTime=%ld\n", __func__, FormatMoney(nSubsidy).c_str(), nStakeTime);
 
     return nSubsidy + nFees;
@@ -348,7 +348,7 @@ unsigned int static GetNextWorkRequired_V2(const CBlockIndex* pindexLast, const 
     uint64_t  PastBlocksMin   = PastSecondsMin / BlocksTargetSpacing;
     uint64_t  PastBlocksMax   = PastSecondsMax / BlocksTargetSpacing;
 
-    if (fTestNet && gArgs.GetBoolArg("-zerogravity", false))
+    if (fTestNet && GetBoolArg("-zerogravity", false))
         return UintToArith256(params.powLimit).GetCompact();
     else
         return KimotoGravityWell(pindexLast, BlocksTargetSpacing, PastBlocksMin, PastBlocksMax, params);

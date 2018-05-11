@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_TRANSACTIONVIEW_H
 #define BITCOIN_QT_TRANSACTIONVIEW_H
 
-#include <qt/guiutil.h>
+#include "guiutil.h"
 
 #include <QWidget>
 #include <QKeyEvent>
@@ -76,7 +76,6 @@ private:
     QDateTimeEdit *dateFrom;
     QDateTimeEdit *dateTo;
     QAction *abandonAction;
-    QAction *bumpFeeAction;
 
     QWidget *createDateRangeWidget();
 
@@ -100,7 +99,6 @@ private Q_SLOTS:
     void openThirdPartyTxUrl(QString url);
     void updateWatchOnlyColumn(bool fHaveWatchOnly);
     void abandonTx();
-    void bumpFee();
 
 Q_SIGNALS:
     void doubleClicked(const QModelIndex&);
@@ -112,8 +110,8 @@ public Q_SLOTS:
     void chooseDate(int idx);
     void chooseType(int idx);
     void chooseWatchonly(int idx);
-    void changedAmount();
-    void changedPrefix();
+    void changedPrefix(const QString &prefix);
+    void changedAmount(const QString &amount);
     void exportClicked();
     void focusTransaction(const QModelIndex&);
 

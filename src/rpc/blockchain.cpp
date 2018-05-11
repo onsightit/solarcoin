@@ -96,9 +96,9 @@ UniValue blockheaderToJSON(const CBlockIndex* blockindex)
 
     if (blockindex->pprev)
         result.push_back(Pair("previousblockhash", blockindex->pprev->GetBlockHash().GetHex()));
-    CBlockIndex *pnext = chainActive.Next(blockindex);
-    if (pnext)
-        result.push_back(Pair("nextblockhash", pnext->GetBlockHash().GetHex()));
+    CBlockIndex *pskip = chainActive.Next(blockindex);
+    if (pskip)
+        result.push_back(Pair("nextblockhash", pskip->GetBlockHash().GetHex()));
     return result;
 }
 
@@ -140,9 +140,9 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
 
     if (blockindex->pprev)
         result.push_back(Pair("previousblockhash", blockindex->pprev->GetBlockHash().GetHex()));
-    CBlockIndex *pnext = chainActive.Next(blockindex);
-    if (pnext)
-        result.push_back(Pair("nextblockhash", pnext->GetBlockHash().GetHex()));
+    CBlockIndex *pskip = chainActive.Next(blockindex);
+    if (pskip)
+        result.push_back(Pair("nextblockhash", pskip->GetBlockHash().GetHex()));
     return result;
 }
 
@@ -1011,36 +1011,14 @@ UniValue verifychain(const JSONRPCRequest& request)
     return CVerifyDB().VerifyDB(Params(), pcoinsTip, nCheckLevel, nCheckDepth);
 }
 
-/** Implementation of IsSuperMajority with better feedback */
-// N/A to SolarCoin
-/*static UniValue SoftForkMajorityDesc(int version, CBlockIndex* pindex, const Consensus::Params& consensusParams)
-{
-    UniValue rv(UniValue::VOBJ);
-    bool activated = false;
-    switch(version)
-    {
-        case 2:
-            activated = pindex->nHeight >= consensusParams.BIP34Height;
-            break;
-        case 3:
-            activated = pindex->nHeight >= consensusParams.BIP66Height;
-            break;
-        case 4:
-            activated = pindex->nHeight >= consensusParams.BIP65Height;
-            break;
-    }
-    rv.push_back(Pair("status", activated));
-    return rv;
-}
-
-static UniValue SoftForkDesc(const std::string &name, int version, CBlockIndex* pindex, const Consensus::Params& consensusParams)
-{
-    UniValue rv(UniValue::VOBJ);
-    rv.push_back(Pair("id", name));
-    rv.push_back(Pair("version", version));
-    rv.push_back(Pair("reject", SoftForkMajorityDesc(version, pindex, consensusParams)));
-    return rv;
-}*/
+//static UniValue SoftForkDesc(const std::string &name, int version, CBlockIndex* pindex, const Consensus::Params& consensusParams)
+//{
+//    UniValue rv(UniValue::VOBJ);
+//    rv.push_back(Pair("id", name));
+//    rv.push_back(Pair("version", version));
+//    rv.push_back(Pair("reject", SoftForkMajorityDesc(version, pindex, consensusParams)));
+//    return rv;
+//}
 
 static UniValue BIP9SoftForkDesc(const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
 {

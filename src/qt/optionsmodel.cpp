@@ -36,7 +36,7 @@ OptionsModel::OptionsModel(QObject *parent, bool resetSettings) :
 
 void OptionsModel::addOverriddenOption(const std::string &option)
 {
-    strOverriddenByCommandLine += QString::fromStdString(option) + "=" + QString::fromStdString(gArgs.GetArg(option, "")) + " ";
+    strOverriddenByCommandLine += QString::fromStdString(option) + "=" + QString::fromStdString(GetArg(option, "")) + " ";
 }
 
 // Writes all missing QSettings with their default values
@@ -86,18 +86,18 @@ void OptionsModel::Init(bool resetSettings)
     //
     // If setting doesn't exist create it with defaults.
     //
-    // If gArgs.SoftSetArg() or gArgs.SoftSetBoolArg() return false we were overridden
+    // If SoftSetArg() or SoftSetBoolArg() return false we were overridden
     // by command-line and show this in the UI.
 
     // Main
     if (!settings.contains("nDatabaseCache"))
         settings.setValue("nDatabaseCache", (qint64)nDefaultDbCache);
-    if (!gArgs.SoftSetArg("-dbcache", settings.value("nDatabaseCache").toString().toStdString()))
+    if (!SoftSetArg("-dbcache", settings.value("nDatabaseCache").toString().toStdString()))
         addOverriddenOption("-dbcache");
 
     if (!settings.contains("nThreadsScriptVerif"))
         settings.setValue("nThreadsScriptVerif", DEFAULT_SCRIPTCHECK_THREADS);
-    if (!gArgs.SoftSetArg("-par", settings.value("nThreadsScriptVerif").toString().toStdString()))
+    if (!SoftSetArg("-par", settings.value("nThreadsScriptVerif").toString().toStdString()))
         addOverriddenOption("-par");
 
     if (!settings.contains("strDataDir"))
@@ -107,19 +107,19 @@ void OptionsModel::Init(bool resetSettings)
 #ifdef ENABLE_WALLET
     if (!settings.contains("bSpendZeroConfChange"))
         settings.setValue("bSpendZeroConfChange", true);
-    if (!gArgs.SoftSetBoolArg("-spendzeroconfchange", settings.value("bSpendZeroConfChange").toBool()))
+    if (!SoftSetBoolArg("-spendzeroconfchange", settings.value("bSpendZeroConfChange").toBool()))
         addOverriddenOption("-spendzeroconfchange");
 #endif
 
     // Network
     if (!settings.contains("fUseUPnP"))
         settings.setValue("fUseUPnP", DEFAULT_UPNP);
-    if (!gArgs.SoftSetBoolArg("-upnp", settings.value("fUseUPnP").toBool()))
+    if (!SoftSetBoolArg("-upnp", settings.value("fUseUPnP").toBool()))
         addOverriddenOption("-upnp");
 
     if (!settings.contains("fListen"))
         settings.setValue("fListen", DEFAULT_LISTEN);
-    if (!gArgs.SoftSetBoolArg("-listen", settings.value("fListen").toBool()))
+    if (!SoftSetBoolArg("-listen", settings.value("fListen").toBool()))
         addOverriddenOption("-listen");
 
     if (!settings.contains("fUseProxy"))
@@ -127,9 +127,9 @@ void OptionsModel::Init(bool resetSettings)
     if (!settings.contains("addrProxy"))
         settings.setValue("addrProxy", "127.0.0.1:9050");
     // Only try to set -proxy, if user has enabled fUseProxy
-    if (settings.value("fUseProxy").toBool() && !gArgs.SoftSetArg("-proxy", settings.value("addrProxy").toString().toStdString()))
+    if (settings.value("fUseProxy").toBool() && !SoftSetArg("-proxy", settings.value("addrProxy").toString().toStdString()))
         addOverriddenOption("-proxy");
-    else if(!settings.value("fUseProxy").toBool() && !gArgs.GetArg("-proxy", "").empty())
+    else if(!settings.value("fUseProxy").toBool() && !GetArg("-proxy", "").empty())
         addOverriddenOption("-proxy");
 
     if (!settings.contains("fUseSeparateProxyTor"))
@@ -137,15 +137,15 @@ void OptionsModel::Init(bool resetSettings)
     if (!settings.contains("addrSeparateProxyTor"))
         settings.setValue("addrSeparateProxyTor", "127.0.0.1:9050");
     // Only try to set -onion, if user has enabled fUseSeparateProxyTor
-    if (settings.value("fUseSeparateProxyTor").toBool() && !gArgs.SoftSetArg("-onion", settings.value("addrSeparateProxyTor").toString().toStdString()))
+    if (settings.value("fUseSeparateProxyTor").toBool() && !SoftSetArg("-onion", settings.value("addrSeparateProxyTor").toString().toStdString()))
         addOverriddenOption("-onion");
-    else if(!settings.value("fUseSeparateProxyTor").toBool() && !gArgs.GetArg("-onion", "").empty())
+    else if(!settings.value("fUseSeparateProxyTor").toBool() && !GetArg("-onion", "").empty())
         addOverriddenOption("-onion");
 
     // Display
     if (!settings.contains("language"))
         settings.setValue("language", "");
-    if (!gArgs.SoftSetArg("-lang", settings.value("language").toString().toStdString()))
+    if (!SoftSetArg("-lang", settings.value("language").toString().toStdString()))
         addOverriddenOption("-lang");
 
     language = settings.value("language").toString();

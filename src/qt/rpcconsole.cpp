@@ -98,7 +98,7 @@ class QtRPCTimerBase: public QObject, public RPCTimerBase
 {
     Q_OBJECT
 public:
-    QtRPCTimerBase(std::function<void(void)>& _func, int64_t millis):
+    QtRPCTimerBase(boost::function<void(void)>& _func, int64_t millis):
         func(_func)
     {
         timer.setSingleShot(true);
@@ -110,7 +110,7 @@ private Q_SLOTS:
     void timeout() { func(); }
 private:
     QTimer timer;
-    std::function<void(void)> func;
+    boost::function<void(void)> func;
 };
 
 class QtRPCTimerInterface: public RPCTimerInterface
@@ -118,7 +118,7 @@ class QtRPCTimerInterface: public RPCTimerInterface
 public:
     ~QtRPCTimerInterface() {}
     const char *Name() { return "Qt"; }
-    RPCTimerBase* NewTimer(std::function<void(void)>& func, int64_t millis)
+    RPCTimerBase* NewTimer(boost::function<void(void)>& func, int64_t millis)
     {
         return new QtRPCTimerBase(func, millis);
     }
@@ -303,14 +303,6 @@ bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &
                             JSONRPCRequest req;
                             req.params = RPCConvertValues(stack.back()[0], std::vector<std::string>(stack.back().begin() + 1, stack.back().end()));
                             req.strMethod = stack.back()[0];
-#ifdef ENABLE_WALLET
-                            // TODO: Move this logic to WalletModel
-                            if (!vpwallets.empty()) {
-                                // in Qt, use always the wallet with index 0 when running with multiple wallets
-                                QByteArray encodedName = QUrl::toPercentEncoding(QString::fromStdString(vpwallets[0]->GetName()));
-                                req.URI = "/wallet/"+std::string(encodedName.constData(), encodedName.length());
-                            }
-#endif
                             lastResult = tableRPC.execute(req);
                         }
 
@@ -368,7 +360,7 @@ bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &
         }
         *pstrFilteredOut = strCommand;
         for (auto i = filter_ranges.rbegin(); i != filter_ranges.rend(); ++i) {
-            pstrFilteredOut->replace(i->first, i->second - i->first, "(…)");
+            pstrFilteredOut->replace(i->first, i->second - i->first, "(â€¦)");
         }
     }
     switch(state) // final state
@@ -743,7 +735,7 @@ void RPCConsole::clear(bool clearHistory)
         );
 
 #ifdef Q_OS_MAC
-    QString clsKey = "(⌘)-L";
+    QString clsKey = "(âŒ˜)-L";
 #else
     QString clsKey = "Ctrl-L";
 #endif

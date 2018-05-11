@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "coins.h"
-
+#include "primitives/transaction.h"
 #include "memusage.h"
 #include "random.h"
 

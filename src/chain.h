@@ -11,6 +11,7 @@
 #include "pow.h"
 #include "tinyformat.h"
 #include "uint256.h"
+#include "utilmoneystr.h"
 
 #include <vector>
 
@@ -163,7 +164,7 @@ public:
     CBlockIndex* pprev;
 
     //! pointer to the index of some further predecessor of this block
-    CBlockIndex* pnext;
+    CBlockIndex* pskip;
 
     //! height of the entry in the chain. The genesis block has height 0
     int nHeight;
@@ -192,6 +193,25 @@ public:
     //! Verification status of this block. See enum BlockStatus
     unsigned int nStatus;
 
+    int64_t nMint;
+    int64_t nMoneySupply;
+
+    unsigned int nFlags;  // ppcoin: block index flags
+    enum  
+    {
+        BLOCK_PROOF_OF_STAKE = (1 << 0), // is proof-of-stake block
+        BLOCK_STAKE_ENTROPY  = (1 << 1), // entropy bit for stake modifier
+        BLOCK_STAKE_MODIFIER = (1 << 2), // regenerated stake modifier
+    };
+
+    uint64_t nStakeModifier; // hash modifier for proof-of-stake
+    unsigned int nStakeModifierChecksum; // checksum of index; in-memeory only
+
+    // proof-of-stake specific fields
+    COutPoint prevoutStake;
+    unsigned int nStakeTime;
+    uint256 hashProofOfStake;
+
     //! block header
     int nVersion;
     uint256 hashMerkleRoot;
@@ -209,7 +229,7 @@ public:
     {
         phashBlock = NULL;
         pprev = NULL;
-        pnext = NULL;
+        pskip = NULL;
         nHeight = 0;
         nFile = 0;
         nDataPos = 0;
@@ -391,8 +411,8 @@ public:
 
     std::string ToVerboseString() const
     {
-        return strprintf("CBlockIndex(nprev=%p, pnext=%p, nFile=%u, nBlockPos=%-6d nHeight=%d, nMint=%s, nMoneySupply=%s, nFlags=(%s)(%d)(%s), nStakeModifier=%016x, nStakeModifierChecksum=%08x, hashProofOfStake=%s, prevoutStake=(%s), nStakeTime=%d merkle=%s, hashBlock=%s)",
-            pprev, pnext, nFile, nDataPos, nHeight,
+        return strprintf("CBlockIndex(nprev=%p, pskip=%p, nFile=%u, nBlockPos=%-6d nHeight=%d, nMint=%s, nMoneySupply=%s, nFlags=(%s)(%d)(%s), nStakeModifier=%016x, nStakeModifierChecksum=%08x, hashProofOfStake=%s, prevoutStake=(%s), nStakeTime=%d merkle=%s, hashBlock=%s)",
+            pprev, pskip, nFile, nDataPos, nHeight,
             FormatMoney(nMint).c_str(), FormatMoney(nMoneySupply).c_str(),
             GeneratedStakeModifier() ? "MOD" : "-", GetStakeEntropyBit(), IsProofOfStake()? "PoS" : "PoW",
             nStakeModifier, nStakeModifierChecksum,
@@ -436,9 +456,6 @@ public:
 arith_uint256 GetBlockProof(const CBlockIndex& block);
 /** Return the time it would take to redo the work difference between from and to, assuming the current hashrate corresponds to the difficulty at tip, in seconds. */
 int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& from, const CBlockIndex& tip, const Consensus::Params&);
-/** Find the forking point between two chain tips. */
-const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* pb);
-
 
 /** Used to marshal pointers into hashes for db storage. */
 class CDiskBlockIndex : public CBlockIndex

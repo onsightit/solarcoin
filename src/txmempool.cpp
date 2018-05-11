@@ -4,7 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "txmempool.h"
-
+#include "primitives/transaction.h"
 #include "clientversion.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"

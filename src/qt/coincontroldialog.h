@@ -20,6 +20,7 @@ class PlatformStyle;
 class WalletModel;
 
 class CCoinControl;
+class CTxMemPool;
 
 namespace Ui {
     class CoinControlDialog;

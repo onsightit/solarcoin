@@ -193,6 +193,17 @@ public:
         return 3 * minRelayTxFee.GetFee(nSize);
     }
 
+    void SetEmpty()
+    {
+        nValue = 0;
+        scriptPubKey.clear();
+    }
+
+    bool IsEmpty() const
+    {
+        return (nValue == 0 && scriptPubKey.empty());
+    }
+
     bool IsDust(const CFeeRate &minRelayTxFee) const
     {
         return (nValue < GetDustThreshold(minRelayTxFee));

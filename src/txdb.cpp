@@ -6,6 +6,7 @@
 #include "txdb.h"
 
 #include "chainparams.h"
+#include "validation.h"
 #include "hash.h"
 #include "pow.h"
 #include "uint256.h"
@@ -13,6 +14,8 @@
 #include <stdint.h>
 
 #include <boost/thread.hpp>
+
+using namespace std;
 
 static const char DB_COINS = 'c';
 static const char DB_BLOCK_FILES = 'f';
@@ -215,11 +218,14 @@ bool CBlockTreeDB::LoadBlockIndexGuts(boost::function<CBlockIndex*(const uint256
                 //    return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindexNew->ToString());
 
                 // SolarCoin: CBlockIndex::IsProofOfStake is not valid during header download. Use height instead.
-                if (pindexNew->nHeight > consensusParams.LAST_POW_BLOCK) {
+                if (pindexNew->nHeight > Params().GetConsensus().LAST_POW_BLOCK) {
                     // DEBUG:
-                    if (pindexNew->nHeight <= consensusParams.LAST_POW_BLOCK + 20)
+                    if (pindexNew->nHeight <= Params().GetConsensus().LAST_POW_BLOCK + 20)
                         LogPrintf("DEBUG: height=%d hashProofOfStake=%s\n", pindexNew->nHeight, pindexNew->hashProofOfStake.ToString());
                 }
+                // SolarCoin: build setStakeSeen
+                if (pindexNew->IsProofOfStake())
+                    setStakeSeen.insert(make_pair(pindexNew->prevoutStake, pindexNew->nStakeTime));
 
                 pcursor->Next();
             } else {

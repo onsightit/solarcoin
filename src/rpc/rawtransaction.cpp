@@ -219,7 +219,8 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
 
     CTransactionRef tx;
     uint256 hashBlock;
-    if (!GetTransaction(hash, tx, Params().GetConsensus(), hashBlock, true))
+    unsigned int nTxOffset = 0;
+    if (!GetTransaction(hash, tx, nTxOffset, Params().GetConsensus(), hashBlock, true))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string(fTxIndex ? "No such mempool or blockchain transaction"
             : "No such mempool transaction. Use -txindex to enable blockchain transaction queries") +
             ". Use gettransaction for wallet transactions.");
@@ -290,7 +291,8 @@ UniValue gettxoutproof(const JSONRPCRequest& request)
     if (pblockindex == NULL)
     {
         CTransactionRef tx;
-        if (!GetTransaction(oneTxid, tx, Params().GetConsensus(), hashBlock, false) || hashBlock.IsNull())
+        unsigned int nTxOffset = 0;
+        if (!GetTransaction(oneTxid, tx, nTxOffset, Params().GetConsensus(), hashBlock, false) || hashBlock.IsNull())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
         if (!mapBlockIndex.count(hashBlock))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Transaction index corrupt");

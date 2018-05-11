@@ -5,10 +5,10 @@
 #ifndef BITCOIN_QT_WALLETMODEL_H
 #define BITCOIN_QT_WALLETMODEL_H
 
-#include <qt/paymentrequestplus.h>
-#include <qt/walletmodeltransaction.h>
+#include "paymentrequestplus.h"
+#include "walletmodeltransaction.h"
 
-#include <support/allocators/secure.h>
+#include "support/allocators/secure.h"
 
 #include <map>
 #include <vector>
@@ -129,7 +129,7 @@ public:
     TransactionTableModel *getTransactionTableModel();
     RecentRequestsTableModel *getRecentRequestsTableModel();
 
-    CAmount getBalance(const CCoinControl *coinControl = nullptr) const;
+    CAmount getBalance(const CCoinControl *coinControl = NULL) const;
     CAmount getUnconfirmedBalance() const;
     CAmount getImmatureBalance() const;
     bool haveWatchOnly() const;
@@ -154,8 +154,7 @@ public:
     };
 
     // prepare transaction for getting txfee before sending coins
-    //SendCoinsReturn prepareTransaction(const QString &txcomment, WalletModelTransaction &transaction, const CCoinControl& coinControl);
-    SendCoinsReturn prepareTransaction(WalletModelTransaction &transaction, const CCoinControl& coinControl);
+    SendCoinsReturn prepareTransaction(WalletModelTransaction &transaction, const CCoinControl *coinControl = NULL);
 
     // Send coins to a list of recipients
     SendCoinsReturn sendCoins(WalletModelTransaction &transaction);
@@ -191,7 +190,7 @@ public:
     UnlockContext requestUnlock();
 
     bool getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
-    bool IsSpendable(const CTxDestination& dest) const;
+    bool havePrivKey(const CKeyID &address) const;
     bool getPrivKey(const CKeyID &address, CKey& vchPrivKeyOut) const;
     void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs);
     bool isSpent(const COutPoint& outpoint) const;
@@ -208,16 +207,11 @@ public:
     bool transactionCanBeAbandoned(uint256 hash) const;
     bool abandonTransaction(uint256 hash) const;
 
-    bool transactionCanBeBumped(uint256 hash) const;
-    bool bumpFee(uint256 hash);
-
     static bool isWalletEnabled();
 
     bool hdEnabled() const;
 
     int getDefaultConfirmTarget() const;
-
-    bool getDefaultWalletRbf() const;
 
 private:
     CWallet *wallet;

@@ -21,6 +21,7 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #include "validationinterface.h"
+#include "primitives/transaction.h"
 
 #include <memory>
 #include <stdint.h>
@@ -47,8 +48,16 @@ UniValue GetNetworkHashPS(int lookup, int height) {
         return 0;
 
     // If lookup is -1, then use blocks since last difficulty change.
-    if (lookup <= 0)
-        lookup = pb->nHeight % Params().GetConsensus().DifficultyAdjustmentInterval() + 1;
+    if (lookup <= 0) {
+        if (pb->nHeight < Params().GetConsensus().nHeight_Version2)
+        {
+            lookup = pb->nHeight % Params().GetConsensus().DifficultyAdjustmentInterval_V1() + 1;
+        }
+        else
+        {
+            lookup = pb->nHeight % Params().GetConsensus().DifficultyAdjustmentInterval_V2() + 1;
+        }
+    }
 
     // If lookup is larger than chain, then set it to chain length.
     if (lookup > pb->nHeight)
