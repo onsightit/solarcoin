@@ -2949,9 +2949,14 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 
 bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW)
 {
+    // SolarCoin: Only check PoW and instantiate a block with the header to get the PoW hash.
+    bool fPoW = block.nVersion <= CBlockHeader::LEGACY_VERSION_2 ? true : false;
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
-        return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
+    if (fPoW && fCheckPOW) {
+        CBlock b(block);
+        if (!CheckProofOfWork(b.GetPoWHash(), block.nBits, consensusParams))
+            return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
+    }
 
     return true;
 }
