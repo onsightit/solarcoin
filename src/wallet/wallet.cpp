@@ -32,6 +32,10 @@
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 
+// optional setting to unlock wallet for staking only
+
+bool fWalletUnlockStakingOnly = true;
+
 using namespace std;
 
 CWallet* pwalletMain = NULL;

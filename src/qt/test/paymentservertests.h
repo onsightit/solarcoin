@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_TEST_PAYMENTSERVERTESTS_H
 #define BITCOIN_QT_TEST_PAYMENTSERVERTESTS_H
 
-#include <qt/paymentserver.h>
+#include "../paymentserver.h"
 
 #include <QObject>
 #include <QTest>
