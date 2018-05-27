@@ -236,13 +236,13 @@ public:
     static const int LEGACY_VERSION_2 = 2;
     static const int LEGACY_VERSION_3 = 3; // V3 - Includes nTime
     // Default transaction version.
-    static const int CURRENT_VERSION  = 4; // V4 - Includes nTime in tx hash
+    static const int32_t CURRENT_VERSION  = 4; // V4 - Includes nTime in tx hash
 
     // Changing the default transaction version requires a two step process: first
     // adapting relay policy by bumping MAX_STANDARD_VERSION, and then later date
     // bumping the default CURRENT_VERSION at which point both CURRENT_VERSION and
     // MAX_STANDARD_VERSION will be equal.
-    static const int32_t MAX_STANDARD_VERSION=4;
+    static const int32_t MAX_STANDARD_VERSION = 4;
 
     // The local variables are made const to prevent unintended modification
     // without updating the cached hash value. However, CTransaction is not
@@ -410,7 +410,7 @@ struct CMutableTransaction
     std::vector<CTxOut> vout;
     uint32_t nLockTime;
     std::string strTxComment;
-    
+
     CMutableTransaction();
     CMutableTransaction(const CTransaction& tx);
 

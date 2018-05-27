@@ -481,6 +481,13 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<con
 
     if (state->pindexBestKnownBlock == NULL || state->pindexBestKnownBlock->nChainWork < chainActive.Tip()->nChainWork) {
         // This peer has nothing interesting.
+        if (fDebug && state->pindexBestKnownBlock != nullptr) {
+            LogPrintf("%s: This peer has nothing interesting because: ", __func__);
+            if (state->pindexBestKnownBlock->nChainWork < chainActive.Tip()->nChainWork)
+                LogPrintf("pindexBestKnownBlock->nChainWork < chainActive.Tip()->nChainWork\n");
+            if (state->pindexBestKnownBlock->nChainWork < UintToArith256(consensusParams.nMinimumChainWork))
+                LogPrintf("pindexBestKnownBlock->nChainWork < UintToArith256(consensusParams.nMinimumChainWork)\n");
+        }
         return;
     }
 
@@ -1367,10 +1374,10 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         AddTimeData(pfrom->addr, nTimeOffset);
 
         // If the peer is old enough to have the old alert system, send it the final alert.
-        if (pfrom->nVersion <= 70012) {
-            CDataStream finalAlert(ParseHex("60010000000000000000000000ffffff7f00000000ffffff7ffeffff7f01ffffff7f00000000ffffff7f00ffffff7f002f555247454e543a20416c657274206b657920636f6d70726f6d697365642c2075706772616465207265717569726564004630440220653febd6410f470f6bae11cad19c48413becb1ac2c17f908fd0fd53bdc3abd5202206d0e9c96fe88d4a0f01ed9dedae2b6f9e00da94cad0fecaae66ecf689bf71b50"), SER_NETWORK, PROTOCOL_VERSION);
-            connman.PushMessage(pfrom, CNetMsgMaker(nSendVersion).Make("alert", finalAlert));
-        }
+        //if (pfrom->nVersion <= 70012) {
+        //    CDataStream finalAlert(ParseHex("60010000000000000000000000ffffff7f00000000ffffff7ffeffff7f01ffffff7f00000000ffffff7f00ffffff7f002f555247454e543a20416c657274206b657920636f6d70726f6d697365642c2075706772616465207265717569726564004630440220653febd6410f470f6bae11cad19c48413becb1ac2c17f908fd0fd53bdc3abd5202206d0e9c96fe88d4a0f01ed9dedae2b6f9e00da94cad0fecaae66ecf689bf71b50"), SER_NETWORK, PROTOCOL_VERSION);
+        //    connman.PushMessage(pfrom, CNetMsgMaker(nSendVersion).Make("alert", finalAlert));
+        //}
 
         // Feeler connections exist only to verify if address is online.
         if (pfrom->fFeeler) {
@@ -1555,8 +1562,14 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     // fell back to inv we probably have a reorg which we should get the headers for first,
                     // we now only provide a getheaders response here. When we receive the headers, we will
                     // then ask for the blocks we need.
-                    connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), inv.hash));
-                    LogPrint("net", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, inv.hash.ToString(), pfrom->id);
+                    // SolarCoin: Despite the comment above, we need to request the block if the peer is at
+                    // legacy protocol version 70005.
+                    if (pfrom->nVersion == LEGACY_PROTOCOL_VERSION) {
+                        pfrom->AskFor(inv);
+                    } else {
+                        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), inv.hash));
+                        LogPrint("net", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, inv.hash.ToString(), pfrom->GetId());
+                    }
                 }
             }
             else
@@ -2218,6 +2231,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
     else if (strCommand == NetMsgType::HEADERS && !fImporting && !fReindex) // Ignore headers received while importing
     {
+        std::vector<CBlock> blocks;
         std::vector<CBlockHeader> headers;
 
         // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
@@ -2227,11 +2241,20 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             Misbehaving(pfrom->GetId(), 20);
             return error("headers message size = %u", nCount);
         }
+
+        // SolarCoin: Only deserialize the block header
+        int nType = vRecv.GetType();
+        vRecv.SetType(nType|SER_BLOCKHEADERONLY);
+        blocks.resize(nCount);
         headers.resize(nCount);
         for (unsigned int n = 0; n < nCount; n++) {
-            vRecv >> headers[n];
-            ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
+            vRecv >> blocks[n];
+            headers[n] = blocks[n].GetBlockHeader();
+            if (n < nCount - 1) // Don't call if we just processed the last header
+                ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
         }
+        blocks.clear();
+        vRecv.SetType(nType);
 
         if (nCount == 0) {
             // Nothing interesting. Stop asking this peers for more headers.
@@ -2368,7 +2391,14 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     else if (strCommand == NetMsgType::BLOCK && !fImporting && !fReindex) // Ignore blocks received while importing
     {
         std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
+        // DEBUG:
+        //int nType = vRecv.GetType();
+        //vRecv.SetType(nType|SER_BLOCKHEADERONLY);
+
         vRecv >> *pblock;
+
+        // DEBUG:
+        //vRecv.SetType(nType);
 
         LogPrint("net", "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom->id);
 
@@ -2389,8 +2419,15 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         }
         bool fNewBlock = false;
         ProcessNewBlock(chainparams, pblock, forceProcessing, &fNewBlock);
-        if (fNewBlock)
+        if (fNewBlock) {
             pfrom->nLastBlockTime = GetTime();
+        } else {
+            LOCK(cs_main);
+            mapBlockSource.erase(pblock->GetHash());
+            // SolarCoin: Ignore block command until all headers are downloaded.
+            if (IsInitialBlockDownload())
+                LogPrint("net", "ignoring non-contiguous block during initial download peer=%d\n", pfrom->id);
+        }
     }
 
 
@@ -2648,6 +2685,11 @@ bool ProcessMessages(CNode* pfrom, CConnman& connman, const std::atomic<bool>& i
     //  (x) data
     //
     bool fMoreWork = false;
+
+    // DEBUG: Only connect to 2.1.8 nodes
+    if (pfrom->cleanSubVer != "" && std::string(pfrom->cleanSubVer).find("2.1.8") == std::string::npos) {
+        return false;
+    }
 
     if (!pfrom->vRecvGetData.empty())
         ProcessGetData(pfrom, chainparams.GetConsensus(), connman, interruptMsgProc);
