@@ -33,6 +33,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     CAmount nDebit = wtx.GetDebit(ISMINE_ALL);
     CAmount nNet = nCredit - nDebit;
     uint256 hash = wtx.GetHash();
+    uint256 hashPrev = uint256();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
 
     if (nNet > 0 || (wtx.IsCoinBase() || wtx.IsCoinStake()))
@@ -63,10 +64,21 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     sub.type = TransactionRecord::RecvFromOther;
                     sub.address = mapValue["from"];
                 }
-                if (wtx.IsCoinBase() || wtx.IsCoinStake())
+                if (wtx.IsCoinBase())
                 {
-                    // Generated
+                    // Generated (proof-of-work)
                     sub.type = TransactionRecord::Generated;
+                }
+                if (wtx.IsCoinStake())
+                {
+                    // Generated (proof-of-stake)
+
+                    if (hashPrev == hash)
+                        continue; // last coinstake output
+
+                    sub.type = TransactionRecord::Generated;
+                    sub.credit = nNet > 0 ? nNet : wtx.tx->GetValueOut() - nDebit;
+                    hashPrev = hash;
                 }
 
                 parts.append(sub);
@@ -175,7 +187,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
     // Sort order, unrecorded transactions sort to the top
     status.sortKey = strprintf("%010d-%01d-%010u-%03d",
         (pindex ? pindex->nHeight : std::numeric_limits<int>::max()),
-        ((wtx.IsCoinBase() || wtx.IsCoinStake()) ? 1 : 0),
+        (wtx.IsCoinBase() ? 1 : 0),
         wtx.nTimeReceived,
         idx);
     status.countsForBalance = wtx.IsTrusted() && !(wtx.GetBlocksToMaturity() > 0);

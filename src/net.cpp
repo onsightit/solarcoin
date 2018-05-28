@@ -1663,6 +1663,41 @@ void CConnman::ProcessOneShot()
     }
 }
 
+// DEBUG: 0.15.1
+bool CConnman::GetTryNewOutboundPeer()
+{
+    return m_try_another_outbound_peer;
+}
+
+// DEBUG: 0.15.1
+void CConnman::SetTryNewOutboundPeer(bool flag)
+{
+    m_try_another_outbound_peer = flag;
+    LogPrint("net", "net: setting try another outbound peer=%s\n", flag ? "true" : "false");
+}
+
+// DEBUG: 0.15.1
+// Return the number of peers we have over our outbound connection limit
+// Exclude peers that are marked for disconnect, or are going to be
+// disconnected soon (eg one-shots and feelers)
+// Also exclude peers that haven't finished initial connection handshake yet
+// (so that we don't decide we're over our desired connection limit, and then
+// evict some peer that has finished the handshake)
+int CConnman::GetExtraOutboundCount()
+{
+    int nOutbound = 0;
+    {
+        LOCK(cs_vNodes);
+        for (CNode* pnode : vNodes) {
+            //if (!pnode->fInbound && !pnode->m_manual_connection && !pnode->fFeeler && !pnode->fDisconnect && !pnode->fOneShot && pnode->fSuccessfullyConnected) {
+            if (!pnode->fInbound && !pnode->fFeeler && !pnode->fDisconnect && !pnode->fOneShot && pnode->fSuccessfullyConnected) {
+                ++nOutbound;
+            }
+        }
+    }
+    return std::max(nOutbound - nMaxOutbound, 0);
+}
+
 void CConnman::ThreadOpenConnections()
 {
     // Connect to specific addresses
@@ -2205,6 +2240,7 @@ CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In) : nSeed0(nSeed0In), nSe
     nBestHeight = 0;
     clientInterface = NULL;
     flagInterruptMsgProc = false;
+    SetTryNewOutboundPeer(false);
 }
 
 NodeId CConnman::GetNewNodeId()
