@@ -1061,6 +1061,7 @@ bool GetTransaction(const uint256 &hash, CTransactionRef &txOut, unsigned int &n
     }
 
     if (fTxIndex) {
+    LogPrintf("DEBUG: GetTransaction() : fTxIndex=%s txhash=%s\n", fTxIndex ? "true" : "false", hash.ToString());
         CDiskTxPos postx;
         if (pblocktree->ReadTxIndex(hash, postx)) {
             CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
@@ -1069,6 +1070,7 @@ bool GetTransaction(const uint256 &hash, CTransactionRef &txOut, unsigned int &n
 
             // SolarCoin: Return nTxOffset into block
             nTxOffset = postx.nTxOffset;
+            LogPrintf("DEBUG: GetTransaction() : nTxOffset=%d\n", nTxOffset);
 
             CBlockHeader header;
             try {
@@ -1076,11 +1078,14 @@ bool GetTransaction(const uint256 &hash, CTransactionRef &txOut, unsigned int &n
                 fseek(file.Get(), postx.nTxOffset, SEEK_CUR);
                 file >> txOut;
             } catch (const std::exception& e) {
+                LogPrintf("DEBUG: GetTransaction() : deserialize i/o error\n");
                 return error("%s: Deserialize or I/O error - %s", __func__, e.what());
             }
             hashBlock = header.GetHash();
-            if (txOut->GetHash() != hash)
+            if (txOut->GetHash() != hash) {
+                LogPrintf("DEBUG: GetTransaction() : txid mismatch\n");
                 return error("%s: txid mismatch", __func__);
+            }
             return true;
         }
     }
@@ -3029,7 +3034,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
         return state.DoS(100, false, REJECT_INVALID, "bad-cb-missing", false, "first tx is not coinbase or second is not coinstake");
     for (unsigned int i = 1; i < block.vtx.size(); i++)
         if (block.vtx[i]->IsCoinBase())
-            return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase/coinstake");
+            return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase");
 
     // Check transactions
     for (const auto& tx : block.vtx)
@@ -3765,10 +3770,8 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams)
         // SolarCoin: calculate stake modifier checksum
         if (pindex->nHeight > 0) {
             pindex->nStakeModifierChecksum = GetStakeModifierChecksum(pindex, chainparams.GetConsensus());
-            if (!fTestNet && !CheckStakeModifierCheckpoints(pindex->nHeight, pindex->nStakeModifierChecksum)) {
-                LogPrintf("DEBUG: CheckStakeModifierCheckpoints() failed.\n");
+            if (!fTestNet && !CheckStakeModifierCheckpoints(pindex->nHeight, pindex->nStakeModifierChecksum))
                 return false;
-            }
         }
 
         // We can link the chain of blocks for which we've received transactions at some point.
