@@ -556,10 +556,11 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<con
 
     // If the peer reorganized, our previous pindexLastCommonBlock may not be an ancestor
     // of its current tip anymore. Go back enough to fix that.
-    LogPrintf("DEBUG: pindexLastCommonBlock->nHeight=%d pindexBestKnownBlock->nHeight=%d\n", state->pindexLastCommonBlock->nHeight, state->pindexBestKnownBlock->nHeight);
     state->pindexLastCommonBlock = LastCommonAncestor(state->pindexLastCommonBlock, state->pindexBestKnownBlock);
-    if (state->pindexLastCommonBlock == state->pindexBestKnownBlock)
+    if (state->pindexLastCommonBlock == state->pindexBestKnownBlock) {
+        LogPrintf("DEBUG: pindexLastCommonBlock == pindexBestKnownBlock\n", state->pindexLastCommonBlock->nHeight, state->pindexBestKnownBlock->nHeight);
         return;
+    }
 
     std::vector<const CBlockIndex*> vToFetch;
     const CBlockIndex *pindexWalk = state->pindexLastCommonBlock;
@@ -569,7 +570,6 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<con
     int nWindowEnd = state->pindexLastCommonBlock->nHeight + BLOCK_DOWNLOAD_WINDOW;
     int nMaxHeight = std::min<int>(state->pindexBestKnownBlock->nHeight, nWindowEnd + 1);
     NodeId waitingfor = -1;
-    LogPrintf("DEBUG: pindexWalk->nHeight=%d nMaxHeight=%d\n", pindexWalk->nHeight, nMaxHeight);
     while (pindexWalk->nHeight < nMaxHeight) {
         // Read up to 128 (or more, if more blocks than that are needed) successors of pindexWalk (towards
         // pindexBestKnownBlock) into vToFetch. We fetch 128, because CBlockIndex::GetAncestor may be as expensive
@@ -577,11 +577,11 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<con
         int nToFetch = std::min(nMaxHeight - pindexWalk->nHeight, std::max<int>(count - vBlocks.size(), 128));
         vToFetch.resize(nToFetch);
         pindexWalk = state->pindexBestKnownBlock->GetAncestor(pindexWalk->nHeight + nToFetch);
-        LogPrintf("DEBUG: pindexWalk->nHeight=%d\n", pindexWalk->nHeight);
         vToFetch[nToFetch - 1] = pindexWalk;
         for (unsigned int i = nToFetch - 1; i > 0; i--) {
             vToFetch[i - 1] = vToFetch[i]->pprev;
         }
+        LogPrintf("DEBUG: pindexWalk->nHeight=%d : vToFetch[0]->GetBlockHash()=%s\n", pindexWalk->nHeight, vToFetch[0]->GetBlockHash().ToString());
 
         // Iterate over those blocks in vToFetch (in forward direction), adding the ones that
         // are not yet downloaded and not in flight to vBlocks. In the mean time, update
@@ -590,17 +590,21 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<con
         BOOST_FOREACH(const CBlockIndex* pindex, vToFetch) {
             if (!pindex->IsValid(BLOCK_VALID_TREE)) {
                 // We consider the chain that this peer is on invalid.
+                LogPrintf("DEBUG: pindex->IsValid=false nHeight=%d nStatus=%d\n", pindex->nHeight, pindex->nStatus);
                 return;
             }
             if (!State(nodeid)->fHaveWitness && IsWitnessEnabled(pindex->pprev, consensusParams)) {
                 // We wouldn't download this block or its descendants from this peer.
+                LogPrintf("DEBUG: have witness = false\n");
                 return;
             }
             if (pindex->nStatus & BLOCK_HAVE_DATA || chainActive.Contains(pindex)) {
+                LogPrintf("DEBUG: block at height %d is already in common?\n", pindex->nHeight);
                 if (pindex->nChainTx)
                     state->pindexLastCommonBlock = pindex;
             } else if (mapBlocksInFlight.count(pindex->GetBlockHash()) == 0) {
                 // The block is not already downloaded, and not yet in flight.
+                LogPrintf("DEBUG: vBlocks.size=%d count=%d nWindowEnd=%d\n", vBlocks.size(), count, nWindowEnd);
                 if (pindex->nHeight > nWindowEnd) {
                     // We reached the end of the window.
                     if (vBlocks.size() == 0 && waitingfor != nodeid) {
@@ -615,6 +619,7 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<con
                 }
             } else if (waitingfor == -1) {
                 // This is the first already-in-flight block.
+                LogPrintf("DEBUG: block IS in flight\n");
                 waitingfor = mapBlocksInFlight[pindex->GetBlockHash()].first;
             }
         }

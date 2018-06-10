@@ -741,7 +741,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         bool fSpendsCoinbase = false;
         BOOST_FOREACH(const CTxIn &txin, tx.vin) {
             const CCoins *coins = view.AccessCoins(txin.prevout.hash);
-            if (coins->IsCoinBase()) {
+            if (coins->IsCoinBase() || coins->IsCoinStake()) {
                 fSpendsCoinbase = true;
                 break;
             }
@@ -1442,8 +1442,8 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
             assert(coins);
 
             // If prev is coinbase, check that it's matured
-            if (coins->IsCoinBase()) {
-                if (nSpendHeight - coins->nHeight < COINBASE_MATURITY)
+            if (coins->IsCoinBase() || coins->IsCoinStake()) {
+                if (nSpendHeight - coins->nHeight < (coins->IsCoinBase() ? COINBASE_MATURITY_POW : COINBASE_MATURITY)) // SolarCoin: Two maturities
                     return state.Invalid(false,
                         REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
                         strprintf("tried to spend coinbase at depth %d", nSpendHeight - coins->nHeight));
@@ -3423,6 +3423,7 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
     if (!CheckBlock(block, state, chainparams.GetConsensus()) ||
         !ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev)) {
         if (state.IsInvalid() && !state.CorruptionPossible()) {
+            LogPrintf("DEBUG: AcceptBlock() : Setting nStatus=BLOCK_FAILED_VALID at height=%d for pindex=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
             pindex->nStatus |= BLOCK_FAILED_VALID;
             setDirtyBlockIndex.insert(pindex);
         }

@@ -3971,7 +3971,7 @@ int CMerkleTx::GetBlocksToMaturity() const
 {
     if (!IsCoinBase() && !IsCoinStake())
         return 0;
-    return max(0, (COINBASE_MATURITY+1) - GetDepthInMainChain());
+    return max(0, (IsCoinBase() ? COINBASE_MATURITY_POW : COINBASE_MATURITY) + 1 - GetDepthInMainChain()); // SolarCoin: Two maturities
 }
 
 
