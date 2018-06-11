@@ -459,7 +459,7 @@ unsigned int GetLegacySigOpCount(const CTransaction& tx)
 
 unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& inputs)
 {
-    if (tx.IsCoinBase())
+    if (tx.IsCoinBase() || tx.IsCoinStake())
         return 0;
 
     unsigned int nSigOps = 0;
@@ -476,7 +476,7 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
 {
     int64_t nSigOps = GetLegacySigOpCount(tx) * WITNESS_SCALE_FACTOR;
 
-    if (tx.IsCoinBase())
+    if (tx.IsCoinBase() || tx.IsCoinStake())
         return nSigOps;
 
     if (flags & SCRIPT_VERIFY_P2SH) {
@@ -1061,7 +1061,6 @@ bool GetTransaction(const uint256 &hash, CTransactionRef &txOut, unsigned int &n
     }
 
     if (fTxIndex) {
-    LogPrintf("DEBUG: GetTransaction() : fTxIndex=%s txhash=%s\n", fTxIndex ? "true" : "false", hash.ToString());
         CDiskTxPos postx;
         if (pblocktree->ReadTxIndex(hash, postx)) {
             CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
@@ -1070,7 +1069,6 @@ bool GetTransaction(const uint256 &hash, CTransactionRef &txOut, unsigned int &n
 
             // SolarCoin: Return nTxOffset into block
             nTxOffset = postx.nTxOffset;
-            LogPrintf("DEBUG: GetTransaction() : nTxOffset=%d\n", nTxOffset);
 
             CBlockHeader header;
             try {
@@ -1078,12 +1076,10 @@ bool GetTransaction(const uint256 &hash, CTransactionRef &txOut, unsigned int &n
                 fseek(file.Get(), postx.nTxOffset, SEEK_CUR);
                 file >> txOut;
             } catch (const std::exception& e) {
-                LogPrintf("DEBUG: GetTransaction() : deserialize i/o error\n");
                 return error("%s: Deserialize or I/O error - %s", __func__, e.what());
             }
             hashBlock = header.GetHash();
             if (txOut->GetHash() != hash) {
-                LogPrintf("DEBUG: GetTransaction() : txid mismatch\n");
                 return error("%s: txid mismatch", __func__);
             }
             return true;
@@ -1802,7 +1798,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     // Check it again in case a previous version let a bad block in
     if (!CheckBlock(block, state, chainparams.GetConsensus(), !fJustCheck, !fJustCheck))
         return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
-    LogPrintf("DEBUG: #1 pindex->nStatus=%d\n", pindex->nStatus);
 
     // verify that the view's current state corresponds to the previous block
     uint256 hashPrevBlock = pindex->pprev == NULL ? uint256() : pindex->pprev->GetBlockHash();
@@ -1967,7 +1962,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                              REJECT_INVALID, "bad-blk-sigops");
 
         txdata.emplace_back(tx);
-        if (tx.IsCoinBase()) {
+        if (tx.IsCoinBase() || tx.IsCoinStake()) {
             nValueOut += tx.GetValueOut();
         } else {
             int64_t nTxValueIn = view.GetValueIn(tx);
@@ -1994,7 +1989,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             blockundo.vtxundo.push_back(CTxUndo());
         }
         UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
-        LogPrintf("DEBUG: #2 pindex->nStatus=%d\n", pindex->nStatus);
 
         vPos.push_back(std::make_pair(tx.GetHash(), pos));
         pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
@@ -2027,17 +2021,18 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                                     block.vtx[0]->GetValueOut(), blockReward),
                                     REJECT_INVALID, "bad-cb-amount");
     }
-    LogPrintf("DEBUG: #3 pindex->nStatus=%d\n", pindex->nStatus);
 
-    if (!control.Wait()) {
-        LogPrintf("DEBUG: #4 pindex->nStatus=%d\n", pindex->nStatus);
+    if (!control.Wait())
         return state.DoS(100, false);
-    }
     int64_t nTime4 = GetTimeMicros(); nTimeVerify += nTime4 - nTime2;
     LogPrint("bench", "    - Verify %u txins: %.2fms (%.3fms/txin) [%.2fs]\n", nInputs - 1, 0.001 * (nTime4 - nTime2), nInputs <= 1 ? 0 : 0.001 * (nTime4 - nTime2) / (nInputs-1), nTimeVerify * 0.000001);
 
     if (fJustCheck)
         return true;
+
+    // SolarCoin: Need to update CBlockIndex PoST parameters 'Mint' and 'MoneySupply' now that we have the block's txns
+    pindex->nMint = nValueOut - nValueIn + nFees;
+    pindex->nMoneySupply = (pindex->pprev ? pindex->pprev->nMoneySupply : 0) + nValueOut - nValueIn;
 
     // Write undo information to disk
     if (pindex->GetUndoPos().IsNull() || !pindex->IsValid(BLOCK_VALID_SCRIPTS))
@@ -2052,13 +2047,11 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             // update nUndoPos in block index
             pindex->nUndoPos = _pos.nPos;
             pindex->nStatus |= BLOCK_HAVE_UNDO;
-            LogPrintf("DEBUG: #5 pindex->nStatus=%d\n", pindex->nStatus);
         }
 
         pindex->RaiseValidity(BLOCK_VALID_SCRIPTS);
         setDirtyBlockIndex.insert(pindex);
     }
-    LogPrintf("DEBUG: #6 pindex->nStatus=%d\n", pindex->nStatus);
 
     if (fTxIndex)
         if (!pblocktree->WriteTxIndex(vPos))
@@ -2366,10 +2359,8 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
         bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams);
         GetMainSignals().BlockChecked(blockConnecting, state);
         if (!rv) {
-            if (state.IsInvalid()) {
-                LogPrintf("DEBUG: pindexNew->nStatus=%d\n", pindexNew->nStatus);
+            if (state.IsInvalid())
                 InvalidBlockFound(pindexNew, state);
-            }
             return error("ConnectTip(): ConnectBlock %s failed", pindexNew->GetBlockHash().ToString());
         }
         nTime3 = GetTimeMicros(); nTimeConnectTotal += nTime3 - nTime2;
@@ -2818,30 +2809,6 @@ CBlockIndex* AddToBlockIndex(const CBlockHeader& block, const CChainParams& chai
 /** Mark a block as having its data received and checked (up to BLOCK_VALID_TRANSACTIONS). */
 bool ReceivedBlockTransactions(const CBlock &block, CValidationState& state, CBlockIndex *pindexNew, const CDiskBlockPos& pos)
 {
-    // SolarCoin: Need to update CBlockIndex PoST parameters 'Mint' and 'MoneySupply' now that we have the block's txns
-    CAmount nFees = 0;
-    CCoinsViewCache view(pcoinsTip);
-    int64_t nValueIn = 0;
-    int64_t nValueOut = 0;
-    for (unsigned int i = 0; i < block.vtx.size(); i++)
-    {
-        const CTransaction &tx = *(block.vtx[i]);
-
-        if (tx.IsCoinBase()) {
-            nValueOut += tx.GetValueOut();
-        } else {
-            int64_t nTxValueIn = view.GetValueIn(tx);
-            int64_t nTxValueOut = tx.GetValueOut();
-            nValueIn += nTxValueIn;
-            nValueOut += nTxValueOut;
-            if (!tx.IsCoinStake()) {
-                nFees += nTxValueIn - nTxValueOut;
-            }
-        }
-    }
-    pindexNew->nMint = nValueOut - nValueIn + nFees;
-    pindexNew->nMoneySupply = (pindexNew->pprev ? pindexNew->pprev->nMoneySupply : 0) + nValueOut - nValueIn;
-
     pindexNew->nTx = block.vtx.size();
     pindexNew->nChainTx = 0;
     pindexNew->nFile = pos.nFile;
@@ -3139,10 +3106,8 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
         }
     } else {
         // Check proof of stake
-        if (block.nBits != GetNextTargetRequired(pindexPrev, true, consensusParams)) {
-            LogPrintf("DEBUG: block.nBits=%d != GetNextTargetRequired=%d  pindexPrev->nHeight=%d\n", block.nBits, GetNextTargetRequired(pindexPrev, true, consensusParams), pindexPrev->nHeight);
+        if (block.nBits != GetNextTargetRequired(pindexPrev, true, consensusParams))
             return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of stake");
-        }
     }
 
     // Check timestamp against prev
@@ -3420,7 +3385,6 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
     if (!CheckBlock(block, state, chainparams.GetConsensus()) ||
         !ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev)) {
         if (state.IsInvalid() && !state.CorruptionPossible()) {
-            LogPrintf("DEBUG: AcceptBlock() : Setting nStatus=BLOCK_FAILED_VALID at height=%d for pindex=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
             pindex->nStatus |= BLOCK_FAILED_VALID;
             setDirtyBlockIndex.insert(pindex);
         }
