@@ -202,8 +202,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
             return false;
         }
         // write the entropy bit of the selected block
-        uint64_t nEntropyBit = (uint64_t)pindex->GetStakeEntropyBit();
-        nStakeModifierNew |= (nEntropyBit << nRound);
+        nStakeModifierNew |= (((uint64_t)pindex->GetStakeEntropyBit()) << nRound);
 
         // add the selected block from candidates to selected list
         mapSelectedBlocks.insert(make_pair(pindex->GetBlockHash(), pindex));
@@ -238,7 +237,6 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
 
     nStakeModifier = nStakeModifierNew;
     fGeneratedStakeModifier = true;
-
     return true;
 }
 
@@ -254,14 +252,12 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
     nStakeModifierTime = pindexFrom->GetBlockTime();
     int64_t nStakeModifierSelectionInterval = GetStakeModifierSelectionInterval(params);
     int64_t nStakeModifierTargetTime = nStakeModifierTime + nStakeModifierSelectionInterval;
-
     const CBlockIndex* pindex = pindexFrom;
-    CBlockIndex *pNext = chainActive.Next(pindex);
 
     // loop to find the stake modifier later by a selection interval
     while (nStakeModifierTime < nStakeModifierTargetTime)
     {
-        if (pNext == nullptr)
+        if (!pindex->pskip)
         {
             // reached best block; may happen if node is behind on block chain
             if (fPrintProofOfStake || (pindex->GetBlockTime() + params.nStakeMinAge - nStakeModifierSelectionInterval > GetAdjustedTime()))
@@ -278,8 +274,7 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
                 return false;
             }
         }
-        pindex = pNext;
-        pNext = chainActive.Next(pindex);
+        pindex = pindex->pskip;
         if (pindex && pindex->GeneratedStakeModifier())
         {
             nStakeModifierHeight = pindex->nHeight;
@@ -337,6 +332,7 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     // Stake Time factored weight
     int64_t factoredTimeWeight = GetStakeTimeFactoredWeight(timeWeight, nCoinDayWeight, pindexPrev, params);
     arith_uint256 bnStakeTimeWeight = arith_uint256(nValueIn) * factoredTimeWeight / COIN / (24 * 60 * 60);
+    int64_t stakeTimeWeight = bnStakeTimeWeight.GetLow64();
     targetProofOfStake = ArithToUint256(bnStakeTimeWeight * bnTargetPerCoinDay);
 
     // Calculate hash
@@ -370,7 +366,7 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     }
 
     // Now check if proof-of-stake hash meets target protocol
-    if (UintToArith256(hashProofOfStake) > UintToArith256(targetProofOfStake)) {
+    if (UintToArith256(hashProofOfStake) > bnStakeTimeWeight * bnTargetPerCoinDay) {
         LogPrintf("DEBUG: BUG: hashProofOfStake=%s > targetProofOfStake=%s (%08x > %08x) at height=%d\n", hashProofOfStake.ToString(), targetProofOfStake.ToString(), UintToArith256(hashProofOfStake).GetCompact(), UintToArith256(targetProofOfStake).GetCompact(), pindexFrom->nHeight);
         // SolarCoin (alpha): TODO: Version 2.1.8 has the same values for hashProofOfStake and targetProofOfStake,
         // but it did not fail the comparison. Version 3.15.1 fails the comparison in PoST at 835217.
@@ -378,7 +374,6 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
             return false;
         }
     }
-
     return true;
 }
 
@@ -390,6 +385,7 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
 
     // Kernel (input 0) must match the stake hash target per coin age (nBits)
     const CTxIn& txIn = tx.vin[0];
+
     const uint256& hashTx = txIn.prevout.hash;
     uint256 hashBlock;
     CTransactionRef txPrevRef;
@@ -405,7 +401,7 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
 
     const CTransaction& txPrev = *txPrevRef;
 
-    // TODO: Verify signature is handled in validation.cpp
+    // TODO: Verify signature
     //if (!VerifySignature(txPrev, tx, 0, 0)) {
     //    LogPrintf("%s(): VerifySignature failed on coinstake %s", __func__, tx.GetHash().ToString().c_str());
     //    return false;
@@ -556,7 +552,7 @@ bool GetCoinAge(const CTransaction& tx, uint64_t& nCoinAge, const Consensus::Par
     if (fDebug || GetBoolArg("-printcoinage", false))
         LogPrintf("coin age bnCoinDay=%s\n", bnCoinDay.ToString());
 
-    nCoinAge = ArithToUint256(bnCoinDay).GetUint64(0);
+    nCoinAge = bnCoinDay.GetLow64();
     return true;
 }
 
