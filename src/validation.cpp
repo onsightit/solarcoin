@@ -1802,6 +1802,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     // Check it again in case a previous version let a bad block in
     if (!CheckBlock(block, state, chainparams.GetConsensus(), !fJustCheck, !fJustCheck))
         return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
+    LogPrintf("DEBUG: #1 pindex->nStatus=%d\n", pindex->nStatus);
 
     // verify that the view's current state corresponds to the previous block
     uint256 hashPrevBlock = pindex->pprev == NULL ? uint256() : pindex->pprev->GetBlockHash();
@@ -1815,7 +1816,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         return true;
     }
 
-    bool fScriptChecks = true;
+    // SolarCoin: Scripts are checked in kernel. If hashAssumeValid (defaultAssumeValid) is set to null.
+    bool fScriptChecks = false; //true;
     if (!hashAssumeValid.IsNull()) {
         // We've been configured with the hash of a block which has been externally verified to have a valid history.
         // A suitable default value is included with the software and updated from time to time.  Because validity
@@ -1882,7 +1884,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     // BIP16 didn't become active until Apr 1 2012
     //int64_t nBIP16SwitchTime = 1333238400;
     //bool fStrictPayToScriptHash = (pindex->GetBlockTime() >= nBIP16SwitchTime);
-    bool fStrictPayToScriptHash = true;
+    bool fStrictPayToScriptHash = false; // SolarCoin: Verify in kernel
 
     unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
 
@@ -1897,7 +1899,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     //}
 
     // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
-    int nLockTimeFlags = 0;
+    //int nLockTimeFlags = 0;
     //if (VersionBitsState(pindex->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
     //    flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
     //    nLockTimeFlags |= LOCKTIME_VERIFY_SEQUENCE;
@@ -1944,15 +1946,15 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             // Check that transaction is BIP68 final
             // BIP68 lock checks (as opposed to nLockTime checks) must
             // be in ConnectBlock because they require the UTXO set
-            prevheights.resize(tx.vin.size());
-            for (size_t j = 0; j < tx.vin.size(); j++) {
-                prevheights[j] = view.AccessCoins(tx.vin[j].prevout.hash)->nHeight;
-            }
+            //prevheights.resize(tx.vin.size());
+            //for (size_t j = 0; j < tx.vin.size(); j++) {
+            //    prevheights[j] = view.AccessCoins(tx.vin[j].prevout.hash)->nHeight;
+            //}
 
-            if (!SequenceLocks(tx, nLockTimeFlags, &prevheights, *pindex)) {
-                return state.DoS(100, error("%s: contains a non-BIP68-final transaction", __func__),
-                                 REJECT_INVALID, "bad-txns-nonfinal");
-            }
+            //if (!SequenceLocks(tx, nLockTimeFlags, &prevheights, *pindex)) {
+            //    return state.DoS(100, error("%s: contains a non-BIP68-final transaction", __func__),
+            //                     REJECT_INVALID, "bad-txns-nonfinal");
+            //}
         }
 
         // GetTransactionSigOpCost counts 3 types of sigops:
@@ -1992,6 +1994,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             blockundo.vtxundo.push_back(CTxUndo());
         }
         UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
+        LogPrintf("DEBUG: #2 pindex->nStatus=%d\n", pindex->nStatus);
 
         vPos.push_back(std::make_pair(tx.GetHash(), pos));
         pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
@@ -2015,7 +2018,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                                 REJECT_INVALID, "bad-cs-amount");
         else
             if (fDebug)
-                printf("ConnectBlock() : coinstake (actual=%ld vs calculated=%ld)\n", nStakeReward, nCalculatedStakeReward);
+                LogPrintf("ConnectBlock() : coinstake (actual=%ld vs calculated=%ld)\n", nStakeReward, nCalculatedStakeReward);
     } else {
         CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
         if (block.vtx[0]->GetValueOut() > blockReward)
@@ -2024,51 +2027,17 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                                     block.vtx[0]->GetValueOut(), blockReward),
                                     REJECT_INVALID, "bad-cb-amount");
     }
+    LogPrintf("DEBUG: #3 pindex->nStatus=%d\n", pindex->nStatus);
 
-    if (!control.Wait())
+    if (!control.Wait()) {
+        LogPrintf("DEBUG: #4 pindex->nStatus=%d\n", pindex->nStatus);
         return state.DoS(100, false);
+    }
     int64_t nTime4 = GetTimeMicros(); nTimeVerify += nTime4 - nTime2;
     LogPrint("bench", "    - Verify %u txins: %.2fms (%.3fms/txin) [%.2fs]\n", nInputs - 1, 0.001 * (nTime4 - nTime2), nInputs <= 1 ? 0 : 0.001 * (nTime4 - nTime2) / (nInputs-1), nTimeVerify * 0.000001);
 
     if (fJustCheck)
         return true;
-
-    // SolarCoin: Need to update CBlockIndex PoST parameters now that we have the block's txns
-    pindex->nMint = nValueOut - nValueIn + nFees;
-    pindex->nMoneySupply = (pindex->pprev ? pindex->pprev->nMoneySupply : 0) + nValueOut - nValueIn;
-    uint256 hash = block.GetHash();
-    // ppcoin: check proof-of-stake
-    // Limited duplicity on stake: prevents block flood attack
-    if (block.IsProofOfStake())
-    {
-        if (setStakeSeen.count(block.GetProofOfStake())) {
-            LogPrintf("%s: duplicate proof-of-stake (%s, %d) for block %s", __func__,
-                block.GetProofOfStake().first.ToString(), block.GetProofOfStake().second,
-                hash.ToString());
-            return false;
-        }
-    }
-    // ppcoin: check proof-of-stake
-    // ppcoin: verify hash target and signature of coinstake tx
-    if (block.IsProofOfStake() && mapBlockIndex.count(block.hashPrevBlock))
-    {
-        uint256 hashProofOfStake, targetProofOfStake;
-        if (!CheckProofOfStake(*(block.vtx[1]), block.nBits, hashProofOfStake, targetProofOfStake, chainparams.GetConsensus())) {
-            LogPrintf("WARNING: ConnectBlock() : CheckProofOfStake() failed for block=%s\n", block.GetHash().ToString());
-            return false; // do not error here as we expect this during initial block download
-        }
-        // ppcoin: record proof-of-stake hash value
-        pindex->hashProofOfStake = hashProofOfStake;
-        HashMap::iterator mi = mapProofOfStake.find(hash);
-        if (mi == mapProofOfStake.end())
-        {
-            LogPrintf("DEBUG: hashProofOfStake=%s added to map at nHeight=%d\n", pindex->hashProofOfStake.ToString(), pindex->nHeight);
-            mapProofOfStake.insert(std::make_pair(hash, hashProofOfStake));
-        }
-
-        pindex->RaiseValidity(BLOCK_VALID_SCRIPTS);
-        setDirtyBlockIndex.insert(pindex);
-    }
 
     // Write undo information to disk
     if (pindex->GetUndoPos().IsNull() || !pindex->IsValid(BLOCK_VALID_SCRIPTS))
@@ -2083,11 +2052,13 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             // update nUndoPos in block index
             pindex->nUndoPos = _pos.nPos;
             pindex->nStatus |= BLOCK_HAVE_UNDO;
+            LogPrintf("DEBUG: #5 pindex->nStatus=%d\n", pindex->nStatus);
         }
 
         pindex->RaiseValidity(BLOCK_VALID_SCRIPTS);
         setDirtyBlockIndex.insert(pindex);
     }
+    LogPrintf("DEBUG: #6 pindex->nStatus=%d\n", pindex->nStatus);
 
     if (fTxIndex)
         if (!pblocktree->WriteTxIndex(vPos))
@@ -2395,8 +2366,10 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
         bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams);
         GetMainSignals().BlockChecked(blockConnecting, state);
         if (!rv) {
-            if (state.IsInvalid())
+            if (state.IsInvalid()) {
+                LogPrintf("DEBUG: pindexNew->nStatus=%d\n", pindexNew->nStatus);
                 InvalidBlockFound(pindexNew, state);
+            }
             return error("ConnectTip(): ConnectBlock %s failed", pindexNew->GetBlockHash().ToString());
         }
         nTime3 = GetTimeMicros(); nTimeConnectTotal += nTime3 - nTime2;
@@ -2845,6 +2818,30 @@ CBlockIndex* AddToBlockIndex(const CBlockHeader& block, const CChainParams& chai
 /** Mark a block as having its data received and checked (up to BLOCK_VALID_TRANSACTIONS). */
 bool ReceivedBlockTransactions(const CBlock &block, CValidationState& state, CBlockIndex *pindexNew, const CDiskBlockPos& pos)
 {
+    // SolarCoin: Need to update CBlockIndex PoST parameters 'Mint' and 'MoneySupply' now that we have the block's txns
+    CAmount nFees = 0;
+    CCoinsViewCache view(pcoinsTip);
+    int64_t nValueIn = 0;
+    int64_t nValueOut = 0;
+    for (unsigned int i = 0; i < block.vtx.size(); i++)
+    {
+        const CTransaction &tx = *(block.vtx[i]);
+
+        if (tx.IsCoinBase()) {
+            nValueOut += tx.GetValueOut();
+        } else {
+            int64_t nTxValueIn = view.GetValueIn(tx);
+            int64_t nTxValueOut = tx.GetValueOut();
+            nValueIn += nTxValueIn;
+            nValueOut += nTxValueOut;
+            if (!tx.IsCoinStake()) {
+                nFees += nTxValueIn - nTxValueOut;
+            }
+        }
+    }
+    pindexNew->nMint = nValueOut - nValueIn + nFees;
+    pindexNew->nMoneySupply = (pindexNew->pprev ? pindexNew->pprev->nMoneySupply : 0) + nValueOut - nValueIn;
+
     pindexNew->nTx = block.vtx.size();
     pindexNew->nChainTx = 0;
     pindexNew->nFile = pos.nFile;
