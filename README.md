@@ -6,10 +6,10 @@ https://solarcoin.org
 What is SolarCoin?
 ----------------
 
-SolarCoin [SLR] is a lite version of Bitcoin using scrypt as a proof-of-work algorithm.
+SolarCoin [SLR] is a lite version of Bitcoin using a proof-of-time algorithm (vericoin).
 
-- 140 Character Transaction Messaging
-- 100 coins per block initial rewards, halving every 525,600 (once a year) blocks.
+- 253 Character Transaction Messaging
+- POW now POST (proof of stake time) consensys target 2% annual staking reward target.
 - 1 Minute Block Targets
 - 1440 Block Difficulty Adjustments
 - RPC PORT = 18181
