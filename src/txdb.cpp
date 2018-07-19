@@ -219,13 +219,13 @@ bool CBlockTreeDB::LoadBlockIndexGuts(boost::function<CBlockIndex*(const uint256
 
                 // SolarCoin: CBlockIndex::IsProofOfStake is not valid during header download. Use height instead.
                 if (pindexNew->nHeight > Params().GetConsensus().LAST_POW_BLOCK) {
-                    // DEBUG: Show proofs of first 20 PoST blocks
+                    // DEBUG: Show proofs, stake modifier mint and moneysupply of first 20 PoST blocks
                     if (pindexNew->nHeight <= Params().GetConsensus().LAST_POW_BLOCK + 20)
-                        LogPrintf("DEBUG: height=%d hashProofOfStake=%s\n", pindexNew->nHeight, pindexNew->hashProofOfStake.ToString());
+                        LogPrintf("DEBUG: txdb: nHeight=%d hashProofOfStake=%s nStakeModifier=%d nMint=%s nMoneySupply=%s\n", pindexNew->nHeight, pindexNew->hashProofOfStake.ToString(), pindexNew->nStakeModifier, FormatMoney(pindexNew->nMint).c_str(), FormatMoneySupply(pindexNew->nMoneySupply).c_str());
                 } else {
-                    // DEBUG: Show Mint, MoneySupply and hashProofOfStake of 20 PoW blocks
-                    if (pindexNew->nHeight >= 14000 && pindexNew->nHeight < 14020)
-                        LogPrintf("DEBUG: height=%d nMint=%d nMoneySupply=%d hashProofOfStake=%s\n", pindexNew->nHeight, pindexNew->nMint, pindexNew->nMoneySupply, pindexNew->hashProofOfStake.ToString());
+                    // DEBUG: Show Mint, MoneySupply, Stake Modifier and hashProofOfStake of 20 PoW blocks
+                    if (pindexNew->nHeight >= 4000 && pindexNew->nHeight < 4020)
+                        LogPrintf("DEBUG: txdb: nHeight=%d nMint=%s nMoneySupply=%s nStakeModifier=%d hashProofOfStake=%s\n", pindexNew->nHeight, FormatMoney(pindexNew->nMint).c_str(), FormatMoneySupply(pindexNew->nMoneySupply).c_str(), pindexNew->nStakeModifier, pindexNew->hashProofOfStake.ToString());
                 }
                 // SolarCoin: build setStakeSeen
                 if (pindexNew->IsProofOfStake())

@@ -539,11 +539,11 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<con
     if (state->pindexBestKnownBlock == NULL || state->pindexBestKnownBlock->nChainWork < chainActive.Tip()->nChainWork) {
         // This peer has nothing interesting.
         if (fDebug && state->pindexBestKnownBlock != nullptr) {
-            LogPrintf("%s: This peer has nothing interesting because: ", __func__);
-            if (state->pindexBestKnownBlock->nChainWork < chainActive.Tip()->nChainWork)
-                LogPrintf("pindexBestKnownBlock->nChainWork < chainActive.Tip()->nChainWork\n");
-            if (state->pindexBestKnownBlock->nChainWork < UintToArith256(consensusParams.nMinimumChainWork))
-                LogPrintf("pindexBestKnownBlock->nChainWork < UintToArith256(consensusParams.nMinimumChainWork)\n");
+            //LogPrintf("%s: This peer has nothing interesting because: ", __func__);
+            //if (state->pindexBestKnownBlock->nChainWork < chainActive.Tip()->nChainWork)
+            //    LogPrintf("pindexBestKnownBlock->nChainWork < chainActive.Tip()->nChainWork\n");
+            //if (state->pindexBestKnownBlock->nChainWork < UintToArith256(consensusParams.nMinimumChainWork))
+            //    LogPrintf("pindexBestKnownBlock->nChainWork < UintToArith256(consensusParams.nMinimumChainWork)\n");
         }
         return;
     }
@@ -2850,14 +2850,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     else if (strCommand == NetMsgType::BLOCK && !fImporting && !fReindex) // Ignore blocks received while importing
     {
         std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
-        // DEBUG:
-        //int nType = vRecv.GetType();
-        //vRecv.SetType(nType|SER_BLOCKHEADERONLY);
-
         vRecv >> *pblock;
-
-        // DEBUG:
-        //vRecv.SetType(nType);
 
         LogPrint("net", "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom->id);
 
@@ -3144,11 +3137,6 @@ bool ProcessMessages(CNode* pfrom, CConnman& connman, const std::atomic<bool>& i
     //  (x) data
     //
     bool fMoreWork = false;
-
-    // DEBUG: Only connect to 2.1.8 nodes
-    if (pfrom->cleanSubVer != "" && std::string(pfrom->cleanSubVer).find("2.1.8") == std::string::npos) {
-        return false;
-    }
 
     if (!pfrom->vRecvGetData.empty())
         ProcessGetData(pfrom, chainparams.GetConsensus(), connman, interruptMsgProc);

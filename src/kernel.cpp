@@ -206,7 +206,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
 
         // add the selected block from candidates to selected list
         mapSelectedBlocks.insert(make_pair(pindex->GetBlockHash(), pindex));
-        if (fDebug && GetBoolArg("-printstakemodifier", false))
+        if (fDebug || GetBoolArg("-printstakemodifier", false))
             LogPrintf("%s(): selected modifier=0x%016x round %d stop=%ld height=%d entropybit=%d\n", __func__, nStakeModifierNew, nRound, nSelectionIntervalStop, pindex->nHeight, pindex->GetStakeEntropyBit());
     }
 
@@ -237,6 +237,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
 
     nStakeModifier = nStakeModifierNew;
     fGeneratedStakeModifier = true;
+
     return true;
 }
 
@@ -252,6 +253,7 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
     nStakeModifierTime = pindexFrom->GetBlockTime();
     int64_t nStakeModifierSelectionInterval = GetStakeModifierSelectionInterval(params);
     int64_t nStakeModifierTargetTime = nStakeModifierTime + nStakeModifierSelectionInterval;
+
     const CBlockIndex* pindex = pindexFrom;
 
     // loop to find the stake modifier later by a selection interval
@@ -262,7 +264,7 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
             // reached best block; may happen if node is behind on block chain
             if (fPrintProofOfStake || (pindex->GetBlockTime() + params.nStakeMinAge - nStakeModifierSelectionInterval > GetAdjustedTime()))
             {
-                LogPrintf("%s: reached best block %s at height %d from block %s", __func__,
+                LogPrintf("%s: reached best block %s at height %d from block %s\n", __func__,
                     pindex->GetBlockHash().ToString().c_str(), pindex->nHeight, hashBlockFrom.ToString().c_str());
                 return false;
             }
@@ -274,7 +276,8 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
                 return false;
             }
         }
-        pindex = pindex->pskip;
+        pindex = chainActive.Next(pindex);
+        //LogPrintf("DEBUG: pindex=%s\n", pindex->ToVerboseString());
         if (pindex && pindex->GeneratedStakeModifier())
         {
             nStakeModifierHeight = pindex->nHeight;
@@ -332,7 +335,6 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     // Stake Time factored weight
     int64_t factoredTimeWeight = GetStakeTimeFactoredWeight(timeWeight, nCoinDayWeight, pindexPrev, params);
     arith_uint256 bnStakeTimeWeight = arith_uint256(nValueIn) * factoredTimeWeight / COIN / (24 * 60 * 60);
-    int64_t stakeTimeWeight = bnStakeTimeWeight.GetLow64();
     targetProofOfStake = ArithToUint256(bnStakeTimeWeight * bnTargetPerCoinDay);
 
     // Calculate hash
@@ -351,7 +353,8 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     ss << nTimeBlockFrom << nTxOffset << txPrev.nTime << prevout.n << nTimeTx;
     hashProofOfStake = Hash(ss.begin(), ss.end());
 
-    if (fPrintProofOfStake)
+    // DEBUG: if (fPrintProofOfStake)
+    if (true)
     {
         LogPrintf("%s(): using modifier %016x at height=%d timestamp=%u for block from height=%d timestamp=%u\n timeWeight=%d coinDayWeight=%d\n", __func__,
             nStakeModifier, nStakeModifierHeight,
@@ -365,13 +368,12 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
             hashProofOfStake.ToString().c_str(), targetProofOfStake.ToString().c_str());
     }
 
-    // Now check if proof-of-stake hash meets target protocol
-    if (UintToArith256(hashProofOfStake) > bnStakeTimeWeight * bnTargetPerCoinDay) {
-        LogPrintf("DEBUG: BUG: hashProofOfStake=%s > targetProofOfStake=%s (%08x > %08x) at height=%d\n", hashProofOfStake.ToString(), targetProofOfStake.ToString(), UintToArith256(hashProofOfStake).GetCompact(), UintToArith256(targetProofOfStake).GetCompact(), pindexFrom->nHeight);
-        // SolarCoin (alpha): TODO: Version 2.1.8 has the same values for hashProofOfStake and targetProofOfStake,
-        // but it did not fail the comparison. Version 3.15.1 fails the comparison in PoST at 835217.
-        if (chainActive.Tip()->nHeight <= params.LAST_POW_BLOCK) {
-            return false;
+    // SolarCoin: Version 3 Bug fix to get past PoW. Somehow this check passes in 2.1.8.
+    if (heightBlockFrom > params.LAST_POW_BLOCK) {
+        // Now check if proof-of-stake hash meets target protocol
+        if (UintToArith256(hashProofOfStake) > UintToArith256(targetProofOfStake)) {
+            LogPrintf("DEBUG: BUG: hashProofOfStake=%s > targetProofOfStake=%s (%08x > %08x) at height=%d\n", hashProofOfStake.ToString(), targetProofOfStake.ToString(), UintToArith256(hashProofOfStake).GetCompact(), UintToArith256(targetProofOfStake).GetCompact(), pindexFrom->nHeight);
+                return false;
         }
     }
     return true;
@@ -385,7 +387,6 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
 
     // Kernel (input 0) must match the stake hash target per coin age (nBits)
     const CTxIn& txIn = tx.vin[0];
-
     const uint256& hashTx = txIn.prevout.hash;
     uint256 hashBlock;
     CTransactionRef txPrevRef;
@@ -462,7 +463,7 @@ int64_t GetStakeTimeFactoredWeight(int64_t timeWeight, int64_t nCoinDayWeight, C
     }
     else
     {
-        double stakeTimeFactor = pow(cos(params.PI*weightFraction),2.0);
+        double stakeTimeFactor = pow(cos((params.PI*weightFraction)),2.0);
         factoredTimeWeight = stakeTimeFactor*timeWeight;
     }
     return factoredTimeWeight;
@@ -552,7 +553,7 @@ bool GetCoinAge(const CTransaction& tx, uint64_t& nCoinAge, const Consensus::Par
     if (fDebug || GetBoolArg("-printcoinage", false))
         LogPrintf("coin age bnCoinDay=%s\n", bnCoinDay.ToString());
 
-    nCoinAge = bnCoinDay.GetLow64();
+    nCoinAge = ArithToUint256(bnCoinDay).GetUint64(0);
     return true;
 }
 

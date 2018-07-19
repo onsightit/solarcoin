@@ -194,7 +194,7 @@ public:
     unsigned int nStatus;
 
     int64_t nMint;
-    int64_t nMoneySupply;
+    uint64_t nMoneySupply;
 
     unsigned int nFlags;  // ppcoin: block index flags
     enum  

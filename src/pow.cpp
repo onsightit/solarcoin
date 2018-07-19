@@ -55,9 +55,9 @@ int64_t GetCurrentCoinSupply(CBlockIndex* pindexPrev, const Consensus::Params& p
     // removed addition of 1.35 SLR / block after 835000 + 1000
     if (pindexPrev->nHeight > params.TWO_PERCENT_INT_HEIGHT)
         if (pindexPrev->nHeight >= params.FORK_HEIGHT_2)
-            // Bug fix: pindexPrev->nMoneySupply is an int64_t that has overflowed and is now negative.
+            // SolarCoin 3.14.2 fix: pindexPrev->nMoneySupply is an int64_t that has overflowed and is now negative.
             // Use the real coin supply + expected growth rate since twoPercentIntHeight from granting.
-            return ((pindexPrev->nMoneySupply / COIN) - 98000000000 + (int64_t)((double)(pindexPrev->nHeight - params.TWO_PERCENT_INT_HEIGHT) * params.COIN_SUPPLY_GROWTH_RATE));
+            return ((pindexPrev->nMoneySupply / COIN) - 98000000000);
         else
             return params.INITIAL_COIN_SUPPLY;
     else
@@ -100,13 +100,6 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
     if (pindexLast == nullptr)
         return bnTargetLimit.GetCompact(); // genesis block
 
-    // DEBUG: Watch for pindexLast 835245
-    bool DEBUG = false;
-    if (pindexLast->nHeight == 835245) {
-        DEBUG = true;
-        LogPrintf("DEBUG: pindexLast=835245\n");
-    }
-
     const CBlockIndex* pindexPrev = GetLastBlockIndex(pindexLast, fProofOfStake, params);
     if (pindexPrev->pprev == nullptr)
         return bnTargetLimit.GetCompact(); // first block
@@ -114,17 +107,8 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
     if (pindexPrevPrev->pprev == nullptr)
         return bnTargetLimit.GetCompact(); // second block
 
-    // DEBUG:
-    if (DEBUG) {
-        LogPrintf("DEBUG: pindexPrev=%d pindexPrev->nBits=%d  (pindexPrevPrev=%d)\n", pindexPrev->nHeight, pindexPrev->nBits, pindexPrevPrev->nHeight);
-    }
-
     int64_t nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
     if (nActualSpacing < 0) {
-        // DEBUG:
-        if (DEBUG) {
-            LogPrintf("DEBUG: nActualSpacing=%d reseting\n", nActualSpacing);
-        }
         nActualSpacing = params.nTargetSpacing;
     }
 
@@ -138,10 +122,6 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
 
     if (bnNew <= 0 || bnNew > bnTargetLimit) {
         bnNew = bnTargetLimit;
-        // DEBUG:
-        if (DEBUG) {
-            LogPrintf("DEBUG: Setting bnNew to bnTargetLimit=%d\n", bnTargetLimit.GetCompact());
-        }
     }
 
     return bnNew.GetCompact();

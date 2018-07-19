@@ -15,6 +15,7 @@
 #include "amount.h"
 
 std::string FormatMoney(const CAmount& n);
+std::string FormatMoneySupply(const uint64_t& n);
 bool ParseMoney(const std::string& str, CAmount& nRet);
 bool ParseMoney(const char* pszIn, CAmount& nRet);
 
