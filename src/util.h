@@ -44,6 +44,8 @@ public:
 extern const std::map<std::string, std::vector<std::string> >& mapMultiArgs;
 extern bool fDebug;
 extern bool fPrintProofOfStake;
+extern bool fPrintStakeModifier;
+extern bool fPrintCoinAge;
 extern bool fTestNet;
 extern bool fPrintToConsole;
 extern bool fPrintToDebugLog;

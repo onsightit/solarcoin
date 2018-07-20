@@ -939,6 +939,11 @@ bool AppInitParameterInteraction()
     fCheckBlockIndex = GetBoolArg("-checkblockindex", chainparams.DefaultConsistencyChecks());
     fCheckpointsEnabled = GetBoolArg("-checkpoints", DEFAULT_CHECKPOINTS_ENABLED);
 
+    // SolarCoin: solarcoin.conf args
+    fPrintProofOfStake = GetBoolArg("-printproofofstake", false);
+    fPrintStakeModifier = GetBoolArg("-printstakemodifier", false);
+    fPrintCoinAge = GetBoolArg("-printcoinage", false);
+
     hashAssumeValid = uint256S(GetArg("-assumevalid", chainparams.GetConsensus().defaultAssumeValid.GetHex()));
     if (!hashAssumeValid.IsNull())
         LogPrintf("Assuming ancestors of block %s have valid signatures.\n", hashAssumeValid.GetHex());

@@ -100,6 +100,12 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
     if (pindexLast == nullptr)
         return bnTargetLimit.GetCompact(); // genesis block
 
+    // DEBUG: Watch for pindexLast 835245
+    bool DEBUG = false;
+    if (pindexLast->nHeight == 835245) {
+        DEBUG = true;
+    }
+
     const CBlockIndex* pindexPrev = GetLastBlockIndex(pindexLast, fProofOfStake, params);
     if (pindexPrev->pprev == nullptr)
         return bnTargetLimit.GetCompact(); // first block
@@ -107,8 +113,17 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
     if (pindexPrevPrev->pprev == nullptr)
         return bnTargetLimit.GetCompact(); // second block
 
+    // DEBUG:
+    if (DEBUG) {
+        LogPrintf("DEBUG: pindexPrev=%d pindexPrev->nBits=%d  (pindexPrevPrev=%d)\n", pindexPrev->nHeight, pindexPrev->nBits, pindexPrevPrev->nHeight);
+    }
+
     int64_t nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
     if (nActualSpacing < 0) {
+        // DEBUG:
+        if (DEBUG) {
+            LogPrintf("DEBUG: nActualSpacing=%d reseting\n", nActualSpacing);
+        }
         nActualSpacing = params.nTargetSpacing;
     }
 
@@ -122,6 +137,10 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
 
     if (bnNew <= 0 || bnNew > bnTargetLimit) {
         bnNew = bnTargetLimit;
+        // DEBUG:
+        if (DEBUG) {
+            LogPrintf("DEBUG: Setting bnNew to bnTargetLimit=%d\n", bnTargetLimit.GetCompact());
+        }
     }
 
     return bnNew.GetCompact();
@@ -354,8 +373,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
 
     // Check range
-    //if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(params.powLimit))
-    if (bnTarget <= 0 || bnTarget > UintToArith256(params.powLimit))
+    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(params.powLimit))
         return false;
 
     // Check proof of work matches claimed amount

@@ -255,11 +255,12 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
     int64_t nStakeModifierTargetTime = nStakeModifierTime + nStakeModifierSelectionInterval;
 
     const CBlockIndex* pindex = pindexFrom;
+    CBlockIndex *pNext = chainActive.Next(pindex);
 
     // loop to find the stake modifier later by a selection interval
     while (nStakeModifierTime < nStakeModifierTargetTime)
     {
-        if (!pindex->pskip)
+        if (pNext == nullptr)
         {
             // reached best block; may happen if node is behind on block chain
             if (fPrintProofOfStake || (pindex->GetBlockTime() + params.nStakeMinAge - nStakeModifierSelectionInterval > GetAdjustedTime()))
@@ -276,7 +277,8 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
                 return false;
             }
         }
-        pindex = chainActive.Next(pindex);
+        pindex = pNext;
+        pNext = chainActive.Next(pindex);
         //LogPrintf("DEBUG: pindex=%s\n", pindex->ToVerboseString());
         if (pindex && pindex->GeneratedStakeModifier())
         {
@@ -353,8 +355,7 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
     ss << nTimeBlockFrom << nTxOffset << txPrev.nTime << prevout.n << nTimeTx;
     hashProofOfStake = Hash(ss.begin(), ss.end());
 
-    // DEBUG: if (fPrintProofOfStake)
-    if (true)
+    if (fPrintProofOfStake)
     {
         LogPrintf("%s(): using modifier %016x at height=%d timestamp=%u for block from height=%d timestamp=%u\n timeWeight=%d coinDayWeight=%d\n", __func__,
             nStakeModifier, nStakeModifierHeight,
@@ -368,7 +369,7 @@ bool CheckStakeTimeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsig
             hashProofOfStake.ToString().c_str(), targetProofOfStake.ToString().c_str());
     }
 
-    // SolarCoin: Version 3 Bug fix to get past PoW. Somehow this check passes in 2.1.8.
+    // SolarCoin: Version 3.14.2 Bug fix to get past PoW. Somehow this check passes in 2.1.8.
     if (heightBlockFrom > params.LAST_POW_BLOCK) {
         // Now check if proof-of-stake hash meets target protocol
         if (UintToArith256(hashProofOfStake) > UintToArith256(targetProofOfStake)) {

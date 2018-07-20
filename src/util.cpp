@@ -112,6 +112,8 @@ static map<string, vector<string> > _mapMultiArgs;
 const map<string, vector<string> >& mapMultiArgs = _mapMultiArgs;
 bool fDebug = false;
 bool fPrintProofOfStake = false;
+bool fPrintStakeModifier = false;
+bool fPrintCoinAge = false;
 bool fTestNet = false;
 bool fPrintToConsole = false;
 bool fPrintToDebugLog = true;
