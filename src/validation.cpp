@@ -2795,6 +2795,15 @@ CBlockIndex* AddToBlockIndex(const CBlockHeader& block, const CChainParams& chai
     pindexNew->SetStakeModifier(nStakeModifier, fGeneratedStakeModifier);
     pindexNew->nStakeModifierChecksum = GetStakeModifierChecksum(pindexNew, chainparams.GetConsensus());
 
+    // ppcoin: record proof-of-stake hash value
+    if (pindexNew->nHeight > chainparams.GetConsensus().LAST_POW_BLOCK)
+    {
+        LogPrintf("DEBUG: mapProofOfStake. Looking for block hash %s, at height %d, count is %d, hashProofOfStake is %s\n",hash.ToString().c_str(),pindexNew->nHeight,mapProofOfStake.count(hash),mapProofOfStake[hash].ToString().c_str());
+        //if (!mapProofOfStake.count(hash))
+        //    return error("AddToBlockIndex() : hashProofOfStake not found in map");
+        //pindexNew->hashProofOfStake = mapProofOfStake[hash];
+    }
+
     if (pindexNew->nHeight > 0)
         if (!fTestNet && !CheckStakeModifierCheckpoints(pindexNew->nHeight, pindexNew->nStakeModifierChecksum))
             LogPrintf("%s: Rejected by stake modifier checkpoint height=%d, modifier=%016x\n", __func__, pindexNew->nHeight, nStakeModifier);
@@ -3437,11 +3446,13 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         // Ensure that CheckBlock() passes before calling AcceptBlock, as
         // belt-and-suspenders.
         bool ret = CheckBlock(*pblock, state, chainparams.GetConsensus());
+        uint256 hashProofOfStake;
 
         LOCK(cs_main);
 
         if (ret) {
             uint256 hash = pblock->GetHash();
+            LogPrintf("ProcessNewBlock(): %s\n",hash.ToString());
             // ppcoin: check proof-of-stake
             // Limited duplicity on stake: prevents block flood attack
             if (pblock->IsProofOfStake())
@@ -3455,23 +3466,35 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
             // if we have the previous block and we are not downloading
             if (pblock->IsProofOfStake() && mapBlockIndex.count(pblock->hashPrevBlock))
             {
-                uint256 hashProofOfStake, targetProofOfStake;
+                uint256 targetProofOfStake;
                 if (!CheckProofOfStake(*pblock->vtx[1], pblock->nBits, hashProofOfStake, targetProofOfStake, chainparams.GetConsensus())) {
                     LogPrintf("WARNING: ProcessNewBlock() : CheckProofOfStake() failed for block=%s\n", hash.ToString().c_str());
                     return false; // do not error here as we expect this during initial block download
                 }
+                LogPrintf("ProcessNewBlock() - Is ProofOfStake, block is in index, computed proofOfStake is %s\n",hashProofOfStake.ToString());
                 HashMap::iterator mi = mapProofOfStake.find(hash);
                 if (mi == mapProofOfStake.end())
                 {
+                    LogPrintf("ProcessNewBlock() : Inserting hashProofOfStake %s for block hash %s into mapProofOfStake\n", hashProofOfStake.ToString().c_str(), hash.ToString().c_str());
                     mapProofOfStake.insert(std::make_pair(hash, hashProofOfStake));
                     fhashProofOfStake = true;
                 }
+                else {
+                    LogPrintf("ProcessNewBlock(): Did not insert into mapProofOfStake\n");
+                }
+            }
+            else {
+                LogPrintf("ProcessNewBlock(): Not PoS or did not find prev block in mapBlockIndex. MBI count of %s is %d\n",pblock->hashPrevBlock.ToString(), mapBlockIndex.count(pblock->hashPrevBlock));
             }
 
             // Store to disk
             ret = AcceptBlock(pblock, state, chainparams, &pindex, fForceProcessing, NULL, fNewBlock);
-            if (ret && fhashProofOfStake)
+
+            if (ret && fhashProofOfStake) {
+                pindex->hashProofOfStake = hashProofOfStake;
+                LogPrintf("ProcessNewBlock(): Setting hashProofOfStake to %s, new pindex value is %s\n",hashProofOfStake.ToString().c_str(), pindex->hashProofOfStake.ToString().c_str());
                 setDirtyBlockIndex.insert(pindex); // Update BlockIndex
+            }
         }
         CheckBlockIndex(chainparams.GetConsensus());
         if (!ret) {

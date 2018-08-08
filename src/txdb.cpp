@@ -221,7 +221,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts(boost::function<CBlockIndex*(const uint256
                 if (pindexNew->nHeight > Params().GetConsensus().LAST_POW_BLOCK) {
                     // DEBUG: Show proofs, stake modifier mint and moneysupply of first 20 PoST blocks
                     if (pindexNew->nHeight <= Params().GetConsensus().LAST_POW_BLOCK + 20)
-                        LogPrintf("DEBUG: txdb: nHeight=%d hashProofOfStake=%s nStakeModifier=%d nMint=%s nMoneySupply=%s\n", pindexNew->nHeight, pindexNew->hashProofOfStake.ToString(), pindexNew->nStakeModifier, FormatMoney(pindexNew->nMint).c_str(), FormatMoneySupply(pindexNew->nMoneySupply).c_str());
+                        LogPrintf("DEBUG: txdb: nHeight=%d hashProofOfStake=%s nStakeTime=%d nStakeModifier=%d nMint=%s nMoneySupply=%s\n", pindexNew->nHeight, pindexNew->hashProofOfStake.ToString(), pindexNew->nStakeTime, pindexNew->nStakeModifier, FormatMoney(pindexNew->nMint).c_str(), FormatMoneySupply(pindexNew->nMoneySupply).c_str());
                 } else {
                     // DEBUG: Show Mint, MoneySupply, Stake Modifier and hashProofOfStake of 20 PoW blocks
                     if (pindexNew->nHeight >= 4000 && pindexNew->nHeight < 4020)
