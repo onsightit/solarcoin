@@ -98,6 +98,10 @@ static bool SelectBlockFromCandidates(vector<pair<int64_t, arith_uint256> >& vSo
         // previous proof-of-stake modifier
         // SolarCoin: CBlockIndex::IsProofOfStake is not valid during header download. Use height instead.
         uint256 hashProof = pindex->nHeight > params.LAST_POW_BLOCK ? pindex->hashProofOfStake : pindex->GetBlockHash();
+        if(pindex->nHeight > params.LAST_POW_BLOCK) {
+            //LogPrintf("%s: Checking candidate block %s\n", __func__, hash.ToString().c_str());
+            //LogPrintf("%s(): candidate hashproof=%s\n", __func__, hashProof.ToString().c_str());
+        }
         CDataStream ss(SER_GETHASH, 0);
         ss << hashProof << nStakeModifierPrev;
         uint256 hashSelection = Hash(ss.begin(), ss.end());
@@ -188,6 +192,14 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStake
     reverse(vSortedByTimestamp.begin(), vSortedByTimestamp.end());
     sort(vSortedByTimestamp.begin(), vSortedByTimestamp.end());
 
+    // DEBUG: dump the vSortedByTimestamp
+    if(nHeightFirstCandidate == 835323) {
+    LogPrintf("%s(): vSortedByTimestamp:[",__func__);
+    for (const PAIRTYPE(int64_t, arith_uint256)& item : vSortedByTimestamp) {
+        LogPrintf("%s, ",item.second.GetHex().c_str());
+    }
+    LogPrintf("]\n");
+}
     // Select 64 blocks from candidate blocks to generate stake modifier
     uint64_t nStakeModifierNew = 0;
     int64_t nSelectionIntervalStop = nSelectionIntervalStart;
